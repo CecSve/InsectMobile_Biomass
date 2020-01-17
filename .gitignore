@@ -42,7 +42,7 @@ vignettes/*.pdf
 raw-data/
 
 # cleaned-data
-cleaned-data
+cleaned-data/
 
 # plots
 plots/

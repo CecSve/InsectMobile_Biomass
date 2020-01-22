@@ -13,7 +13,7 @@ library(magrittr)
 # Prepare datasets for biomass data
 biomass <-
   read.csv(
-    here::here("DK_Biomass_January_2020.csv"),
+    here::here("raw-data/DK_Biomass_January_2020.csv"),
     header = TRUE,
     row.names = NULL,
     sep = ";"
@@ -39,7 +39,7 @@ hist(log(biomass_nozeros$SampleBiomass_mg)) # Normally distributed but we still 
 # Import metadata
 samplingevent <-
   read.csv(
-    here::here("DK_SamplingEvent.csv"),
+    here::here("raw-data/DK_SamplingEvent.csv"),
     header = TRUE,
     row.names = NULL,
     sep = ";",
@@ -98,3 +98,5 @@ length(unique(data_landuse[["PID"]])) # count how many pilots that carried out t
 data.frame(table(data_landuse$Wind)) # how often were the different wind categories registered
 data.frame(table(data_landuse$Temperature)) # how many samples were collected at different temperature intervals
 data.frame(table(data_landuse$Date)) # how many samples per day
+
+write.table(data_landuse, file = "cleaned-data/DK_rough_landuse_biomass.txt")

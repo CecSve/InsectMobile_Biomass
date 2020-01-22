@@ -1,6 +1,8 @@
 #inseckMobile:
 
 #note: what i call route_no here is rather the sample no
+library(ggplot2)
+library(plyr)
 
 #sort image data################################################################################
 
@@ -12,18 +14,21 @@ images<-read.delim("stats_images.txt",as.is=T)
 images$Image_Name<-gsub("_wrong label","",images$Image_Name)
 
 #extract metadata
+
 #habitat
 images$habitat <- sapply(images$Image_Name,function(x)strsplit(x,"_")[[1]][1])
 images$habitat[which(images$habitat=="GrÃ¼n")] <- "Gruen"
 images$habitat[which(images$habitat=="Freucht")] <- "Feucht"
 unique(images$habitat)
 
+#route no
 images$route_no <- as.character(sapply(images$Image_Name,function(x)strsplit(x,"_")[[1]][2]))
 images$route_no <- gsub("-17-20","",images$route_no)
 images$route_no <- gsub("-12-15","",images$route_no)
 images$route_no <- as.numeric(images$route_no)
 unique(images$route_no)
 
+#time
 images$time <- NA
 images$time[grepl("12-15",images$Image_Name)] <- "12-15"
 images$time[grepl("12_15",images$Image_Name)] <- "12-15"
@@ -33,23 +38,6 @@ unique(images$time)
 
 #set habitat levels
 images$habitat <- factor(images$habitat, levels=c("Urban","Agrar","Gruen","Feucht","Wald")) 
-
-##check dataset file########################################################################################
-
-#are any in the images files AND in the dataset file
-dataset<-read.delim("stats_dataset.txt",as.is=T)
-unique(dataset$habitat)
-unique(dataset$route_no)
-unique(dataset$time)
-dataset$time[which(dataset$time=="12_15")] <- "12-15"
-
-#make aggregate names
-images$name <- paste(images$habitat,images$route_no,images$time,sep="_")
-dataset$name <- paste(dataset$habitat,dataset$route_no,dataset$time,sep="_")
-
-#are there dataset names not in images
-dataset$name[dataset$name %in% images$name]
-dataset$name[!dataset$name %in% images$name]#all good
 
 #fix mistakes####################################################################
 
@@ -64,8 +52,6 @@ table(images$habitat)
 ##summarise data####################################################################
 
 #per habitat and route and time
-summary(images)
-library(plyr)
 summaryData <- ddply(images,.(habitat,route_no,time),summarise,
                      nuObjects=length(unique(Object_ID)),
                      meanSize=median(Size_cm),
@@ -79,6 +65,209 @@ summaryData$Feucht <- ifelse(summaryData$habitat=="Feucht",1,0)
 summaryData$Wald <- ifelse(summaryData$habitat=="Wald",1,0)
 
 nrow(summaryData)#129
+
+# ###route length info############################################################################## 
+# 
+# routelength <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/metaData/2018_gefahreneRouten25832.csv")
+# unique(routelength$Codierung)
+# routelength$route_no <- sapply(as.character(routelength$Codierung),function(x)strsplit(x,"_")[[1]][2])
+# routelength$route_no <- as.numeric(routelength$route_no)
+# routelength$habitat <- sapply(as.character(routelength$Codierung),function(x)strsplit(x,"_")[[1]][1])
+# routelength$habitat <- gsub("GrÃ¼n","Gruen",routelength$habitat)
+# 
+# #merge with data
+# summaryData <- merge(summaryData,routelength,by=c("habitat","route_no"),all.x=T)
+# subset(summaryData,is.na(length))
+# 
+# ggplot(summaryData,aes(x=length,y=sumBiomass))+
+#   geom_point(aes(x=length,y=sumBiomass))+
+#   facet_wrap(~habitat,scales="free")+
+#   geom_smooth(method="lm")
+
+##effect of time and day of sampling#########################################################################
+
+routelength <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/metaData/190503_volunteer sampling protocols 2018_d1-sh-for Diana.csv")
+unique(routelength$Codierung)
+routelength$route_no <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][2])
+routelength$route_no <- as.numeric(routelength$route_no)
+routelength$habitat <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][1])
+routelength$habitat <- gsub("Grün","Gruen",routelength$habitat)
+routelength$time <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][3])
+
+#merge with data
+summaryData <- merge(summaryData,routelength,by=c("habitat","route_no","time"),all.x=T)
+
+#anlysis of time at a finer scale
+#format time
+summaryData$Time <- as.POSIXct(summaryData$Startzeit.starting.time,format="%H:%M")
+ggplot(summaryData,aes(x=Time,y=sumBiomass))+
+  geom_point(aes(colour=habitat))+
+  geom_smooth(method="lm")+
+  facet_wrap(~time,scales="free")+
+  scale_y_log10()
+
+#analysis of date at a finer scale
+summaryData$Date <- as.Date(summaryData$Date,format="%d-%m-%Y")
+library(lubridate)
+summaryData$Julian_day <- yday(summaryData$Date)
+
+ggplot(summaryData,aes(x=Julian_day,y=SamplesummaryData..mg.))+
+  geom_point(aes(colour=Landuse))+
+  geom_smooth(method="lm")+
+  facet_wrap(~Time,scales="free")+
+  scale_y_log10()
+
+##dry weight###############################################################################
+
+#compare biomass from fotos with dry weight
+dryWeights <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/dryWeight/Dry weight_Insektenmobil_Julianas lab book_16_05_2019-she.csv",as.is=T)
+
+#get habitat
+dryWeights$habitat <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(x),"_")[[1]][1])
+dryWeights <- subset(dryWeights,!habitat %in% c("Blank","Blank filter"))
+dryWeights <- subset(dryWeights,!is.na(habitat))
+dryWeights$habitat[dryWeights$habitat=="Grün"]<- "Gruen"
+unique(dryWeights$habitat)
+
+#get route number
+dryWeights$route_no <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(x),"_")[[1]][2])
+dryWeights$route_no <- as.numeric(dryWeights$route_no)
+unique(dryWeights$route_no)
+
+#get time
+dryWeights$time <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(x),"_")[[1]][3])
+unique(dryWeights$time)
+
+#get total biomass per habitat, route and time
+summaryDry <- ddply(dryWeights,.(habitat,route_no,time),summarise,dryBiomass=sum(Dry.mass..mg.))
+
+#merge with image based mass data
+allBiomass <- merge(summaryData,summaryDry,by=c("habitat","time","route_no"),all=T)
+subset(allBiomass,is.na(sumBiomass))#5 missing
+subset(allBiomass,is.na(dryBiomass))#none missing
+
+#plot
+summary(allBiomass$sumBiomass)
+summary(allBiomass$dryBiomass)
+qplot(sumBiomass,dryBiomass,data=allBiomass,colour=habitat,shape=time)+
+  scale_y_log10()+scale_x_log10()+
+  theme_bw()+
+  ylab("Biomass (weighted)")+xlab("Biomass (image-based)")
+#missing 4 site combinations!
+
+qplot(sumBiomass,dryBiomass,data=allBiomass)+
+  facet_wrap(time~habitat,scales="free")+
+  scale_y_log10()+scale_x_log10()
+
+cor.test(allBiomass$sumBiomass,allBiomass$dryBiomass)#0.9050286
+
+#format data to common format###############################################################
+
+myVars <- c("habitat","time","dryBiomass","Name.d..Freiwilligen.volunteer.s.name",
+            "Datum.date","Length.of.route.by.GIS",
+            "Routenbezeichnung.name.of.route","Startzeit.starting.time","Ende.end.time",
+            "Wind..schwach.mittel.stark.","Temperatur..15.20..20.25..25.30.Grad.Celsius.") 
+
+df <- allBiomass[,myVars]
+names(df) <- c("Habitat","Time_band","Biomass","Volunteer","Date","Route_length",
+               "Route_ID","Start_time","End_time","Wind","Temperature")
+
+###old analysis#################################################################################################
+
+###land use data##############################################################################
+
+#get land use data
+library(plyr)
+
+#get 100m buffer
+land100 <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/landData/insectmobile_schnittflaechengroessen_atkis2018+buffer100_conflict-20190529-181641.csv",
+                    sep=",")
+unique(land100$beschreibu)
+
+#fix mistake
+land100$name <- as.character(land100$name)
+land100$name[which(land100$name=="Nienburg_Wald_1\n")]<-"Nienburg_Wald_1" 
+land100$name[which(land100$name=="Leipzig_Anett_Alternative")]<-"Leipzig_Urban_17"
+land100$name[which(land100$name=="Leipzig_Urban_SemmelweisstraÃŸe")]<-"Leipzig_Urban_16"
+land100$name[which(land100$name=="Volkse-Didderse")]<-"Volkse_Agrar_15"
+land100$name[which(land100$name=="Rosslau_Luko")]<-"Rosslau_Wald_14"
+unique(land100$name)
+
+#get forest area as Wald (Gehölz too)
+#agriculture as Landwirtschaft
+#get urban as 
+#Wohnbaufläche, Industrie- und Gewerbefläche, Stra?Yenverkehr,Bahnverkehr
+
+#overall see what is common
+out <- ddply(land100,.(beschreibu),summarise,totArea=sum(area_sqm))
+arrange(out,totArea)
+
+#separate habitat and route
+land100$habitat <- land100$mI_habitat 
+land100$route_no <- land100$mI_route_no
+#land100$route_no <- sapply(as.character(land100$name),function(x)strsplit(x,"_")[[1]][3]) 
+land100$habitat[which(land100$habitat=="Feuchtland")] <- "Feucht"
+land100$habitat[which(land100$habitat=="Gruenland")] <- "Gruen"
+unique(land100$habitat)
+unique(land100$route_no)
+
+land100S <- ddply(land100,.(habitat,route_no),summarise,
+                 forest=mean(area_sqm[beschreibu %in% c("Wald","GehÃ¶lz")]),
+                 urban=mean(area_sqm[beschreibu %in% c("WohnbauflÃ¤che",
+                                                      "Industrie- und GewerbeflÃ¤che",
+                                                      "StraÃŸenverkehr",
+                                                      "Bahnverkehr")]),
+                 agri=mean(area_sqm[beschreibu %in% c("Landwirtschaft")]))
+land100S[is.na(land100S)] <- 0
+
+#merge with pop data
+summaryData <- merge(summaryData,land100S,by=c("habitat","route_no"),all.x=T)
+nrow(subset(summaryData,is.na(forest)))#4
+nrow(summaryData)
+
+##land use analyssi###########################################################################
+
+library(ggplot2)
+q1 <- qplot(forest,sumBiomass,data=summaryData)+stat_smooth(method="lm")
+q2 <- qplot(agri,sumBiomass,data=summaryData)+stat_smooth(method="lm")
+q3 <- qplot(urban,sumBiomass,data=summaryData)+stat_smooth(method="lm")
+library(cowplot)
+plot_grid(q1,q2,q3,nrow=1)
+
+library(ggplot2)
+q1 <- qplot(forest,nuObjects,data=summaryData)+stat_smooth(method="lm")+ylab("total abundance")
+q2 <- qplot(agri,nuObjects,data=summaryData)+stat_smooth(method="lm")+ylab("total abundance")
+q3 <- qplot(urban,nuObjects,data=summaryData)+stat_smooth(method="lm")+ylab("total abundance")
+library(cowplot)
+plot_grid(q1,q2,q3,nrow=1)
+
+library(ggplot2)
+q1 <- qplot(forest,meanSize,data=summaryData)+stat_smooth(method="lm")
+q2 <- qplot(agri,meanSize,data=summaryData)+stat_smooth(method="lm")
+q3 <- qplot(urban,meanSize,data=summaryData)+stat_smooth(method="lm")
+library(cowplot)
+plot_grid(q1,q2,q3,nrow=1)
+
+###sampling range##########################################################################################
+
+#relationships
+g1 <- ggplot(summaryData,aes(forest,agri))+
+  geom_jitter(alpha=0.5)+theme_bw()
+g2 <- ggplot(summaryData,aes(forest,urban))+
+  geom_jitter(alpha=0.5)+theme_bw()
+g3 <- ggplot(summaryData,aes(agri,urban))+
+  geom_jitter(alpha=0.5)+theme_bw()
+
+#histograms
+g4 <- ggplot(summaryData,aes(forest))+
+  geom_histogram()+theme_bw()
+g5 <- ggplot(summaryData,aes(urban))+
+  geom_histogram()+theme_bw()
+g6 <- ggplot(summaryData,aes(agri))+
+  geom_histogram()+theme_bw()
+
+library(cowplot)
+plot_grid(g4,g5,g6,g1,g2,g3,ncol=3,nrow=2)
 
 ##size analysis#######################################################################
 
@@ -296,199 +485,3 @@ with(dune.env, ordispider(dune.ca, habitat, col = "blue", label= TRUE))
 plot(dune.ca, display = "sites", type = "p")
 with(dune.env, ordiellipse(dune.ca, time, kind = "se", conf = 0.95))
 with(dune.env, ordispider(dune.ca, time, col = "blue", label= TRUE))
-
-###route length info############################################################################## 
-
-routelength <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/metaData/2018_gefahreneRouten25832.csv")
-unique(routelength$Codierung)
-routelength$route_no <- sapply(as.character(routelength$Codierung),function(x)strsplit(x,"_")[[1]][2])
-routelength$route_no <- as.numeric(routelength$route_no)
-routelength$habitat <- sapply(as.character(routelength$Codierung),function(x)strsplit(x,"_")[[1]][1])
-routelength$habitat <- gsub("Grün","Gruen",routelength$habitat)
-
-#merge with data
-summaryData <- merge(summaryData,routelength,by=c("habitat","route_no"),all.x=T)
-subset(summaryData,is.na(length))
-
-ggplot(summaryData,aes(x=length,y=sumBiomass))+
-  geom_point(aes(x=length,y=sumBiomass))+
-  facet_wrap(~habitat,scales="free")+
-  geom_smooth(method="lm")
-
-##effect of time and day of sampling#########################################################################
-
-routelength <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/metaData/190503_volunteer sampling protocols 2018_d1-sh-for Diana.csv")
-unique(routelength$Codierung)
-routelength$route_no <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][2])
-routelength$route_no <- as.numeric(routelength$route_no)
-routelength$habitat <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][1])
-routelength$habitat <- gsub("Grün","Gruen",routelength$habitat)
-routelength$time <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][3])
-
-#merge with data
-summaryData <- merge(summaryData,routelength,by=c("habitat","route_no","time"),all.x=T)
-
-#anlysis of time at a finer scale
-#format time
-summaryData$Time <- as.POSIXct(summaryData$Startzeit.starting.time,format="%H:%M")
-ggplot(summaryData,aes(x=Time,y=sumBiomass))+
-  geom_point(aes(colour=habitat))+
-  geom_smooth(method="lm")+
-  facet_wrap(~time,scales="free")+
-  scale_y_log10()
-
-#analysis of date at a finer scale
-summaryData$Date <- as.Date(summaryData$Date,format="%d-%m-%Y")
-library(lubridate)
-summaryData$Julian_day <- yday(summaryData$Date)
-
-ggplot(summaryData,aes(x=Julian_day,y=SamplesummaryData..mg.))+
-  geom_point(aes(colour=Landuse))+
-  geom_smooth(method="lm")+
-  facet_wrap(~Time,scales="free")+
-  scale_y_log10()
-
-##dry weight###############################################################################
-
-#compare biomass from fotos with dry weight
-dryWeights <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/dryWeight/Dry weight_Insektenmobil_Julianas lab book_16_05_2019-she.csv",as.is=T)
-
-#get habitat
-dryWeights$habitat <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(x),"_")[[1]][1])
-dryWeights <- subset(dryWeights,!habitat %in% c("Blank","Blank filter"))
-dryWeights <- subset(dryWeights,!is.na(habitat))
-dryWeights$habitat[dryWeights$habitat=="Grün"]<- "Gruen"
-unique(dryWeights$habitat)
-
-#get route number
-dryWeights$route_no <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(x),"_")[[1]][2])
-dryWeights$route_no <- as.numeric(dryWeights$route_no)
-unique(dryWeights$route_no)
-
-#get time
-dryWeights$time <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(x),"_")[[1]][3])
-unique(dryWeights$time)
-
-#get total biomass per habitat, route and time
-summaryDry <- ddply(dryWeights,.(habitat,route_no,time),summarise,dryBiomass=sum(Dry.mass..mg.))
-
-#merge with image based mass data
-allBiomass <- merge(summaryData,summaryDry,by=c("habitat","time","route_no"),all=T)
-subset(allBiomass,is.na(sumBiomass))
-subset(allBiomass,is.na(dryBiomass))#none missing
-
-#plot
-library(ggplot2)
-summary(allBiomass$sumBiomass)
-summary(allBiomass$dryBiomass)
-qplot(sumBiomass,dryBiomass,data=allBiomass,colour=habitat,shape=time)+
-  scale_y_log10()+scale_x_log10()+
-  theme_bw()+
-  ylab("Biomass (weighted)")+xlab("Biomass (image-based)")
-#missing 4 site combinations!
-
-qplot(sumBiomass,dryBiomass,data=allBiomass)+
-  facet_wrap(time~habitat,scales="free")+
-  scale_y_log10()+scale_x_log10()
-
-cor.test(allBiomass$sumBiomass,allBiomass$dryBiomass)#0.9050286
-
-
-#compare small and large insects in terms of dry weight
-
-###land use data##############################################################################
-
-#get land use data
-library(plyr)
-
-#get 100m buffer
-land100 <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/landData/insectmobile_schnittflaechengroessen_atkis2018+buffer100_conflict-20190529-181641.csv",
-                    sep=",")
-unique(land100$beschreibu)
-
-#fix mistake
-land100$name <- as.character(land100$name)
-land100$name[which(land100$name=="Nienburg_Wald_1\n")]<-"Nienburg_Wald_1" 
-land100$name[which(land100$name=="Leipzig_Anett_Alternative")]<-"Leipzig_Urban_17"
-land100$name[which(land100$name=="Leipzig_Urban_SemmelweisstraÃŸe")]<-"Leipzig_Urban_16"
-land100$name[which(land100$name=="Volkse-Didderse")]<-"Volkse_Agrar_15"
-land100$name[which(land100$name=="Rosslau_Luko")]<-"Rosslau_Wald_14"
-unique(land100$name)
-
-#get forest area as Wald (Gehölz too)
-#agriculture as Landwirtschaft
-#get urban as 
-#Wohnbaufläche, Industrie- und Gewerbefläche, Stra?Yenverkehr,Bahnverkehr
-
-#overall see what is common
-out <- ddply(land100,.(beschreibu),summarise,totArea=sum(area_sqm))
-arrange(out,totArea)
-
-#separate habitat and route
-land100$habitat <- land100$mI_habitat 
-land100$route_no <- land100$mI_route_no
-#land100$route_no <- sapply(as.character(land100$name),function(x)strsplit(x,"_")[[1]][3]) 
-land100$habitat[which(land100$habitat=="Feuchtland")] <- "Feucht"
-land100$habitat[which(land100$habitat=="Gruenland")] <- "Gruen"
-unique(land100$habitat)
-unique(land100$route_no)
-
-land100S <- ddply(land100,.(habitat,route_no),summarise,
-                 forest=mean(area_sqm[beschreibu %in% c("Wald","GehÃ¶lz")]),
-                 urban=mean(area_sqm[beschreibu %in% c("WohnbauflÃ¤che",
-                                                      "Industrie- und GewerbeflÃ¤che",
-                                                      "StraÃŸenverkehr",
-                                                      "Bahnverkehr")]),
-                 agri=mean(area_sqm[beschreibu %in% c("Landwirtschaft")]))
-land100S[is.na(land100S)] <- 0
-
-#merge with pop data
-summaryData <- merge(summaryData,land100S,by=c("habitat","route_no"),all.x=T)
-nrow(subset(summaryData,is.na(forest)))#4
-nrow(summaryData)
-
-##land use analyssi###########################################################################
-
-library(ggplot2)
-q1 <- qplot(forest,sumBiomass,data=summaryData)+stat_smooth(method="lm")
-q2 <- qplot(agri,sumBiomass,data=summaryData)+stat_smooth(method="lm")
-q3 <- qplot(urban,sumBiomass,data=summaryData)+stat_smooth(method="lm")
-library(cowplot)
-plot_grid(q1,q2,q3,nrow=1)
-
-library(ggplot2)
-q1 <- qplot(forest,nuObjects,data=summaryData)+stat_smooth(method="lm")+ylab("total abundance")
-q2 <- qplot(agri,nuObjects,data=summaryData)+stat_smooth(method="lm")+ylab("total abundance")
-q3 <- qplot(urban,nuObjects,data=summaryData)+stat_smooth(method="lm")+ylab("total abundance")
-library(cowplot)
-plot_grid(q1,q2,q3,nrow=1)
-
-library(ggplot2)
-q1 <- qplot(forest,meanSize,data=summaryData)+stat_smooth(method="lm")
-q2 <- qplot(agri,meanSize,data=summaryData)+stat_smooth(method="lm")
-q3 <- qplot(urban,meanSize,data=summaryData)+stat_smooth(method="lm")
-library(cowplot)
-plot_grid(q1,q2,q3,nrow=1)
-
-###sampling range##########################################################################################
-
-#relationships
-g1 <- ggplot(summaryData,aes(forest,agri))+
-  geom_jitter(alpha=0.5)+theme_bw()
-g2 <- ggplot(summaryData,aes(forest,urban))+
-  geom_jitter(alpha=0.5)+theme_bw()
-g3 <- ggplot(summaryData,aes(agri,urban))+
-  geom_jitter(alpha=0.5)+theme_bw()
-
-#histograms
-g4 <- ggplot(summaryData,aes(forest))+
-  geom_histogram()+theme_bw()
-g5 <- ggplot(summaryData,aes(urban))+
-  geom_histogram()+theme_bw()
-g6 <- ggplot(summaryData,aes(agri))+
-  geom_histogram()+theme_bw()
-
-library(cowplot)
-plot_grid(g4,g5,g6,g1,g2,g3,ncol=3,nrow=2)
-
-####################################################################################################

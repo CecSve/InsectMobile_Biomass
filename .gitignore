@@ -37,3 +37,13 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# raw-data folder
+raw-data/
+
+# cleaned-data
+cleaned-data/
+
+# plots
+plots/
+.Rproj.user

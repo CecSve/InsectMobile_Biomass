@@ -3,6 +3,7 @@
 #note: what i call route_no here is rather the sample no
 library(ggplot2)
 library(plyr)
+library(reshape2)
 
 #sort image data################################################################################
 
@@ -139,7 +140,12 @@ dryWeights$time <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(
 unique(dryWeights$time)
 
 #get total biomass per habitat, route and time
-summaryDry <- ddply(dryWeights,.(habitat,route_no,time),summarise,dryBiomass=sum(Dry.mass..mg.))
+summaryDry <- ddply(dryWeights,.(habitat,route_no,time,Size),
+                    summarise,dryBiomass=sum(Dry.mass..mg.))
+summaryDry <- dcast(summaryDry,habitat+route_no+time~Size,value.var="dryBiomass")
+summaryDry$Biomass <- summaryDry$`< 10 mm`+summaryDry$`> 10 mm` 
+names(summaryDry)[4] <- 'Biomass_small'
+names(summaryDry)[5] <- 'Biomass_large'
 
 #merge with image based mass data
 allBiomass <- merge(summaryData,summaryDry,by=c("habitat","time","route_no"),all=T)
@@ -163,14 +169,14 @@ cor.test(allBiomass$sumBiomass,allBiomass$dryBiomass)#0.9050286
 
 #format data to common format###############################################################
 
-myVars <- c("habitat","time","dryBiomass","Name.d..Freiwilligen.volunteer.s.name",
+myVars <- c("habitat","time","Biomass","Biomass_small","Biomass_large","Name.d..Freiwilligen.volunteer.s.name",
             "Datum.date","Length.of.route.by.GIS",
             "Routenbezeichnung.name.of.route","Startzeit.starting.time","Ende.end.time",
             "Wind..schwach.mittel.stark.","Temperatur..15.20..20.25..25.30.Grad.Celsius.") 
 
 df <- allBiomass[,myVars]
-names(df) <- c("Habitat","Time_band","Biomass","Volunteer","Date","Route_length",
-               "Route_ID","Start_time","End_time","Wind","Temperature")
+names(df) <- c("Habitat","Time_band","Biomass","Biomass_small","Biomass_large","Volunteer","Date","Route_length",
+               "RouteID","StartTime","EndTime","Wind","Temperature")
 
 ###old analysis#################################################################################################
 

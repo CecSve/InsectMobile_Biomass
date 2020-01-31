@@ -89,7 +89,7 @@ metadata2$LandUSeType <- mapvalues(
     'våd, tør'
   ),
   to = c(
-    'Famrland',
+    'Farmland',
     'Forest',
     'Forest_dry',
     'Dryland',
@@ -124,6 +124,7 @@ data_landuse$LandUSeType <- factor(data_landuse$LandUSeType, levels = c("Urban",
 data_landuse %>% group_by(LandUSeType) %>% summarize(count=n()) # count how many samples there is from each coarse land-use category
 length(unique(data_landuse[["RouteURL"]])) # count how many routes were sampled - but notice some have received new routes
 length(unique(data_landuse[["PID"]])) # count how many pilots that carried out the sampling
+length(unique(data_landuse[["SampleID"]])) # count how many samples
 data.frame(table(data_landuse$Wind)) # how often were the different wind categories registered
 data.frame(table(data_landuse$Temperature)) # how many samples were collected at different temperature intervals
 data.frame(table(data_landuse$Date)) # how many samples per day
@@ -161,4 +162,4 @@ data$Route_length <- '5000'
 
 # Add Velocity (Route_length*2)/Time_driven - we think it could account for some of the variation between samples, especially urban (many stops)
 
-write.table(data, file = "DK_rough_landuse_biomass_editedheaders.txt")
+write.table(data, file = "cleaned-data/DK_rough_landuse_biomass.txt")

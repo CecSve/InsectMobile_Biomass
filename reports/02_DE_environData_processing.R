@@ -75,5 +75,5 @@ df$RouteID[!df$RouteID %in% output$Codierung]#yay!!
 
 #cast the data
 outputCast <- dcast(output,Codierung~LU+Buffer,value.var="value")
-
+#Agrar_01,agricultural_250
 df <- merge(df,output,by.x="RouteID",by.y="Codierung",all.x=T)

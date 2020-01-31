@@ -10,7 +10,7 @@ library(lubridate) # work with date and time formats
 #library(here)
 library(magrittr)
 
-setwd("H:/Documents/Insektmobilen/Analysis/Biomass_test/January_2020")
+setwd("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass")
 
 # Prepare datasets for biomass data - should be updated to this code when analysis has finished
 #biomass <-read.csv(here::here("raw-data/DK_Biomass_January_2020.csv"),header = TRUE,row.names = NULL,sep = ";") # Biomass data

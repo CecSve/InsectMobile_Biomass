@@ -88,12 +88,18 @@ nrow(summaryData)#129
 ##effect of time and day of sampling#########################################################################
 
 routelength <- read.csv("C:/Users/db40fysa/Nextcloud/mobileInsect/13_data/metaData/190503_volunteer sampling protocols 2018_d1-sh-for Diana.csv")
+
 unique(routelength$Codierung)
 routelength$route_no <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][2])
 routelength$route_no <- as.numeric(routelength$route_no)
 routelength$habitat <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][1])
 routelength$habitat <- gsub("Grün","Gruen",routelength$habitat)
 routelength$time <- sapply(as.character(routelength$Codierung.coding),function(x)strsplit(x,"_")[[1]][3])
+
+#Codierung
+routelength$Codierung <- routelength$Codierung.coding
+routelength$Codierung <- gsub("_12-15","",routelength$Codierung)
+routelength$Codierung <- gsub("_17-20","",routelength$Codierung)
 
 #merge with data
 summaryData <- merge(summaryData,routelength,by=c("habitat","route_no","time"),all.x=T)
@@ -108,7 +114,7 @@ ggplot(summaryData,aes(x=Time,y=sumBiomass))+
   scale_y_log10()
 
 #analysis of date at a finer scale
-summaryData$Date <- as.Date(summaryData$Date,format="%d-%m-%Y")
+summaryData$Date <- as.Date(summaryData$Datum.date,format="%d.%m.%y")
 library(lubridate)
 summaryData$Julian_day <- yday(summaryData$Date)
 
@@ -140,17 +146,30 @@ dryWeights$time <- sapply(dryWeights$Sample.ID,function(x)strsplit(as.character(
 unique(dryWeights$time)
 
 #get total biomass per habitat, route and time
+summary(dryWeights$Dry.mass..mg.)
 summaryDry <- ddply(dryWeights,.(habitat,route_no,time,Size),
                     summarise,dryBiomass=sum(Dry.mass..mg.))
 summaryDry <- dcast(summaryDry,habitat+route_no+time~Size,value.var="dryBiomass")
+summaryDry$`< 10 mm`[is.na(summaryDry$`< 10 mm`)] <- 0
+summaryDry$`> 10 mm`[is.na(summaryDry$`> 10 mm`)] <- 0
+
+#any less than zero, set to zero
+summary(summaryDry$`< 10 mm`)
+summary(summaryDry$`> 10 mm`)
+summaryDry$`< 10 mm`[summaryDry$`< 10 mm`< 0] <- 0
+summaryDry$`> 10 mm`[summaryDry$`> 10 mm`< 0] <- 0
+
+#total
 summaryDry$Biomass <- summaryDry$`< 10 mm`+summaryDry$`> 10 mm` 
 names(summaryDry)[4] <- 'Biomass_small'
 names(summaryDry)[5] <- 'Biomass_large'
+summary(summaryDry$Biomass)
+
 
 #merge with image based mass data
 allBiomass <- merge(summaryData,summaryDry,by=c("habitat","time","route_no"),all=T)
 subset(allBiomass,is.na(sumBiomass))#5 missing
-subset(allBiomass,is.na(dryBiomass))#none missing
+subset(allBiomass,is.na(dryWeights))#none missing
 
 #plot
 summary(allBiomass$sumBiomass)
@@ -169,18 +188,96 @@ cor.test(allBiomass$sumBiomass,allBiomass$dryBiomass)#0.9050286
 
 #format data to common format###############################################################
 
-myVars <- c("habitat","time","Biomass","Biomass_small","Biomass_large","Name.d..Freiwilligen.volunteer.s.name",
+myVars <- c("habitat","time","Biomass","Biomass_small","Biomass_large",
+            "Name.d..Freiwilligen.volunteer.s.name",
             "Datum.date","Length.of.route.by.GIS",
-            "Routenbezeichnung.name.of.route","Startzeit.starting.time","Ende.end.time",
-            "Wind..schwach.mittel.stark.","Temperatur..15.20..20.25..25.30.Grad.Celsius.") 
+            "Codierung",
+            "Startzeit.starting.time","Ende.end.time",
+            "Wind..schwach.mittel.stark.",
+            "Temperatur..15.20..20.25..25.30.Grad.Celsius.") 
 
 df <- allBiomass[,myVars]
-names(df) <- c("Habitat","Time_band","Biomass","Biomass_small","Biomass_large","Volunteer","Date","Route_length",
+
+names(df) <- c("Land_use","Time_band","Biomass","Biomass_small","Biomass_large","PilotID","Date","Route_length",
                "RouteID","StartTime","EndTime","Wind","Temperature")
 
-###old analysis#################################################################################################
+df$RouteID <- gsub("ün","uen",df$RouteID)
+levels(df$Land_use) <- c("Urban","Farmland","Dryland","Wetland","Forest")
+df$Land_use <- factor(df$Land_use,levels=c("Urban","Farmland","Dryland","Wetland","Forest"))
 
-###land use data##############################################################################
+#retrieve 
+#temperature -  mean and max
+#pet
+#humdity - mean and max
+#(wind)
+#2 m above ground
+#DWD
+
+#add Time_driven - diff between start and end time
+#add Distance_driven - in m
+#add Velocity -  Distance driven/Time_driven 
+
+#X, Y for each route
+#utm in m
+
+#standardized temp
+#15-20
+#20-25
+#25-30+
+
+#wind temp
+#Light (1.6-3.3 m/s)
+#Gentle (3.4 - 5.5 m/s)
+#Moderate (5.5-7.9 m/s)
+
+#save processed data file
+save(df,file="df_DE.RData")
+
+###plotting#################################################################################################
+
+#devtools::install_github("mikabr/ggpirate")
+library(ggplot2)
+library(plyr)
+library(ggpirate)
+library(cowplot)
+
+
+#Distributions of biomass
+hist(df$Biomass)
+hist(log(df$Biomass+1))
+
+hist(df$Biomass_small)
+hist(log(df$Biomass_small+1))
+
+hist(df$Biomass_large)
+hist(log(df$Biomass_large+1))#zero-inflated...
+
+#Fig 1
+
+#total biomass
+ggplot(df,aes(x=Habitat, y=log(Biomass+1)))+
+  geom_pirate(aes(colour=Time_band,fill=Time_band),show.legend=TRUE)+
+  theme_bw()+
+  xlab("Land cover")+ylab("Total insect biomass")
+
+#split by size
+g1 <- ggplot(df,aes(x=Habitat, y=log(Biomass_small+1)))+
+  geom_pirate(aes(colour=Time_band,fill=Time_band),show.legend=TRUE)+
+  theme_bw()+
+  xlab("Land cover")+ylab("Insect biomass (small)")+
+  theme(legend.position = "none")
+g2 <- ggplot(df,aes(x=Habitat, y=log(Biomass_large+1)))+
+  geom_pirate(aes(colour=Time_band,fill=Time_band),show.legend=TRUE)+
+  theme_bw()+
+  xlab("Land cover")+ylab("Insect biomass (large)")+
+  theme(legend.position = "none")
+plot_grid(g1,g2)
+
+
+
+
+
+###old land use data##############################################################################
 
 #get land use data
 library(plyr)

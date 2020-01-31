@@ -204,6 +204,9 @@ names(df) <- c("Land_use","Time_band","Biomass","Biomass_small","Biomass_large",
 df$RouteID <- gsub("ün","uen",df$RouteID)
 levels(df$Land_use) <- c("Urban","Farmland","Dryland","Wetland","Forest")
 df$Land_use <- factor(df$Land_use,levels=c("Urban","Farmland","Dryland","Wetland","Forest"))
+df$Time_band <- factor(df$Time_band)
+levels(df$Time_band) <- c("midday","evening")
+
 
 #retrieve 
 #temperature -  mean and max
@@ -231,7 +234,7 @@ df$Land_use <- factor(df$Land_use,levels=c("Urban","Farmland","Dryland","Wetland
 #Moderate (5.5-7.9 m/s)
 
 #save processed data file
-save(df,file="df_DE.RData")
+save(df,file="cleaned-data/DE_rough_landuse_biomass.RData")
 
 ###plotting#################################################################################################
 

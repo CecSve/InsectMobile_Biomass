@@ -176,6 +176,7 @@ data <- data %>% mutate(Wind=recode(Wind,
 
 # Add time driven column Time_driven
 # convert the time columns to datetimes
+test <- data
 test$StartTime <- as.POSIXct(data$StartTime,
                                       format='%H:%M:%S')
 test$EndTime   <- as.POSIXct(data$EndTime,
@@ -186,8 +187,10 @@ data$Time_driven <- difftime(test$EndTime, test$StartTime, units = "mins")
 # setting route_length and distance_driven as numeric values
 data$Route_length <- as.double(data$Route_length)
 data$Distance_driven <- as.double(data$Distance_driven)
+data$Time_driven <- as.double(data$Time_driven)
 
 # Add Velocity (Route_length*2)/Time_driven - we think it could account for some of the variation between samples, especially urban (many stops)
+str(data)
 data$Velocity <- (data$Route_length*2)/data$Time_driven
 
 write.table(data, file = "cleaned-data/DK_rough_landuse_biomass.txt")

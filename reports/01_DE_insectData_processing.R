@@ -313,5 +313,10 @@ df$Temperature <- as.factor(df$Temperature)
 #2 m above ground
 #DWD
 
+#change pilot id into a number
+sort(unique(df$PilotID))
+#Melanie Huk/Kownatzki Melanie/Thomas Huk
+df$PilotID <- as.numeric(as.factor(df$PilotID))
+
 #save processed data file
 save(df,file="cleaned-data/DE_rough_landuse_biomass.RData")

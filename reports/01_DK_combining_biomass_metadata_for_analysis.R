@@ -108,6 +108,7 @@ metadata2$LandUSeType <- mapvalues(
 )
 
 head(metadata2)
+levels(metadata2$LandUSeType)
 tail(metadata2)
 str(metadata2)
 
@@ -121,12 +122,14 @@ data_landuse <-
       LandUSeType == 'Forest' |
       LandUSeType == 'Dryland' |
       LandUSeType == 'Urban' | LandUSeType == 'Wetland'
-  ) %>% droplevels
+  ) %>% droplevels()
+
+levels(data_landuse$LandUSeType)
 
 data_landuse$LandUSeType <-
   factor(
     data_landuse$LandUSeType,
-    levels = c("Urban", "Farmland", "Dryland", "Wetland", "Forest")
+    levels = c("Urban", "Farmland", "Dryland", "Wetland", "Forest") # rearrange order of levels for plotting
   )
 
 # get summaries of how many samples there is for each variable and their levels
@@ -147,6 +150,9 @@ data <-
     Biomass = SampleBiomass_mg,
     PilotID = PID
 )
+
+head(data)
+levels(data$Land_use)
 
 # make a column for whether sampling was midday or evening
 time <- as.POSIXct(strptime(data$StartTime, "%H:%M"), "UTC")

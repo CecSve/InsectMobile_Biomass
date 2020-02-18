@@ -85,13 +85,13 @@ ggplot(temp,aes(x=Land_use, y=meanInsects))+
   xlab("Land cover")+ylab("Insect biomass")
 
 g1 <- ggplot(allInsects,aes(x=Land_use, y=log(Biomass_large+1)))+
-  geom_boxplot(fill="darkblue")+
+  geom_boxplot(colour="darkblue",fill="white")+
   theme_bw()+
   facet_wrap(~Country)+
   xlab("Land cover")+ylab("Large insect biomass")
 
 g2 <- ggplot(allInsects,aes(x=Land_use, y=log(Biomass_small+1)))+
-  geom_boxplot(fill="darkblue")+
+  geom_boxplot(colour="darkblue",fill="white")+
   theme_bw()+
   facet_wrap(~Country)+
   xlab("Land cover")+ylab("Small insect biomass")

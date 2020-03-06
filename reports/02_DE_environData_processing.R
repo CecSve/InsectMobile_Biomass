@@ -110,4 +110,4 @@ df$RouteID[!df$RouteID %in% output$Codierung]#yay!!
 #cast the data
 library(reshape2)
 outputCast <- dcast(output,Codierung~Land_use+Buffer,value.var="value",fun=sum,na.rm=T)
-df <- merge(df,output,by.x="RouteID",by.y="Codierung",all.x=T)
+write.table(outputCast,file="cleaned-data/environData_DE.txt",sep="\t")

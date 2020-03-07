@@ -7,6 +7,10 @@ all(allInsects$RouteID %in% land_use$Codierung)
 #merge insect and land use
 allInsects <- merge(allInsects,land_use,by.x="RouteID",by.y="Codierung")
 
+
+#plot the data
+
+
 #get buffer size with largest effect for each land use
 library(lme4)
 library(lmerTest)

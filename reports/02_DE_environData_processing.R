@@ -1,3 +1,5 @@
+
+#land use data (extracted by Volker see READ ME file in data folder)
 setwd("C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/atkis_v05")
 allFiles <- list.files()
 allFiles <- allFiles[!grepl("README.txt",allFiles)]
@@ -111,3 +113,71 @@ df$RouteID[!df$RouteID %in% output$Codierung]#yay!!
 library(reshape2)
 outputCast <- dcast(output,Codierung~Land_use+Buffer,value.var="value",fun=sum,na.rm=T)
 write.table(outputCast,file="cleaned-data/environData_DE.txt",sep="\t")
+
+#weather data
+load("cleaned-data/DE_rough_landuse_biomass.RData")
+sites <- df[,c("RouteID","Date","x","y")]
+coordinates(sites)<-c("x","y")
+proj4string(sites)<- "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs"
+sitesLatLon <- spTransform(sites,CRS("+proj=longlat +datum=WGS84"))
+
+#use R package to get data from DWD
+library(rdwd)
+#https://bookdown.org/brry/rdwd/
+
+
+#get the nearesy station according to the following
+getStations <- function(x){
+  m <- nearbyStations(lat=x[2], 
+                      lon=x[1], 
+                      radius=40,
+                      res="hourly",
+                      var=c("air_temperature"),
+                      per="historical",
+                      mindate=as.Date("2018-07-15"))
+
+  return(m$Stationsname[2])
+}
+
+sitesLatLon@data$Station <- apply(sitesLatLon@coords,1,getStations)
+                    
+#get list of stations for each coordinates
+myStations <- data.frame(Station=unique(sitesLatLon@data$Station))
+
+#get temp data for each of these stations
+library(lubridate)
+getData <- function(station){
+  link <- selectDWD(station,res="hourly",var="air_temperature", per="historical")
+  file <- dataDWD(link, read=FALSE, dir="../localdata", quiet=TRUE, force=NA, overwrite=TRUE)
+  clim <- readDWD(file, varnames=TRUE)
+  clim$Year <- year(clim$MESS_DATUM)
+  clim$Month <- month(clim$MESS_DATUM)
+
+  #mean temperature for whole of June and July 2018
+  if(nrow(subset(clim,(Month %in% 6:7) & Year==2018))==0){
+    out <- data.frame(STATIONS_ID=NA,MESS_DATUM=NA,QN_9=NA,TT_TU.Lufttemperatur=NA)
+    out$Station <- station
+    return(out)
+  }else{
+    out <- subset(clim,(Month %in% 6:7) & Year==2018)[,1:4]
+    out$Station <- station
+    return(out)
+  }
+}
+
+tempData <- ldply(myStations$Station,getData)
+
+#any missing data?
+subset(tempData,is.na(STATIONS_ID))
+#just one Mittelnkirchen-Hohenfelde
+subset(sitesLatLon,Station=="Mittelnkirchen-Hohenfelde")#for Gruen_09 
+m <- nearbyStations(lat=53.36881, 
+                lon=9.602736, 
+                radius=40,
+                res="hourly",
+                var=c("air_temperature"),
+                per="historical",
+                mindate=as.Date("2018-07-15"))
+#try Rosengarten-Klecken
+getData("Rosengarten-Klecken")
+#yep!

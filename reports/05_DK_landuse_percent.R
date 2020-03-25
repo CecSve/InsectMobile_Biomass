@@ -88,11 +88,18 @@ lme1 <-
 
 summary(lme1)
 
+# incorporating spatial data #######################################################
+#get land use data
+land_use <- read.delim("cleaned-data/")
+
 #plus spatial models################################################################
-# does not work for now
+# add x and y coordinates for each route
 library(nlme)
 
 #jitter x and y slightly - fix later
+insectsDK$x <- 0
+insectsDK$y <- 0
+
 insectsDK$x2 <- insectsDK$x + rnorm(length(insectsDK$x),0,100)
 insectsDK$y2 <- insectsDK$y + rnorm(length(insectsDK$y),0,100)
 

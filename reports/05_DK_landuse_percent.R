@@ -25,7 +25,7 @@ insectsDK$Land_use <- factor(insectsDK$Land_use,levels=c("Urban","Farmland",
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
 
 ###Fig 2############################################################
-# from report 04
+# from report 04, added/changed some of the explanatory variables in the models compared to the merged data
 #total biomass
 
 ggplot(insectsDK,aes(x=Land_use, y=log(Biomass+1)))+
@@ -78,8 +78,26 @@ drop1(lm1)
 
 library(lme4)
 library(lmerTest)
-lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band + 
-               Time_band:as.numeric(StartTime) + yDay + 
-               (1|RouteID) + (1|PilotID), data=insectsDK)
+lme1 <-
+  lmer(
+    log(Biomass + 1) ~ Land_use + Time_band +
+      Time_band:as.numeric(StartTime) + yDay +
+      (1 | RouteID) + (1 | PilotID),
+    data = insectsDK
+  )
 
 summary(lme1)
+
+#plus spatial models################################################################
+# does not work for now
+library(nlme)
+
+#jitter x and y slightly - fix later
+insectsDK$x2 <- insectsDK$x + rnorm(length(insectsDK$x),0,100)
+insectsDK$y2 <- insectsDK$y + rnorm(length(insectsDK$y),0,100)
+
+gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
+              Time_band:as.numeric(StartTime) + yDay,
+            random=~1|RouteID,
+            correlation=corExp(form=~x2+y2|RouteID),
+            data=insectsDK,na.action=na.omit)

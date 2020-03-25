@@ -46,3 +46,6 @@ cleaned-data/
 
 # plots
 .Rproj.user
+
+# covariate-data
+covariate-data/

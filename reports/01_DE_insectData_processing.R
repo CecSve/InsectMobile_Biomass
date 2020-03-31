@@ -323,5 +323,8 @@ sort(unique(df$PilotID))
 #Melanie Huk/Kownatzki Melanie/Thomas Huk
 df$PilotID <- as.numeric(as.factor(df$PilotID))
 
+#format data
+df$Date <- as.Date(df$Date, format="%d.%m.%y")
+
 #save processed data file
 save(df,file="cleaned-data/DE_rough_landuse_biomass.RData")

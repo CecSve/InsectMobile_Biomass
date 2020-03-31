@@ -5,6 +5,7 @@ library(reshape2)
 library(lubridate)
 
 ###land-use###############################################################
+
 #land use data (extracted by Volker see READ ME file in data folder)
 setwd("C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/atkis_v05")
 allFiles <- list.files()
@@ -111,7 +112,6 @@ df$RouteID[df$RouteID %in% output$Codierung]
 df$RouteID[!df$RouteID %in% output$Codierung]#yay!!
 
 #cast the data
-library(reshape2)
 outputCast <- dcast(output,Codierung~Land_use+Buffer,value.var="value",fun=sum,na.rm=T)
 write.table(outputCast,file="cleaned-data/environData_DE.txt",sep="\t")
 
@@ -297,4 +297,16 @@ routeWind <- ddply(sitesLatLonDF,.(Station,RouteID,Date),summarise,
                     eveningTemp = median(F.Windgeschwindigkeit[hour %in% 17:20]))
 
 write.table(routeWind,file="cleaned-data/routeWind_DE.txt",sep="\t")
-#
+
+###traffic light data########################################################
+
+trafficlights <- readOGR(dsn="C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/routes_2018", layer="2018_gefahreneRouten25832")
+
+unique(trafficlights$Codierung)
+trafficlights$Codierung[!trafficlights$Codierung %in% outputCast$Codierung]
+
+outputCast$tl <- trafficlights@data$tr_signals[match(outputCast$Codierung,
+                                                     trafficlights@data$Codierung)]
+
+write.table(trafficlights@data[,c("Codierung","tr_signals")],
+            file="cleaned-data/trafficlights_DE.txt",sep="\t")

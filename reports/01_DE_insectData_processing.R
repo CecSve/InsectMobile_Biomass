@@ -200,6 +200,11 @@ routelength$Codierung[!routelength$Codierung %in% allBiomass$Codierung]
 allBiomass$Codierung[!allBiomass$Codierung %in% allBiomass$Codierung]
 #woohoo!!
 
+#add missing date info - assume PM for Agrar_18 is same as AM
+unique(routelength$Datum)
+routelength$Datum <- as.character(routelength$Datum)
+routelength$Datum[routelength$Datum==""] <- "06.07.18"#KJC's route
+
 #merge with data
 summaryData <- merge(allBiomass,routelength,by=c("Codierung","time","habitat","route_no"),all=T)
 summaryData$Time <- as.POSIXct(summaryData$Startzeit,format="%H:%M")
@@ -317,6 +322,9 @@ df$Temperature <- as.factor(df$Temperature)
 sort(unique(df$PilotID))
 #Melanie Huk/Kownatzki Melanie/Thomas Huk
 df$PilotID <- as.numeric(as.factor(df$PilotID))
+
+#format data
+df$Date <- as.Date(df$Date, format="%d.%m.%y")
 
 #save processed data file
 save(df,file="cleaned-data/DE_rough_landuse_biomass.RData")

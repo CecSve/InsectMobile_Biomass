@@ -2,6 +2,15 @@
 
 library(tidyverse)
 library(readr)
+library(stringr)
+library(data.table)
+
+# reformat pilottriptorouteids and rough_landuse.. to tab separated columns for merging lists in the end of the document
+DK_pilotTripIdToRouteID <- read.delim("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DK_pilotTripIdToRouteID.txt")
+write.table(DK_pilotTripIdToRouteID, file = "cleaned-data/DK_pilotTripIdToRouteID.txt", sep = "\t")
+
+DK_rough_landuse_biomass <- read.csv("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DK_rough_landuse_biomass.txt", sep="")
+write.table(DK_rough_landuse_biomass, file = "cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
 
 # load buffer zone files 
 oeko <- read.delim("covariate-data/DK_ruter2018_OekoAreas.txt")
@@ -38,15 +47,15 @@ mergedData <- mergedData %>% mutate(Num_trafficLights = replace(Num_trafficLight
 mergedData <- merge(mergedData, coords, by.x= "RouteID_JB", by.y= "routeID")
 mergedData <- select(mergedData, -OBJECTID) # remove objectid column since it is not needed  
 
-write.table(mergedData, file = "cleaned-data/DK_mergedData.txt") # save updated metadata that now contains number of traffic lights on routes and centroid coordinates for each route
+write.table(mergedData, file = "cleaned-data/DK_mergedData.txt", sep = "\t") # save updated metadata that now contains number of traffic lights on routes and centroid coordinates for each route
 
 # merge buffer data with mergeddata
 hedgeData <- merge(mergedData, hedge, by.x= "RouteID_JB", by.y= "routeID")
 oekoData <- oeko %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, oeko, by = c("RouteID_JB"))
 
 # save output
-write.table(hedgeData, file = "cleaned-data/DK_hedgeData.txt")
-write.table(oekoData, file = "cleaned-data/DK_oekoData.txt")
+write.table(hedgeData, file = "cleaned-data/DK_hedgeData.txt", sep = "\t")
+write.table(oekoData, file = "cleaned-data/DK_oekoData.txt", sep = "\t")
 
 # create a dataframe where each buffer category and mergeData are combined
 data_50m <- buf_50m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_50m, by = c("RouteID_JB"))
@@ -55,7 +64,20 @@ data_500m <- buf_500m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData
 data_1000m <- buf_1000m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_1000m, by = c("RouteID_JB"))
 
 # save output
-write.table(data_50m, file = "cleaned-data/DK_landusedata_50m.txt")
-write.table(data_250m, file = "cleaned-data/DK_landusedata_250m.txt")
-write.table(data_500m, file = "cleaned-data/DK_landusedata_500m.txt")
-write.table(data_1000m, file = "cleaned-data/DK_landusedata_1000m.txt")
+write.table(data_50m, file = "cleaned-data/DK_landusedata_50m.txt", sep = "\t")
+write.table(data_250m, file = "cleaned-data/DK_landusedata_250m.txt", sep = "\t")
+write.table(data_500m, file = "cleaned-data/DK_landusedata_500m.txt", sep = "\t")
+write.table(data_1000m, file = "cleaned-data/DK_landusedata_1000m.txt", sep = "\t")
+
+# combine data
+setwd("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/")
+
+list_of_files <- list.files(recursive = TRUE,
+                            pattern = "\\.txt$", 
+                            full.names = F)
+
+data <- lapply(list_of_files, read.table, sep = "\t") # create a vector with the dataframes/lists 
+names(data) <- stringr::str_replace(list_of_files, pattern = ".txt", replacement = "")
+
+# save data
+saveRDS(data, "DK_allLanduseData.Rds")

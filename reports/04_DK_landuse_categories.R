@@ -24,14 +24,6 @@ insectsDK$Land_use <- factor(insectsDK$Land_use,levels=c("Urban","Farmland",
 #decide on common color scheme
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
 
-#get land use data
-land_use <- read.delim("cleaned-data/environData_DE.txt")
-
-#get buffer size with largest effect for each land use
-library(lme4)
-library(lmerTest)
-getEffect <- function(model){summary(model)$coef[2,]}
-
 ###Fig 2############################################################
 # from report 04, added/changed some of the explanatory variables in the models compared to the merged data
 #total biomass

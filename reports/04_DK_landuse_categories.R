@@ -110,10 +110,14 @@ insectsDK$Time_band <- factor(insectsDK$Time_band,levels=c("midday","evening"))
 insectsDK$Land_use <- factor(insectsDK$Land_use,levels=c("Urban","Farmland",
                                                          "Dryland","Wetland","Forest"))
 
-# not sure this is the best way to make utms into numeric values?
-insectsDK$utm_x <- as.double(insectsDK$utm_x)
-insectsDK$utm_y <- as.double(insectsDK$utm_y)
+# first replace commas with points for decimals
+insectsDK$utm_x <- sapply(insectsDK$utm_x, gsub, pattern = ",", replacement= ".")
+insectsDK$utm_y <- sapply(insectsDK$utm_y, gsub, pattern = ",", replacement= ".")
 str(insectsDK)
+
+# change from character to numeric
+insectsDK$utm_x <- as.numeric(insectsDK$utm_x)
+insectsDK$utm_y <- as.numeric(insectsDK$utm_y)
 
 library(nlme)
 

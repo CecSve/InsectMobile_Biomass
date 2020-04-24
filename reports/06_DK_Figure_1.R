@@ -5,6 +5,13 @@ library(data.table)
 library(sp)
 library(tidyverse)
 library(raster)
+library(rgdal)
+library(maps)
+library(mapproj)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggplot2)
+library(sf)
 
 # load merged data
 data <-
@@ -30,3 +37,57 @@ str(data)
 # change from character to numeric
 data$utm_x <- as.numeric(data$utm_x)
 data$utm_y <- as.numeric(data$utm_y)
+
+# extract Latitude and Longitude variables and put them into simple data frame called lat.long.df.
+lat.long.df <- data.frame(data$utm_x, data$utm_y) 
+str(lat.long.df)
+
+coordinates(lat.long.df) <-  ~data.utm_x + data.utm_y #Function coordinates() creates a spatial object
+str(lat.long.df) # at this point, this dataset doesn’t have CRS. Spatial data can’t exist without CRS(Coordinates Reference System). Spatial data requires, at least, coordinates and CRS.
+
+proj4string(lat.long.df) <- CRS("+init=epsg:25832")
+head(lat.long.df)
+
+# Now, dataset has coordinates and CRS. Next thing is to convert this to Longitude-Latitude data.
+dist.location <- spTransform(lat.long.df, CRS("+init=epsg:4326"))
+dist.location
+
+landuse.map <- 
+  data.frame(Landuse = data$Land_use,
+             lat = dist.location$data.utm_x,
+             long = dist.location$data.utm_y)
+
+world.map <- map_data ("world") # not a good base
+worldmap <- ne_countries(scale = 'medium', type = 'map_units',
+                         returnclass = 'sf')
+ggplot() + geom_sf(data = worldmap) + theme_bw()
+
+DK.map <- world.map %>% filter(region == "Denmark")
+
+denmark <- worldmap[worldmap$name == 'Denmark',]
+ggplot() + geom_sf(data = denmark) + theme_bw() # the island of Bornholm distorts the details, so the map should be cropped
+
+denmark_cropped <- st_crop(denmark, xmin = 8, xmax = 13,
+                          ymin = 54.5, ymax = 58)
+ggplot() + geom_sf(data = denmark_cropped) + theme_bw()
+
+landuse.map %>% head()
+
+# one way of plotting
+DK.map %>%
+  ggplot() + 
+  geom_map(map = DK.map, 
+           aes(x = long, y = lat, map_id = region),
+           fill="white", colour = "black") + 
+  coord_map() + 
+  geom_point(data = landuse.map, 
+             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
+
+# another way of plotting - need to remove the two coordinates for the the island of Bornholm
+denmark_cropped %>%
+  ggplot() + 
+  geom_sf(data = denmark_cropped,
+          fill="white", colour = "black") + 
+  coord_sf() + 
+  geom_point(data = landuse.map, 
+             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())

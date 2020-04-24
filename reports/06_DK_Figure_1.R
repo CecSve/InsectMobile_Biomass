@@ -12,6 +12,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggplot2)
 library(sf)
+library(rnaturalearthhires)
 
 # load merged data
 data <-
@@ -58,7 +59,7 @@ landuse.map <-
              long = dist.location$data.utm_y)
 
 world.map <- map_data ("world") # not a good base
-worldmap <- ne_countries(scale = 'medium', type = 'map_units',
+worldmap <- ne_countries(scale = 'large', type = 'map_units',
                          returnclass = 'sf')
 ggplot() + geom_sf(data = worldmap) + theme_bw()
 
@@ -72,6 +73,8 @@ denmark_cropped <- st_crop(denmark, xmin = 8, xmax = 13,
 ggplot() + geom_sf(data = denmark_cropped) + theme_bw()
 
 landuse.map %>% head()
+main.landuse.map <- landuse.map[landuse.map$lat < 13, ]
+main.data <- data[data$utm_x < 800000, ]
 
 # one way of plotting
 DK.map %>%
@@ -83,11 +86,20 @@ DK.map %>%
   geom_point(data = landuse.map, 
              aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
 
-# another way of plotting - need to remove the two coordinates for the the island of Bornholm
+# whole of Denmark with better resolution (one plot in the ocean is on the island of Taasinge which is not included in this resolution)
+denmark %>%
+  ggplot() + 
+  geom_sf(data = denmark, 
+           fill="white", colour = "black") + 
+  coord_sf() + 
+  geom_point(data = landuse.map, 
+             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=3, show.legend = T) + theme_void() + theme(legend.title = element_blank())
+
+# another way of plotting - without the coordinates for Bornholm - not necessary
 denmark_cropped %>%
   ggplot() + 
   geom_sf(data = denmark_cropped,
           fill="white", colour = "black") + 
   coord_sf() + 
-  geom_point(data = landuse.map, 
-             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
+  geom_point(data = main.landuse.map, 
+             aes(x=lat, y = long, colour = main.data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())

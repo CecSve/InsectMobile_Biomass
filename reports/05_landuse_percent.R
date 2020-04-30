@@ -1,5 +1,7 @@
 #get land use data
 land_use <- read.delim("cleaned-data/environData_DE.txt")
+traffic <- read.delim("cleaned-data/trafficlights_DE.txt")
+land_use <- merge(land_use,traffic,by=c("Codierung"))
 
 #check all route data present
 all(allInsects$RouteID %in% land_use$Codierung)
@@ -83,3 +85,40 @@ lme1000 <- lmer(log(Biomass+1) ~ log(Agriculture_1000+1) + log(Urban_1000+1)+Tim
                   Time_band:as.numeric(StartTime) + yDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
+
+
+#traffic light effects
+summary(lmer(log(Biomass+1) ~  scale(tr_signals) +
+                  (1|RouteID) + (1|PilotID), data=allInsects))
+summary(lmer(log(Biomass+1) ~  scale(log(tr_signals + 1)) +
+               (1|RouteID) + (1|PilotID), data=allInsects))
+summary(lmer(log(Biomass+1) ~  scale(log(Urban_50+1)) +
+               (1|RouteID) + (1|PilotID), data=allInsects))
+summary(lmer(log(Biomass+1) ~  scale(log(Urban_1000+1)) +
+               (1|RouteID) + (1|PilotID), data=allInsects))
+
+#traffic light signals more important...
+allInsects$Urban <- ifelse(allInsects$Land_use=="Urban","Yes","No")
+summary(lmer(log(Biomass+1) ~  scale(log(Urban_1000+1)) +
+                                scale(log(tr_signals+1))+
+               (1|RouteID) + (1|PilotID), data=allInsects))
+
+summary(lmer(log(Biomass+1) ~  scale(log(Urban_1000+1)) +
+               Urban:log(tr_signals+1)+
+               (1|RouteID) + (1|PilotID), data=allInsects))
+
+summary(lmer(log(Biomass+1) ~  scale(log(Urban_1000+1)) +
+               scale(log(tr_signals+1))+
+               (1|RouteID) + (1|PilotID), data=subset(allInsects,Land_use=="Urban")))
+
+library(car)
+    
+lmer1 <- lmer(log(Biomass+1) ~  scale(log(Urban_1000+1)) +
+               scale(log(tr_signals+1))+
+               (1|RouteID) + (1|PilotID), data=subset(allInsects,Land_use!="Urban"))
+vif(lmer1)
+lmer1 <- lmer(log(Biomass+1) ~  scale(log(Urban_1000+1)) +
+                Land_use:scale(log(tr_signals+1))+
+                (1|RouteID) + (1|PilotID), data=subset(allInsects,Land_use!="Urban"))
+vif(lmer1)
+

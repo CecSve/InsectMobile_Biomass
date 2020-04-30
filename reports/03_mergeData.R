@@ -4,8 +4,7 @@ insectsDK$Country <- "Denmark"
 
 
 #read in German data
-load("cleaned-data/DE_rough_landuse_biomass.RData")
-insectsDE <- df
+insectsDE <- read.delim("cleaned-data/DE_rough_landuse_biomass.txt")
 insectsDE$Country <- "Germany"
 
 #common columns

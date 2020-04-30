@@ -47,6 +47,8 @@ coordinates(lat.long.df) <-  ~data.utm_x + data.utm_y #Function coordinates() cr
 str(lat.long.df) # at this point, this dataset doesn’t have CRS. Spatial data can’t exist without CRS(Coordinates Reference System). Spatial data requires, at least, coordinates and CRS.
 
 proj4string(lat.long.df) <- CRS("+init=epsg:25832")
+#this is +proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs 
+
 head(lat.long.df)
 
 # Now, dataset has coordinates and CRS. Next thing is to convert this to Longitude-Latitude data.
@@ -103,3 +105,50 @@ denmark_cropped %>%
   coord_sf() + 
   geom_point(data = main.landuse.map, 
              aes(x=lat, y = long, colour = main.data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
+
+
+###adding in Germany data############################################
+
+#harmomise danish data
+dataDanish <- data
+names(dataDanish)[which(names(dataDanish)=="utm_x")] <- "x"
+names(dataDanish)[which(names(dataDanish)=="utm_y")] <- "y"
+dataDanish <- dataDanish[,c("Land_use","x","y")]
+
+#get and align Germany data
+insectsDE <- read.delim("cleaned-data/DE_rough_landuse_biomass.txt")
+#the x and y is in "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs"
+#same utm as Danish data - phew!
+dataGermany <- insectsDE[,c("Land_use","x","y")]
+
+#merge both
+allData <- rbind(dataDanish,dataGermany)
+
+#get regional data
+worldmap <- ne_countries(scale = 'large', type = 'map_units',
+                         returnclass = 'sf')
+ourMap <- worldmap[worldmap$name %in% c('Denmark','Germany'),]
+
+#transform regional data to utm
+ourMap <- st_transform(ourMap,crs=st_crs("+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs"))
+ggplot() + geom_sf(data = ourMap) + theme_void()
+
+#add points
+ggplot() + 
+  geom_sf(data = ourMap) + 
+  geom_point(data = allData,aes(x=x,y=y,colour=Land_use)) +
+  theme_void()+
+  theme(legend.title = element_blank())
+
+
+#decide on common color scheme
+library(wesanderson)
+landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+ggplot() + 
+  geom_sf(data = ourMap,fill="grey95") + 
+  geom_point(data = allData,aes(x=x,y=y,colour=Land_use)) +
+  theme_void()+
+  scale_colour_manual(values=landuseCols)+
+  theme(legend.title = element_blank())
+
+ggsave("plots/Fig1.png")

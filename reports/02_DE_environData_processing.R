@@ -302,11 +302,30 @@ write.table(routeWind,file="cleaned-data/routeWind_DE.txt",sep="\t")
 
 trafficlights <- readOGR(dsn="C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/routes_2018", layer="2018_gefahreneRouten25832")
 
-unique(trafficlights$Codierung)
-trafficlights$Codierung[!trafficlights$Codierung %in% outputCast$Codierung]
+#get land use data
+environData <- read.delim("cleaned-data/environData_DE.txt")
 
-outputCast$tl <- trafficlights@data$tr_signals[match(outputCast$Codierung,
+unique(trafficlights$Codierung)
+trafficlights$Codierung[!trafficlights$Codierung %in% environData$Codierung]
+
+environData$tl <- trafficlights@data$tr_signals[match(environData$Codierung,
                                                      trafficlights@data$Codierung)]
 
 write.table(trafficlights@data[,c("Codierung","tr_signals")],
             file="cleaned-data/trafficlights_DE.txt",sep="\t")
+
+#examine relationships
+environData$Land_use <- sapply(as.character(environData$Codierung),function(x)
+  strsplit(x,"_")[[1]][1])
+
+summary(environData$Urban_50[environData$Land_use=="Urban"])
+summary(environData$Urban_1000[environData$Land_use=="Urban"])
+
+ggplot(environData)+
+  geom_point(aes(x=tl,y=Urban_500,colour=Land_use))
+
+ggplot(environData)+
+  geom_point(aes(x=tl,y=Urban_500))+
+  facet_wrap(~Land_use)
+
+#no correlation between traffic lights and cover within each land-use

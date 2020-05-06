@@ -188,9 +188,8 @@ outForest$Land_use <- "Forest"
 
 #wetland
 hist(allInsects$Wetland_1000)#log??
-lme50 <- lmer(log(Biomass+1) ~ Wetland_50 + Time_band + 
-                Time_band:cnumberTime + cTL + cyDay + 
-                (1|RouteID) + (1|PilotID), data=allInsects)
+
+
 lme250 <- lmer(log(Biomass+1) ~ Wetland_250 + Time_band + 
                  Time_band:cnumberTime + cTL + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
@@ -230,3 +229,14 @@ ggplot(subset(outAll,Land_use!="Wetland"))+
   xlab("Buffer size (m)") + ylab("Effect of percent change on biomass")
 
 
+###multiple regression########################################
+
+#focus on 1000m
+
+lme1000 <- lmer(log(Biomass+1) ~ log(Agriculture_1000+1) + log(Urban_1000+1) +
+                Time_band + 
+                Time_band:cnumberTime + cTL + cyDay + 
+                (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+
+#now positive effect of farmland and almost negatuve effect of urban

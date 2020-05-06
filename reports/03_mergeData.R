@@ -68,7 +68,7 @@ mean(allInsects2$Wind[allInsects$Time_band=="midday"],na.rm=T)#4.163846
 mean(allInsects2$Temp[allInsects$Time_band=="evening"],na.rm=T)#23.01231
 mean(allInsects2$Wind[allInsects$Time_band=="evening"],na.rm=T)#3.693846
 allInsects2$Temp[is.na(allInsects2$Temp)] <- c(24.42077,23.01231)
-allInsects2$Wind[is.na(allInsects2$Temp)] <- c(4.163846,3.693846)
+allInsects2$Wind[is.na(allInsects2$Wind)] <- c(4.163846,3.693846)
 allInsects <- allInsects2
 
 #land use data

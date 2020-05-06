@@ -117,7 +117,7 @@ write.table(outputCast,file="cleaned-data/environData_DE.txt",sep="\t")
 
 ####temperature#######################################################################
 
-load("cleaned-data/DE_rough_landuse_biomass.RData")
+df <- read.delim("cleaned-data/DE_rough_landuse_biomass.txt")
 sites <- df[,c("RouteID","Date","x","y")]
 coordinates(sites)<-c("x","y")
 proj4string(sites)<- "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs"
@@ -154,7 +154,7 @@ myStations <- data.frame(Station=unique(sitesLatLonDF$Station))
 library(lubridate)
 getData <- function(station){
   link <- selectDWD(station,res="hourly",var="air_temperature", per="historical")
-  file <- dataDWD(link, read=FALSE, dir="../localdata", quiet=TRUE, force=NA, overwrite=TRUE)
+  file <- dataDWD(link, read=FALSE, dir="../localdata", quiet=TRUE, force=NA)
   clim <- readDWD(file, varnames=TRUE)
   clim$Year <- year(clim$MESS_DATUM)
   clim$Month <- month(clim$MESS_DATUM)
@@ -329,3 +329,41 @@ ggplot(environData)+
   facet_wrap(~Land_use)
 
 #no correlation between traffic lights and cover within each land-use
+
+###stopping data############################################################
+
+stops <- readOGR(dsn="C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/stops", layer="stops20200429atRoutesBuffer25mDisCenCount")
+
+#get land use data
+environData <- read.delim("cleaned-data/environData_DE.txt")
+
+unique(stops$Codierung)
+unique(stops$osm_id_cou)
+
+stops$Codierung[!stops$Codierung %in% environData$Codierung]
+
+environData$osm <- stops@data$osm_id_cou[match(environData$Codierung,
+                                                      stops@data$Codierung)]
+environData$osm <- as.numeric(as.character(environData$osm))
+environData$osm[is.na(environData$osm)] <- 0
+
+#infer zeros for missing values
+
+write.table(environData[,c("Codierung","osm")],
+            file="cleaned-data/stops_DE.txt",sep="\t")
+
+#examine relationships
+environData$Land_use <- sapply(as.character(environData$Codierung),function(x)
+  strsplit(x,"_")[[1]][1])
+
+summary(environData$Urban_50[environData$Land_use=="Urban"])
+summary(environData$Urban_1000[environData$Land_use=="Urban"])
+
+ggplot(environData)+
+  geom_point(aes(x=osm,y=Urban_500,colour=Land_use))
+
+ggplot(environData)+
+  geom_point(aes(x=tl,y=Urban_500))+
+  facet_wrap(~Land_use)
+
+###end

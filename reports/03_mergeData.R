@@ -45,3 +45,5 @@ tlData <- read.delim("cleaned-data/trafficlights_DE.txt",as.is=T)
 windData <- melt(windData[,-1],id=c("RouteID","Date"))
 names(windData)[which(names(windData)=="value")] <- "Wind"
 names(windData)[which(names(windData)=="varible")] <- "Time_band"
+
+####Denmark??

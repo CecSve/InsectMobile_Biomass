@@ -9,7 +9,7 @@ library(wesanderson)
 
 # load data
 # from report 03
-insectsDK <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt",sep=" ")
+insectsDK <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt",sep="\t")
 str(insectsDK)
 
 #format Date
@@ -25,7 +25,7 @@ insectsDK$Land_use <- factor(insectsDK$Land_use,levels=c("Urban","Farmland",
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
 
 #get land use data
-land_use <- read.delim("cleaned-data/environData_DE.txt")
+land_use <- read.delim("cleaned-data/DK_landusedata_1000m.txt") # this example reads in 1000 m buffer
 
 #get buffer size with largest effect for each land use
 library(lme4)
@@ -98,7 +98,9 @@ summary(lme1)
 
 # incorporating spatial data #######################################################
 #get land use data
-land_use <- read.delim("cleaned-data/")
+land_use <- read.delim("cleaned-data/") 
+mergedData <- read.delim("cleaned-data/DK_mergedData.txt")
+data_1000m <- read.delim("cleaned-data/DK_landusedata_1000m.txt")
 
 # plotting
 library(tidyverse)
@@ -248,3 +250,4 @@ gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band +
             random=~1|RouteID,
             correlation=corExp(form=~x2+y2|RouteID),
             data=insectsDK,na.action=na.omit)
+summary(gls1)

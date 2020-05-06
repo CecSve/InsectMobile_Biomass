@@ -15,6 +15,7 @@ write.table(DK_rough_landuse_biomass, file = "cleaned-data/DK_rough_landuse_biom
 # load buffer zone files 
 oeko <- read.delim("covariate-data/DK_ruter2018_OekoAreas.txt")
 hedge <- read.delim("covariate-data/DK_ruter2018_hegnAreas.txt")
+urbangreen <- read.delim("covariate-data/DK_ruter2018_urbGreenAreas.txt")
 buf_50m <- read_delim("covariate-data/DK_ruter2018buf50_areas.txt","\t", escape_double = FALSE, trim_ws = TRUE)
 buf_250m <- read_delim("covariate-data/DK_ruter2018buf250_areas.txt","\t", escape_double = FALSE, trim_ws = TRUE)
 buf_500m <- read_delim("covariate-data/DK_ruter2018buf500_areas.txt","\t", escape_double = FALSE, trim_ws = TRUE)
@@ -24,7 +25,7 @@ buf_1000m <- read_delim("covariate-data/DK_ruter2018buf1000_areas.txt","\t", esc
 tripids <- read.delim("cleaned-data/DK_pilotTripIdToRouteID.txt")
 
 # load metadata
-metadata <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt", sep = " ")
+metadata <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
 
 # load centroid coordinates for each route
 coords <- read.delim("covariate-data/DK_ruter2018_pkt_koordinater.txt")
@@ -52,10 +53,12 @@ write.table(mergedData, file = "cleaned-data/DK_mergedData.txt", sep = "\t") # s
 # merge buffer data with mergeddata
 hedgeData <- merge(mergedData, hedge, by.x= "RouteID_JB", by.y= "routeID")
 oekoData <- oeko %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, oeko, by = c("RouteID_JB"))
+urbangreenData <- urbangreen %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, urbangreen, by = c("RouteID_JB"))
 
 # save output
 write.table(hedgeData, file = "cleaned-data/DK_hedgeData.txt", sep = "\t")
 write.table(oekoData, file = "cleaned-data/DK_oekoData.txt", sep = "\t")
+write.table(urbangreenData, file = "cleaned-data/DK_urbangreenData.txt", sep = "\t")
 
 # create a dataframe where each buffer category and mergeData are combined
 data_50m <- buf_50m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_50m, by = c("RouteID_JB"))

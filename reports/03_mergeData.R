@@ -142,6 +142,14 @@ mergedData <-
 mergedData <-
   select(mergedData,-OBJECTID) # remove objectid column since it is not needed  
 
+# first replace commas with points for decimals
+mergedData$utm_x <- sapply(mergedData$utm_x, gsub, pattern = ",", replacement= ".")
+mergedData$utm_y <- sapply(mergedData$utm_y, gsub, pattern = ",", replacement= ".")
+str(mergedData)
+
+# change from character to numeric
+mergedData$utm_x <- as.numeric(mergedData$utm_x)
+mergedData$utm_y <- as.numeric(mergedData$utm_y)
 # a land use category has been made in script 02 based on land use intensity along the routes so the Land_use column will be changed to roughLand_use and the new categories will be called Land_use
 mergedData <- plyr::rename(mergedData, c("Land_use" = "roughLand_use"))
 
@@ -156,6 +164,10 @@ mergedData <-
       "Farmland" = "Agriculture"
     )
   )
+
+# rename stop columns to match DE names
+mergedData <- plyr::rename(mergedData, c("Num_trafficLights" = "tr_signals"))
+mergedData <- plyr::rename(mergedData, c("COUNT_STOPS" = "stops"))
 
 #add on environmental data
 environData <- read.delim("cleaned-data/environData_DK.txt",as.is=T)

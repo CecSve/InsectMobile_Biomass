@@ -3,13 +3,15 @@
 library(cowplot)
 library(ggplot2)
 library(wesanderson)
+library(ggpubr)
+library(scales)
 
 ####colour################################################################
 
 #decide on common color scheme
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
 
-###plot land cover##############################################
+### DE plot land cover##############################################
 
 qU <- ggplot(allInsects)+
               geom_point(aes(x=Urban_1000,y=(Biomass+1)),
@@ -47,6 +49,98 @@ qFo <- ggplot(allInsects)+
   xlab("Forest cover") +ylab("Biomass")
 
 plot_grid(qU,qF,qD,qW,qFo)
+
+###DK plot land cover##############################################
+
+qU <- ggplot(allInsects)+
+  geom_point(aes(x=Urban_1000,y=(Biomass+1)),
+             col=landuseCols[1])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Urban cover") +ylab("Biomass")
+
+qUpubr <- ggscatter(allInsects, x = "Urban_1000", y = "Biomass",
+          color = landuseCols[1], shape = 19, size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 3) + xlab("Urban cover") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+qF <- ggplot(allInsects)+
+  geom_point(aes(x=Agriculture_1000,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Agriculture cover") +ylab("Biomass")
+
+qApubr <- ggscatter(allInsects, x = "Agriculture_1000", y = "Biomass",
+                    color = landuseCols[2], shape = 19, size = 3, # Points color, shape and size
+                    add = "reg.line",  # Add regressin line
+                    add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                    conf.int = TRUE, # Add confidence interval
+                    cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 0.7) + xlab("Agricultural cover") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+qD <- ggplot(allInsects)+
+  geom_point(aes(x=Open.uncultivated.land_1000,y=(Biomass+1)),
+             col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Open uncultivated land cover") +ylab("Biomass")
+
+qDpubr <- ggscatter(allInsects, x = "Open.uncultivated.land_1000", y = "Biomass",
+                    color = landuseCols[3], shape = 19, size = 3, # Points color, shape and size
+                    add = "reg.line",  # Add regressin line
+                    add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                    conf.int = TRUE, # Add confidence interval
+                    cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.17, label.y = 0.7) + xlab("Open uncultivated land cover") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+qW <- ggplot(allInsects)+
+  geom_point(aes(x=Wetland_1000,y=(Biomass+1)),
+             col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Wetland cover") +ylab("Biomass")
+
+qWpubr <- ggscatter(allInsects, x = "Wetland_1000", y = "Biomass",
+                    color = landuseCols[4], shape = 19, size = 3, # Points color, shape and size
+                    add = "reg.line",  # Add regressin line
+                    add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                    conf.int = TRUE, # Add confidence interval
+                    cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.25, label.y = 1) + xlab("Wetland cover") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+qFo <- ggplot(allInsects)+
+  geom_point(aes(x=Forest_1000,y=(Biomass+1)),
+             col=landuseCols[5])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Forest cover") +ylab("Biomass")
+
+qFpubr <- ggscatter(allInsects, x = "Forest_1000", y = "Biomass",
+                    color = landuseCols[5], shape = 19, size = 3, # Points color, shape and size
+                    add = "reg.line",  # Add regressin line
+                    add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                    conf.int = TRUE, # Add confidence interval
+                    cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.4, label.y = 1) + xlab("Forest cover") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+plot_grid(qU,qF,qD,qW,qFo)
+plot_grid(qUpubr, qApubr, qDpubr, qWpubr, qFpubr)
+
+### CECILIE - DU ER KOMMET HERTIL
 
 ###plot buffers#################################################
 

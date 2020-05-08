@@ -85,6 +85,7 @@ allInsects <- insectsDK
 # load libraries to reformat date and time
 library(lubridate)
 library(reshape2)
+library(tidyverse)
 
 #format Date
 allInsects$Date <- as.Date(allInsects$Date, "%d-%m-%Y")
@@ -140,6 +141,21 @@ mergedData <-
   merge(mergedData, coords, by.x = "RouteID_JB", by.y = "routeID")
 mergedData <-
   select(mergedData,-OBJECTID) # remove objectid column since it is not needed  
+
+# a land use category has been made in script 02 based on land use intensity along the routes so the Land_use column will be changed to roughLand_use and the new categories will be called Land_use
+mergedData <- plyr::rename(mergedData, c("Land_use" = "roughLand_use"))
+
+mergedData <-
+  mergedData %>% mutate(
+    Land_use = recode(
+      roughLand_use,
+      "Forest" = "Forest",
+      "Urban" = "Urban",
+      "Dryland" = "Open uncultivated land",
+      "Wetland" = "Wetland",
+      "Farmland" = "Agriculture"
+    )
+  )
 
 #add on environmental data
 environData <- read.delim("cleaned-data/environData_DK.txt",as.is=T)

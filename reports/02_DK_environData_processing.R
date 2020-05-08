@@ -4,13 +4,14 @@ library(tidyverse)
 library(readr)
 library(stringr)
 library(data.table)
+library(ggpubr)
 
 # reformat pilottriptorouteids and rough_landuse.. to tab separated columns for merging lists in the end of the document
 DK_pilotTripIdToRouteID <- read.delim("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DK_pilotTripIdToRouteID.txt")
-write.table(DK_pilotTripIdToRouteID, file = "cleaned-data/DK_pilotTripIdToRouteID.txt", sep = "\t")
+#write.table(DK_pilotTripIdToRouteID, file = "cleaned-data/DK_pilotTripIdToRouteID.txt", sep = "\t")
 
 DK_rough_landuse_biomass <- read.csv("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DK_rough_landuse_biomass.txt", sep="")
-write.table(DK_rough_landuse_biomass, file = "cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
+#write.table(DK_rough_landuse_biomass, file = "cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
 
 # load buffer zone files 
 oeko <- read.delim("covariate-data/DK_ruter2018_OekoAreas.txt")
@@ -31,24 +32,31 @@ metadata <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
 coords <- read.delim("covariate-data/DK_ruter2018_pkt_koordinater.txt")
 
 # load traffic light counts per route
-stops <- read.delim("covariate-data/DK_TrafficLightsCount.txt")
+tfstops <- read.delim("covariate-data/DK_TrafficLightsCount.txt")
 
 # merging data by new routeIDs (RouteID_JB) so other data can be merged as well
 mergedData <- merge(metadata, tripids, by.x= "SampleID", by.y= "PilotTripID")
 setdiff(metadata$SampleID, tripids$PilotTripID) # all metadatasamples are included - yay!
 
 # adding stopping effect (proxy = count of traffic lights on route) 
-with_stops <- merge(mergedData, stops, by.x = "RouteID_JB", by.y = "routeID", all = T)
+with_tfstops <- merge(mergedData, tfstops, by.x = "RouteID_JB", by.y = "routeID", all = T)
 
 # removing samples from stops that don't have biomass
-mergedData <- with_stops %>% drop_na(SampleID)
+mergedData <- with_tfstops %>% drop_na(SampleID)
 mergedData <- mergedData %>% mutate(Num_trafficLights = replace(Num_trafficLights,is.na(Num_trafficLights),0)) # recode NAs to zeros for number of traffic ligths on the routes
+
+# add all stops
+allstops <- read.delim("covariate-data/DK_ruter2018_countStops.txt")
+with_allstops <- merge(mergedData, allstops, by.x = "RouteID_JB", by.y = "routeId2018", all = T)
+
+# removing samples from stops that don't have biomass
+mergedData <- with_allstops %>% drop_na(SampleID)
 
 # adding utm coordinates for route centroids
 mergedData <- merge(mergedData, coords, by.x= "RouteID_JB", by.y= "routeID")
 mergedData <- select(mergedData, -OBJECTID) # remove objectid column since it is not needed  
 
-write.table(mergedData, file = "cleaned-data/DK_mergedData.txt", sep = "\t") # save updated metadata that now contains number of traffic lights on routes and centroid coordinates for each route
+write.table(mergedData, file = "cleaned-data/DK_mergedData.txt", sep = "\t") # save updated metadata that now contains number of traffic lights on routes + all stops and centroid coordinates for each route
 
 # merge buffer data with mergeddata
 hedgeData <- merge(mergedData, hedge, by.x= "RouteID_JB", by.y= "routeID")

@@ -1,17 +1,12 @@
 # preparing DK landuse data prepared by Jesper Bladt in GIS. README file in H:\Documents\Insektmobilen\Data\Arealanvendelse_Århus\2018_bufferzones_data\Final_buffers_2018 (Cecilie Svenningsens work drive). README should be included in final git submission. 
 
+# load libraries required for reformatting and merging data
 library(tidyverse)
 library(readr)
 library(stringr)
 library(data.table)
 library(ggpubr)
-
-# reformat pilottriptorouteids and rough_landuse.. to tab separated columns for merging lists in the end of the document
-DK_pilotTripIdToRouteID <- read.delim("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DK_pilotTripIdToRouteID.txt")
-#write.table(DK_pilotTripIdToRouteID, file = "cleaned-data/DK_pilotTripIdToRouteID.txt", sep = "\t")
-
-DK_rough_landuse_biomass <- read.csv("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DK_rough_landuse_biomass.txt", sep="")
-#write.table(DK_rough_landuse_biomass, file = "cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
+library(tidyr)
 
 # load buffer zone files 
 oeko <- read.delim("covariate-data/DK_ruter2018_OekoAreas.txt")
@@ -22,73 +17,101 @@ buf_250m <- read_delim("covariate-data/DK_ruter2018buf250_areas.txt","\t", escap
 buf_500m <- read_delim("covariate-data/DK_ruter2018buf500_areas.txt","\t", escape_double = FALSE, trim_ws = TRUE)
 buf_1000m <- read_delim("covariate-data/DK_ruter2018buf1000_areas.txt","\t", escape_double = FALSE, trim_ws = TRUE)
 
-# load pilotripids and routeids (prepared by Jesper)
-tripids <- read.delim("cleaned-data/DK_pilotTripIdToRouteID.txt")
+##### Reformatting environmental data to WIDE format with tidyr #######
+# transform oekodata from long to wide format prior to merging 
+oekocast <-
+  oeko %>% pivot_wider(names_from = bufferDist,
+                       values_from = propOeko,
+                       names_prefix = "propOeko_")
 
-# load metadata
-metadata <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt", sep = "\t")
+#test <- dcast(melt(oeko, id.vars=c("routeID", "bufferDist", "propOeko")), routeID~bufferDist+propOeko)
 
-# load centroid coordinates for each route
-coords <- read.delim("covariate-data/DK_ruter2018_pkt_koordinater.txt")
+# transform hedgedata and urbangreen from long to wide format prior to merging - note! multiple value columns
+hedgecast <-
+  hedge %>% pivot_wider(
+    names_from = bufferDist,
+    values_from = c(hegnLength, byHegnLength, hegnMeterPerHa, byHegnMeterPerHa)
+  )
 
-# load traffic light counts per route
-tfstops <- read.delim("covariate-data/DK_TrafficLightsCount.txt")
+urbangreencast <-
+  urbangreen %>% pivot_wider(
+    names_from = bufferDist,
+    values_from = c(urbGreenAreaHa, urbGreenPropArea)
+  )
 
-# merging data by new routeIDs (RouteID_JB) so other data can be merged as well
-mergedData <- merge(metadata, tripids, by.x= "SampleID", by.y= "PilotTripID")
-setdiff(metadata$SampleID, tripids$PilotTripID) # all metadatasamples are included - yay!
+# buffer zone data - include column with buffer distance for each dataset
+buf_50m$bufferDist <- 50
+buf_250m$bufferDist <- 250
+buf_500m$bufferDist <- 500
+buf_1000m$bufferDist <- 1000
 
-# adding stopping effect (proxy = count of traffic lights on route) 
-with_tfstops <- merge(mergedData, tfstops, by.x = "RouteID_JB", by.y = "routeID", all = T)
+#add on land_use data (following 02_DE script to create DK_environData)
+buf_50m$propLand_use <- NA
+buf_250m$propLand_use <- NA
+buf_500m$propLand_use <- NA
+buf_1000m$propLand_use <- NA
 
-# removing samples from stops that don't have biomass
-mergedData <- with_tfstops %>% drop_na(SampleID)
-mergedData <- mergedData %>% mutate(Num_trafficLights = replace(Num_trafficLights,is.na(Num_trafficLights),0)) # recode NAs to zeros for number of traffic ligths on the routes
+#wetland
+buf_50m$propLand_use[buf_50m$type %in% c("Sø", "Strandeng", "Mose")] <- "Wetland"
+buf_250m$propLand_use[buf_250m$type %in% c("Sø", "Strandeng", "Mose")] <- "Wetland"
+buf_500m$propLand_use[buf_500m$type %in% c("Sø", "Strandeng", "Mose")] <- "Wetland"
+buf_1000m$propLand_use[buf_1000m$type %in% c("Sø", "Strandeng", "Mose")] <- "Wetland"
 
-# add all stops
-allstops <- read.delim("covariate-data/DK_ruter2018_countStops.txt")
-with_allstops <- merge(mergedData, allstops, by.x = "RouteID_JB", by.y = "routeId2018", all = T)
+#forest
+buf_50m$propLand_use[buf_50m$type %in% "Skov"] <- "Forest"
+buf_250m$propLand_use[buf_250m$type %in% "Skov"] <- "Forest"
+buf_500m$propLand_use[buf_500m$type %in% "Skov"] <- "Forest"
+buf_1000m$propLand_use[buf_1000m$type %in% "Skov"] <- "Forest"
 
-# removing samples from stops that don't have biomass
-mergedData <- with_allstops %>% drop_na(SampleID)
+#agriculture
+buf_50m$propLand_use[buf_50m$type %in% c("Ekstensiv", "Intensiv", "Markblok", "Semi-intensiv")] <- "Agriculture"
+buf_250m$propLand_use[buf_250m$type %in% c("Ekstensiv", "Intensiv", "Markblok", "Semi-intensiv")] <- "Agriculture"
+buf_500m$propLand_use[buf_500m$type %in% c("Ekstensiv", "Intensiv", "Markblok", "Semi-intensiv")] <- "Agriculture"
+buf_1000m$propLand_use[buf_1000m$type %in% c("Ekstensiv", "Intensiv", "Markblok", "Semi-intensiv")] <- "Agriculture"
 
-# adding utm coordinates for route centroids
-mergedData <- merge(mergedData, coords, by.x= "RouteID_JB", by.y= "routeID")
-mergedData <- select(mergedData, -OBJECTID) # remove objectid column since it is not needed  
+#urban
+buf_50m$propLand_use[buf_50m$type %in% c("Lav bebyggelse", "Erhverv", "Høj bebyggelse", "Bykerne")] <- "Urban"
+buf_250m$propLand_use[buf_250m$type %in% c("Lav bebyggelse", "Erhverv", "Høj bebyggelse", "Bykerne")] <- "Urban"
+buf_500m$propLand_use[buf_500m$type %in% c("Lav bebyggelse", "Erhverv", "Høj bebyggelse", "Bykerne")] <- "Urban"
+buf_1000m$propLand_use[buf_1000m$type %in% c("Lav bebyggelse", "Erhverv", "Høj bebyggelse", "Bykerne")] <- "Urban"
 
-write.table(mergedData, file = "cleaned-data/DK_mergedData.txt", sep = "\t") # save updated metadata that now contains number of traffic lights on routes + all stops and centroid coordinates for each route
+#open uncultivated land
+buf_50m$propLand_use[buf_50m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open uncultivated land"
+buf_250m$propLand_use[buf_250m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open uncultivated land"
+buf_500m$propLand_use[buf_500m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open uncultivated land"
+buf_1000m$propLand_use[buf_1000m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open uncultivated land"
 
-# merge buffer data with mergeddata
-hedgeData <- merge(mergedData, hedge, by.x= "RouteID_JB", by.y= "routeID")
-oekoData <- oeko %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, oeko, by = c("RouteID_JB"))
-urbangreenData <- urbangreen %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, urbangreen, by = c("RouteID_JB"))
+#subset to the above land-uses for each buffer
+# 50
+table(buf_50m$propLand_use)
+output50 <- subset(buf_50m,!is.na(propLand_use))
 
-# save output
-write.table(hedgeData, file = "cleaned-data/DK_hedgeData.txt", sep = "\t")
-write.table(oekoData, file = "cleaned-data/DK_oekoData.txt", sep = "\t")
-write.table(urbangreenData, file = "cleaned-data/DK_urbangreenData.txt", sep = "\t")
+#250
+table(buf_250m$propLand_use)
+output250 <- subset(buf_250m,!is.na(propLand_use))
 
-# create a dataframe where each buffer category and mergeData are combined
-data_50m <- buf_50m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_50m, by = c("RouteID_JB"))
-data_250m <- buf_250m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_250m, by = c("RouteID_JB"))
-data_500m <- buf_500m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_500m, by = c("RouteID_JB"))
-data_1000m <- buf_1000m %>% rename(RouteID_JB = routeID) %>% inner_join(mergedData, buf_1000m, by = c("RouteID_JB"))
+#500
+table(buf_500m$propLand_use)
+output500 <- subset(buf_500m,!is.na(propLand_use))
 
-# save output
-write.table(data_50m, file = "cleaned-data/DK_landusedata_50m.txt", sep = "\t")
-write.table(data_250m, file = "cleaned-data/DK_landusedata_250m.txt", sep = "\t")
-write.table(data_500m, file = "cleaned-data/DK_landusedata_500m.txt", sep = "\t")
-write.table(data_1000m, file = "cleaned-data/DK_landusedata_1000m.txt", sep = "\t")
+#1000
+table(buf_1000m$propLand_use)
+output1000 <- subset(buf_1000m,!is.na(propLand_use))
 
-# combine data
-setwd("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/")
+#cast the data
+outputCast50 <- dcast(output50,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast250 <- dcast(output250,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast500 <- dcast(output500,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast1000 <- dcast(output1000,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
 
-list_of_files <- list.files(recursive = TRUE,
-                            pattern = "\\.txt$", 
-                            full.names = F)
+#merge buffer zone cast outputs
+outputCast <- merge(outputCast50, outputCast250, by = "routeID")
+outputCast <- merge(outputCast, outputCast500, by = "routeID")
+outputCast <- merge(outputCast, outputCast1000, by = "routeID")
 
-data <- lapply(list_of_files, read.table, sep = "\t") # create a vector with the dataframes/lists 
-names(data) <- stringr::str_replace(list_of_files, pattern = ".txt", replacement = "")
+#merge with oeko, urbangreen, and hedge cast outputs
+outputCast <- merge(outputCast, oekocast, by = "routeID")
+outputCast <- merge(outputCast, hedgecast, by = "routeID")
+outputCast <- merge(outputCast, urbangreencast, by = "routeID")
 
-# save data
-saveRDS(data, "DK_allLanduseData.Rds")
+write.table(outputCast,file="cleaned-data/environData_DK.txt",sep="\t")

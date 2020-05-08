@@ -58,18 +58,18 @@ plot_grid(g1,g2,ncol=1)
 
 #centreing
 allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
-allInsects$cWind <- allInsects$Wind - median(allInsects$Wind)
-allInsects$cTemp <- allInsects$Temp - median(allInsects$Temp)
+allInsects$cWind <- allInsects$Wind - median(allInsects$Wind) # only works for DE data
+allInsects$cTemp <- allInsects$Temp - median(allInsects$Temp) # only works for DE data
 allInsects$cStops <- log(allInsects$stops+1) - median(log(allInsects$stops+1))
 allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signals+1))
 
 #sort time data to standard each around the time band
 allInsects$numberTime <- as.numeric(allInsects$StartTime)
-median(allInsects$numberTime[allInsects$Time_band=="midday"])#23
-median(allInsects$numberTime[allInsects$Time_band=="evening"])#69.5
+median(allInsects$numberTime[allInsects$Time_band=="midday"])#23 for DE, 37.5 for DK
+median(allInsects$numberTime[allInsects$Time_band=="evening"])#69.5 for DK, 124 for DK
 allInsects$cnumberTime <- NA
-allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -23
-allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -69.5
+allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -37.5
+allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -124
 
 table(allInsects$Route_length,allInsects$PilotID)
 hist(allInsects$cStops)
@@ -83,16 +83,30 @@ lm1 <- lm(log(Biomass+1) ~cStops,
 summary(lm1)
 
 lm1 <- lm(log(Biomass+1) ~ cTL, 
-          data=allInsects)#stronger
+          data=allInsects)#stronger for DE, not stronger for DK
 summary(lm1)
 
+#DE
 lm1 <- lm(log(Biomass+1) ~ Land_use + Time_band*cnumberTime + 
             cTemp +cWind + cyDay + cStops, 
           data=allInsects)
 summary(lm1)
 
+#DK - without detailed weather data
+lm1 <- lm(log(Biomass+1) ~ Land_use + Time_band*cnumberTime + 
+            Temperature +Wind + cyDay + cStops, 
+          data=allInsects)
+summary(lm1)
+
+#DE
 lm1 <- lm(log(Biomass+1) ~ Land_use + Time_band*cnumberTime + 
             cTemp +cWind + cyDay + cTL, 
+          data=allInsects)
+summary(lm1)
+
+#DK - without detailed weather data
+lm1 <- lm(log(Biomass+1) ~ Land_use + Time_band*cnumberTime + 
+            Temperature +Wind + cyDay + cTL, 
           data=allInsects)
 summary(lm1)
 
@@ -101,7 +115,8 @@ summary(lm1)
 library(lme4)
 library(lmerTest)
 library(MuMIn)
-#Full model
+
+#Full model- DE
 lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band + 
                Time_band:cnumberTime + cyDay + 
                cTemp + cWind + cStops +
@@ -112,6 +127,18 @@ r.squaredGLMM(lme1)
 #        R2m       R2c
 #[1,] 0.3344578 0.8464894
 
+#Full model- DK (no detailed weather data)
+lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band + 
+               Time_band:cnumberTime + cyDay + 
+               Temperature + Wind + cStops +
+               (1|RouteID_JB), data=allInsects)
+
+summary(lme1)
+r.squaredGLMM(lme1)
+#R2m       R2c
+#[1,] 0.3580548 0.6487728
+
+# DE
 lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band + 
                Time_band:cnumberTime + cyDay + 
                cTemp + cWind + cStops +
@@ -121,16 +148,37 @@ lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band +
 
 #just keep route as ID
 
+# DK
+lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band + 
+               Time_band:cnumberTime + cyDay + 
+               Temperature + Wind + cStops +
+               (1|PilotID), data=allInsects)
+#R2m       R2c
+#[1,] 0.3427775 0.6070411
+
 #plus spatial models################################################################
 
 library(nlme)
 
-#jitter x and y slightly - fix leter
+#jitter x and y slightly - fix later
 allInsects$x2 <- allInsects$x + rnorm(length(allInsects$x),0,10)
 allInsects$y2 <- allInsects$y + rnorm(length(allInsects$y),0,10)
 
+# for DK jitter x and y slightly - fix later
+allInsects$x2 <- allInsects$utm_x + rnorm(length(allInsects$utm_x),0,10)
+allInsects$y2 <- allInsects$utm_y + rnorm(length(allInsects$utm_y),0,10)
+
+# DE
 gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
               Time_band:cnumberTime + cyDay + cTemp + cWind + cTL,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID),
+            data=allInsects,na.action=na.omit)
+summary(gls1)
+
+#DK
+gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
+              Time_band:cnumberTime + cyDay + Temperature + Wind + cTL,
             random=~1|PilotID/RouteID,
             correlation=corExp(form=~x2+y2|PilotID/RouteID),
             data=allInsects,na.action=na.omit)
@@ -140,7 +188,7 @@ summary(gls1)
 #effect of TL disappears when pilot is put in the model
 #effect of year day disappears when pilot is put in the model
 
-#final model
+#final model (works for both countries)
 gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
               Time_band:cnumberTime + cTL,
             random=~1|PilotID/RouteID,
@@ -150,6 +198,12 @@ summary(gls1)
 #keep in TL even if not significant
 
 r.squaredGLMM(gls1)
+# Summary DE
 #R2m       R2c
 #[1,] 0.2552812 0.8441772
 #alot explained by pilot and route
+
+# Summary DK
+#R2m       R2c
+#[1,] 0.2530004 0.6394638
+# ? interpretation???

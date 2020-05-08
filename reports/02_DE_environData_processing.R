@@ -8,6 +8,7 @@ library(lubridate)
 
 #land use data (extracted by Volker see READ ME file in data folder)
 setwd("C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/atkis_v05")
+#use atkis intersect 06??
 allFiles <- list.files()
 allFiles <- allFiles[!grepl("README.txt",allFiles)]
 
@@ -74,6 +75,7 @@ output$Land_use[grepl("agricultural",output$File)] <- "Agriculture"
 
 #urban
 output$Land_use[grepl("urbanArea",output$File)] <- "Urban"
+#TO DO: need to remove NAM== "Wassersportanlage"
 
 #grassland
 output$Land_use[grepl("greenland",output$File)] <- "Grassland"

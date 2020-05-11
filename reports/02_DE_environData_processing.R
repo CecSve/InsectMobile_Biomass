@@ -145,7 +145,7 @@ outputI$Hedges[grepl("hedgesAvenues",outputI$File)] <- 1
 outputI$urbanGreen <- 0
 outputI$urbanGreen[grepl("urbanGreen",outputI$File)] <- 1
 
-landuseIntensity <- ddply(outputI,.(Codierung),summarise,
+landuseIntensity <- ddply(outputI,.(Codierung,Buffer),summarise,
       water = sum(value[Water==1]),
       roads = sum(value[Roads==1]),
       hedges = sum(value[Hedges==1]),

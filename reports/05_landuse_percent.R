@@ -411,6 +411,15 @@ plot_grid(f50pubr,f250pubr,f500pubr,f1000pubr,ncol=1)
 
 ### CECILIE - DU ER KOMMET HERTIL
 
+###covariation check#########################################
+
+#check whether explanatory variables are strongly correlated
+cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_1000",names(allInsects))])])
+cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_500",names(allInsects))])])
+cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_250",names(allInsects))])])
+cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_50",names(allInsects))])])
+#correlations between stops and urban cover...
+
 ###analysis####################################################
 
 # run 04 to add variables to allInsects used for analysis 

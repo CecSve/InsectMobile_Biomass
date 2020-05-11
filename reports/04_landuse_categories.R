@@ -160,7 +160,7 @@ lme1 <- lmer(log(Biomass+1) ~ Land_use + Time_band +
 
 library(nlme)
 
-#jitter x and y slightly - fix later
+#DE jitter x and y slightly - fix later
 allInsects$x2 <- allInsects$x + rnorm(length(allInsects$x),0,10)
 allInsects$y2 <- allInsects$y + rnorm(length(allInsects$y),0,10)
 
@@ -188,7 +188,7 @@ summary(gls1)
 #effect of TL disappears when pilot is put in the model
 #effect of year day disappears when pilot is put in the model
 
-#final model (works for both countries)
+#final model DE
 gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
               Time_band:cnumberTime + cTL,
             random=~1|PilotID/RouteID,
@@ -203,7 +203,18 @@ r.squaredGLMM(gls1)
 #[1,] 0.2552812 0.8441772
 #alot explained by pilot and route
 
+#final model DK - use cStops instead of cTL
+gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
+              Time_band:cnumberTime + cStops,
+            random=~1|PilotID/RouteID_JB,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
+            data=allInsects,na.action=na.omit)
+summary(gls1)
+#keep in TL even if not significant
+
+r.squaredGLMM(gls1)
+
 # Summary DK
 #R2m       R2c
-#[1,] 0.2530004 0.6394638
+#[1,] 0.2686265 0.6022614
 # ? interpretation???

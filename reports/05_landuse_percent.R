@@ -428,6 +428,8 @@ cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_50",names(allInsects)
 
 library(lme4)
 library(lmerTest)
+
+#function to extract summary components of model
 getEffect <- function(model){
   coefs <- summary(model)$coef[2,]
   temp <- confint(model)
@@ -435,7 +437,7 @@ getEffect <- function(model){
   data.frame(t(coefs),t(cis))
   }
 
-###DE#########################################################
+###DE simple#########################################################
 #agriculture
 hist(allInsects$Agriculture_1000)
 lme50 <- lmer(log(Biomass+1) ~ Agriculture_50 + Time_band + 
@@ -559,7 +561,8 @@ ggplot(subset(outAll,Land_use!="Wetland"))+
 
 #focus on 1000m
 
-lme1000 <- lmer(log(Biomass+1) ~ log(Agriculture_1000+1) + log(Urban_1000+1) +
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_1000) + 
+                sqrt(Urban_1000) +
                 Time_band + 
                 Time_band:cnumberTime + cTL + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
@@ -567,7 +570,12 @@ summary(lme1000)
 
 #now positive effect of farmland and almost negatuve effect of urban
 
-###DK#########################################################
+#check variance inflation factor
+library(car)
+vif(lme1000)
+#some issue
+
+###DK simple#########################################################
 # NB! changed cTL to cStops since more data for DK 
 #agriculture
 hist(allInsects$Agriculture_1000)

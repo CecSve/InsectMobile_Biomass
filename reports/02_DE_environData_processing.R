@@ -7,9 +7,9 @@ library(lubridate)
 ###land-use###############################################################
 
 #land use data (extracted by Volker see READ ME file in data folder)
-setwd("C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/atkis_v05")
-#use atkis intersect 06??
-allFiles <- list.files()
+tdir <- "C:/Users/db40fysa/Nextcloud/mobileInsect/04_geodata/atkisIntersect_v06"
+
+allFiles <- list.files(tdir)
 allFiles <- allFiles[!grepl("README.txt",allFiles)]
 
 #get name of shapefie
@@ -19,11 +19,14 @@ Name <- gsub(".shp","",Names)
 #remove those with Root on them
 Name <- Name[!grepl("Root",Name)]
 
+#get rid of "veg_01_greenland" 
+Name <- Name[!Name %in% "veg_01_greenland"]
+
 #for each folder
 output <- ldply(Name, function(x){
   
   #read in shape file
-  out <- readOGR(dsn=getwd(),
+  out <- readOGR(dsn=tdir,
                layer=x)
 
   #just get data frame
@@ -75,17 +78,11 @@ output$Land_use[grepl("agricultural",output$File)] <- "Agriculture"
 
 #urban
 output$Land_use[grepl("urbanArea",output$File)] <- "Urban"
-#TO DO: need to remove NAM== "Wassersportanlage"
 
 #grassland
 output$Land_use[grepl("greenland",output$File)] <- "Grassland"
 
-#subset to the above land-uses
 table(output$Land_use)
-output <- subset(output,!is.na(Land_use))
-
-#change NAs to zeros
-output$value[is.na(output$value)] <- 0
 
 #maybe use Codierung to match
 unique(output$Codierung)
@@ -109,13 +106,50 @@ output$Buffer <- sapply(output$File,function(x){
 
 table(output$Buffer)
 
+#change NAs to zeros
+output$value[is.na(output$value)] <- 0
+
 #check all codierung in the insect data file
-df$RouteID[df$RouteID %in% output$Codierung]
-df$RouteID[!df$RouteID %in% output$Codierung]#yay!!
+insectsDE$RouteID[insectsDE$RouteID %in% output$Codierung]
+insectsDE$RouteID[!insectsDE$RouteID %in% output$Codierung]#yay!!
+
+#subset to the above land-uses
+outputI <- output
+table(output$Land_use)
+output <- subset(output,!is.na(Land_use))
 
 #cast the data
 outputCast <- dcast(output,Codierung~Land_use+Buffer,value.var="value",fun=sum,na.rm=T)
 write.table(outputCast,file="cleaned-data/environData_DE.txt",sep="\t")
+
+#Agriculture_50
+#Agrar_11 - 169.90
+outA <- subset(temp, Codierung=="Agrar_11") 
+
+###land use intensity###############################################
+
+#water bodies
+#urban green area
+#hedges
+#roads
+
+outputI$Water <- 0
+outputI$Water[grepl("water",outputI$File)] <- 1
+
+outputI$Roads <- 0
+outputI$Roads[grepl("roads",outputI$File)] <- 1
+
+outputI$Hedges <- 0
+outputI$Hedges[grepl("hedgesAvenues",outputI$File)] <- 1
+
+outputI$urbanGreen <- 0
+outputI$urbanGreen[grepl("urbanGreen",outputI$File)] <- 1
+
+landuseIntensity <- ddply(outputI,.(Codierung),summarise,
+      water = sum(value[Water==1]),
+      roads = sum(value[Roads==1]),
+      hedges = sum(value[Hedges==1]),
+      urbangreen = sum(value[urbanGreen==1]))
 
 ####temperature#######################################################################
 

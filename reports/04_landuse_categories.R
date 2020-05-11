@@ -65,11 +65,11 @@ allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signal
 
 #sort time data to standard each around the time band
 allInsects$numberTime <- as.numeric(allInsects$StartTime)
-median(allInsects$numberTime[allInsects$Time_band=="midday"])#23 for DE, 37.5 for DK
-median(allInsects$numberTime[allInsects$Time_band=="evening"])#69.5 for DK, 124 for DK
+middayMean <- median(allInsects$numberTime[allInsects$Time_band=="midday"])#23 for DE, 37.5 for DK
+eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"])#69.5 for DK, 124 for DK
 allInsects$cnumberTime <- NA
-allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -37.5
-allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -124
+allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -middayMean
+allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -eveningMean
 
 table(allInsects$Route_length,allInsects$PilotID)
 hist(allInsects$cStops)

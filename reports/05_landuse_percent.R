@@ -557,16 +557,30 @@ ggplot(subset(outAll,Land_use!="Wetland"))+
   xlab("Buffer size (m)") + ylab("Effect of percent change on biomass")
 
 
-###multiple regression########################################
+###DE multiple regression########################################
 
 #focus on 1000m
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  sqrt(Urban_1000) +
+                  sqrt(Wetland_1000) +
+                  sqrt(Forest_1000) +
+                  Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
 
-lme1000 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_1000) + 
-                sqrt(Urban_1000) +
+
+#final
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  sqrt(Urban_1000) +
+                  #sqrt(Wetland_50) +
                 Time_band + 
                 Time_band:cnumberTime + cTL + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
+
+#stepwise
 
 #now positive effect of farmland and almost negatuve effect of urban
 
@@ -575,8 +589,12 @@ library(car)
 vif(lme1000)
 #some issue
 
+library(MuMIn)
+r.squaredGLMM(lme1000)
+
 ###DK simple#########################################################
 # NB! changed cTL to cStops since more data for DK 
+
 #agriculture
 hist(allInsects$Agriculture_1000)
 lme50 <- lmer(log(Biomass+1) ~ Agriculture_50 + Time_band + 
@@ -676,6 +694,7 @@ outWetland <- as.data.frame(outWetland)
 outWetland$Buffer <- c(50,250,500,1000)
 outWetland$Land_use <- "Wetland"
 
+###plot buffer effects########################################
 
 #combine all effects
 outAll <- rbind(outUrban,outAgri,outOpen,outWetland,outForest)
@@ -701,7 +720,7 @@ ggplot(outAll)+
   geom_hline(yintercept=0,colour="red",linetype="dashed")+
   xlab("Buffer size (m)") + ylab("Effect of percent change on biomass") + scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = c(-7.5, -5, -2.5, 0, 2.5, 5, 7.5)) + theme(legend.position = "none")
 
-###multiple regression########################################
+###DK multiple regression########################################
 
 #focus on 1000m - changed to cStops instead of cTL, added wetland
 

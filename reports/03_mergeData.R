@@ -40,6 +40,7 @@ windData <- read.delim("cleaned-data/routeWind_DE.txt",as.is=T)
 tempData <- read.delim("cleaned-data/routeTemps_DE.txt",as.is=T)
 stopData <- read.delim("cleaned-data/stops_DE.txt",as.is=T)
 tlData <- read.delim("cleaned-data/trafficlights_DE.txt",as.is=T)
+luiData <- read.delim("cleaned-data/landuseIntensity_DE.txt",as.is=T)
 
 #merge weather
 windData <- melt(windData[,-1],id=c("RouteID","Date"))
@@ -73,6 +74,9 @@ allInsects <- allInsects2
 
 #land use data
 allInsects <- merge(allInsects,environData,by.x="RouteID",by.y="Codierung",all.x=T)
+
+#land use intensity data
+allInsects <- merge(allInsects,luiData,by.x="RouteID",by.y="Codierung",all.x=T)
 
 #stop data
 stopData <- merge(tlData,stopData,by="Codierung",all=T)

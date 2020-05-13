@@ -13,7 +13,7 @@ library(scales)
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
 landuseCols <- landuseCols[c(1,4,3,5,2)]
 
-landuseOrder <- c("Urban","Farmland","Open.uncultivated","Wetland","Forest")
+landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 
 ###transformations for land use#####################################
 
@@ -28,7 +28,7 @@ qU <- ggplot(allInsects,aes(x=sqrt(Urban_1000),y=(Biomass+1)))+
               geom_smooth(method="lm",color="grey70")+
               xlab("Urban cover") +ylab("Biomass")
 
-qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
+qF <- ggplot(allInsects,aes(x=sqrt(Agriculture_1000),y=(Biomass+1)))+
   geom_point(col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
@@ -450,16 +450,16 @@ getEffect <- function(model){
 
 #agriculture
 hist(allInsects$Agriculture_1000)
-lme50 <- lmer(log(Biomass+1) ~ Agriculture_50 + Time_band + 
+lme50 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_50) + Time_band + 
                 Time_band:cnumberTime + cTL + cyDay + 
                (1|RouteID) + (1|PilotID), data=allInsects)
-lme250 <- lmer(log(Biomass+1) ~ Agriculture_250 + Time_band + 
+lme250 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_250) + Time_band + 
                  Time_band:cnumberTime + cTL + cyDay +  
                 (1|RouteID) + (1|PilotID), data=allInsects)
-lme500 <- lmer(log(Biomass+1) ~ Agriculture_500 + Time_band + 
+lme500 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_500) + Time_band + 
                  Time_band:cnumberTime + cTL + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
-lme1000 <- lmer(log(Biomass+1) ~ Agriculture_1000 + Time_band + 
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_1000) + Time_band + 
                   Time_band:cnumberTime + cTL + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 outAgri <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
@@ -543,22 +543,18 @@ outWetland <- as.data.frame(outWetland)
 outWetland$Buffer <- c(50,250,500,1000)
 outWetland$Land_use <- "Wetland"
 
-
-#combine all effects
-outAll <- rbind(outForest,outAgri,outUrban,outWetland,outOpen.uncultivated)
-
 ###DE multiple regression########################################
 
-#focus on 1000m
+#full model
 lme1000 <- lmer(log(Biomass+1) ~ 
                   sqrt(Agriculture_1000) + 
                   sqrt(Urban_1000) +
+                  sqrt(Open.uncultivated_1000)
                   sqrt(Wetland_1000) +
                   sqrt(Forest_1000) +
                   Time_band + 
                   Time_band:cnumberTime + cTL + cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
-
 
 #final
 lme1000 <- lmer(log(Biomass+1) ~ 
@@ -714,27 +710,24 @@ summary(lmer(log(Biomass+1) ~  log(Urban_50+1) + log(Agriculture_50+1) + log(Wet
 ###plot buffer effects########################################
 
 #DE
-
+outAll <- rbind(outForest,outAgri,outUrban,outWetland,outOpen.uncultivated)
 outAll$Land_use <- factor(outAll$Land_use,levels=landuseOrder)
 
 ggplot(outAll)+
   geom_crossbar(aes(x=factor(Buffer),y=Estimate,
-                    ymin=X2.5..,ymax=X97.5..))+
-  facet_wrap(~Land_use)+
-  coord_flip()+
-  theme_bw()
-
-ggplot(subset(outAll,Land_use!="Wetland"))+
-  geom_crossbar(aes(x=factor(Buffer),y=Estimate,
                     ymin=X2.5..,ymax=X97.5..,
                     fill=Land_use),
                 width=0.5)+
-  facet_wrap(~Land_use)+
-  scale_fill_manual(values=landuseCols[-5])+
+  facet_wrap(~Land_use,scales="free",ncol=1)+
+  scale_fill_manual(values=landuseCols)+
   coord_flip()+
   theme_bw()+
-  geom_hline(yintercept=0,colour="red",linetype="dashed")+
-  xlab("Buffer size (m)") + ylab("Effect of percent change on biomass")
+  theme(legend.position = "none")+
+  geom_hline(yintercept=0,colour="black",linetype="dashed")+
+  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass")
+
+ggsave("plots/Landcover_buffer.png",width=3,height=8)
+
 
 # Final DK plot 
 
@@ -750,5 +743,5 @@ ggplot(outAll)+
   scale_fill_manual(values=landuseCols[c(2,5,3,1,4)])+
   coord_flip()+
   theme_bw()+
-  geom_hline(yintercept=0,colour="red",linetype="dashed")+
+  geom_hline(yintercept=0,colour="black",linetype="dashed")+
   xlab("Buffer size (m)") + ylab("Effect of percent change on biomass") + scale_y_continuous(labels = function(x) paste0(x, "%"), breaks = c(-7.5, -5, -2.5, 0, 2.5, 5, 7.5)) + theme(legend.position = "none")

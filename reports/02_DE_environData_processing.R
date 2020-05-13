@@ -46,9 +46,15 @@ output <- ldply(Name, function(x){
   names(temp_2)[5] <- "value"
   
   if("VEG" %in% names(temp)){
-    temp_2$VEG <- temp$VEG
+    temp_2$VEG <- as.character(temp$VEG)
   }else{
     temp_2$VEG <- NA
+  }
+  
+  if("Codierun_2" %in% names(temp)){
+    temp_2$Codierun_2 <- as.character(temp$Codierun_2)
+  }else{
+    temp_2$Codierun_2 <- as.character(temp$Codierung)
   }
   
   return(temp_2)
@@ -68,10 +74,12 @@ unique(output$VEG)
 output$Land_use <- NA
 
 #wetland
-output$Land_use[output$OBJART %in% c(43005,43006)] <- "Wetland"
+output$Land_use[output$OBJART_TXT %in% c("AX_Sumpf")] <- "Wetland"
+output$Land_use[grepl("water",output$File)] <- "Wetland"
 
 #forest
 output$Land_use[output$OBJART_TXT %in% "AX_Wald"] <- "Forest"
+#note this does not include AX_Gehoelz
 
 #agriculture
 output$Land_use[grepl("agricultural",output$File)] <- "Agriculture"
@@ -80,7 +88,9 @@ output$Land_use[grepl("agricultural",output$File)] <- "Agriculture"
 output$Land_use[grepl("urbanArea",output$File)] <- "Urban"
 
 #grassland
-output$Land_use[grepl("greenland",output$File)] <- "Grassland"
+output$Land_use[grepl("greenland",output$File)] <- "Open uncultivated"
+output$Land_use[output$OBJART_TXT %in% 
+                  c("AX_Heide","AX_Moor")] <- "Open uncultivated"
 
 table(output$Land_use)
 
@@ -113,43 +123,84 @@ output$value[is.na(output$value)] <- 0
 insectsDE$RouteID[insectsDE$RouteID %in% output$Codierung]
 insectsDE$RouteID[!insectsDE$RouteID %in% output$Codierung]#yay!!
 
+#remove duplicates - mistake in the data (check w/ Volker)
+output <- subset(output,Codierung==Codierun_2)
+
 #subset to the above land-uses
 outputI <- output
 table(output$Land_use)
 output <- subset(output,!is.na(Land_use))
 
 #cast the data
-outputCast <- dcast(output,Codierung~Land_use+Buffer,value.var="value",fun=sum,na.rm=T)
+outputCast <- reshape2::dcast(output,Codierung~Land_use+Buffer,value.var="value",fun=sum,na.rm=T)
 write.table(outputCast,file="cleaned-data/environData_DE.txt",sep="\t")
-
-#Agriculture_50
-#Agrar_11 - 169.90
-outA <- subset(temp, Codierung=="Agrar_11") 
 
 ###land use intensity###############################################
 
 #water bodies
-#urban green area
-#hedges
-#roads
-
 outputI$Water <- 0
 outputI$Water[grepl("water",outputI$File)] <- 1
 
+#roads
 outputI$Roads <- 0
 outputI$Roads[grepl("roads",outputI$File)] <- 1
 
+#hedges
 outputI$Hedges <- 0
 outputI$Hedges[grepl("hedgesAvenues",outputI$File)] <- 1
 
+#urban green area
 outputI$urbanGreen <- 0
 outputI$urbanGreen[grepl("urbanGreen",outputI$File)] <- 1
+
+#extensive (1050,1021,1030,1040) vs intensive (1010) agriculture
+outputI$intensiveAgr <- 0
+outputI$intensiveAgr[outputI$VEG=="1010"] <- 1
+outputI$extensiveAgr <- 0
+outputI$extensiveAgr[outputI$VEG %in% 
+                       c("1050","1021","1030","1040")] <- 1
+#most are 1021 - streobsweise, but little
 
 landuseIntensity <- ddply(outputI,.(Codierung,Buffer),summarise,
       water = sum(value[Water==1]),
       roads = sum(value[Roads==1]),
       hedges = sum(value[Hedges==1]),
-      urbangreen = sum(value[urbanGreen==1]))
+      urbangreen = sum(value[urbanGreen==1]),
+      intensiveAgr = sum(value[intensiveAgr==1]),
+      extensiveAgr = sum(value[extensiveAgr==1]))
+
+#cast the data
+outputCastRoads <- reshape2::dcast(landuseIntensity,Codierung~Buffer,
+                               value.var=c("roads"),fun=sum)
+names(outputCastRoads)[2:5] <- sapply(names(outputCastRoads)[2:5],
+                                      function(x)paste0("roads_",x))
+
+outputCastHedges <- reshape2::dcast(landuseIntensity,Codierung~Buffer,
+                                   value.var=c("hedges"),fun=sum)
+names(outputCastHedges)[2:5] <- sapply(names(outputCastHedges)[2:5],
+                                      function(x)paste0("hedges_",x))
+
+outputCastGreen <- reshape2::dcast(landuseIntensity,Codierung~Buffer,
+                                   value.var=c("urbangreen"),fun=sum)
+names(outputCastGreen)[2:5] <- sapply(names(outputCastGreen)[2:5],
+                                      function(x)paste0("urbangreen_",x))
+
+outputCastintAgr <- reshape2::dcast(landuseIntensity,Codierung~Buffer,
+                                   value.var=c("intensiveAgr"),fun=sum)
+names(outputCastintAgr)[2:5] <- sapply(names(outputCastintAgr)[2:5],
+                                      function(x)paste0("intAgr_",x))
+
+outputCastextAgr <- reshape2::dcast(landuseIntensity,Codierung~Buffer,
+                                   value.var=c("extensiveAgr"),fun=sum)
+names(outputCastextAgr)[2:5] <- sapply(names(outputCastextAgr)[2:5],
+                                      function(x)paste0("exAgr_",x))
+
+outputCast <- merge(outputCastRoads,outputCastHedges,by="Codierung")
+outputCast <- merge(outputCast,outputCastGreen,by="Codierung")
+outputCast <- merge(outputCast,outputCastintAgr ,by="Codierung")
+outputCast <- merge(outputCast,outputCastextAgr,by="Codierung")
+
+write.table(outputCast,file="cleaned-data/landuseIntensity_DE.txt",sep="\t")
 
 ####temperature#######################################################################
 

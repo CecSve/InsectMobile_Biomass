@@ -140,13 +140,20 @@ ggplot() +
   theme_void()+
   theme(legend.title = element_blank())
 
+#reorder and rename levels of Land_use
+levels(allData$Land_use) <- c("Urban","Farmland",
+                           "Open uncultivated land",
+                           "Wetland",
+                           "Forest")
 
 #decide on common color scheme
 library(wesanderson)
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+landuseCols <- landuseCols[c(1,4,3,5,2)]
+
 ggplot() + 
   geom_sf(data = ourMap,fill="grey95") + 
-  geom_point(data = allData,aes(x=x,y=y,colour=Land_use)) +
+  geom_point(data = allData,aes(x=x,y=y,colour=Land_use),size=rel(1.5)) +
   theme_void()+
   scale_colour_manual(values=landuseCols)+
   theme(legend.title = element_blank())

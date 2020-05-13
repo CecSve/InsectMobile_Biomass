@@ -49,3 +49,6 @@ cleaned-data/
 
 # covariate-data
 covariate-data/
+
+#ignore plots
+plots/*

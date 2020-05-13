@@ -32,7 +32,10 @@ output <- ldply(Name, function(x){
   #just get data frame
   temp <-out@data
   temp$File <- as.character(x)
-
+  
+  #use right-hand most Codier column
+  temp$Codierung <- temp[,max(which(grepl("Codierun",names(temp))))]
+  
   if("prop" %in% names(temp)){
     myNames <- c("Name","Codierung","OBJART","OBJART_TXT","prop","layer","File")
     #VEG is sometimes a column - forest, water and heath etc, greenland
@@ -122,9 +125,6 @@ output$value[is.na(output$value)] <- 0
 #check all codierung in the insect data file
 insectsDE$RouteID[insectsDE$RouteID %in% output$Codierung]
 insectsDE$RouteID[!insectsDE$RouteID %in% output$Codierung]#yay!!
-
-#remove duplicates - mistake in the data (check w/ Volker)
-output <- subset(output,Codierung==Codierun_2)
 
 #subset to the above land-uses
 outputI <- output

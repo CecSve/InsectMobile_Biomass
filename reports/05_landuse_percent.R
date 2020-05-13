@@ -10,6 +10,7 @@ library(scales)
 
 #decide on common color scheme
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+landuseCols <- landuseCols[c(1,4,3,5,2)]
 
 ### DE plot land cover##############################################
 

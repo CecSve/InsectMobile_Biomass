@@ -549,9 +549,9 @@ outWetland$Land_use <- "Wetland"
 lme1000 <- lmer(log(Biomass+1) ~ 
                   sqrt(Agriculture_1000) + 
                   sqrt(Urban_1000) +
-                  sqrt(Open.uncultivated_1000)
+                  sqrt(Open.uncultivated_1000)+
                   sqrt(Wetland_1000) +
-                  sqrt(Forest_1000) +
+                  sqrt(Forest_250) +
                   Time_band + 
                   Time_band:cnumberTime + cTL + cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
@@ -559,24 +559,33 @@ lme1000 <- lmer(log(Biomass+1) ~
 #final
 lme1000 <- lmer(log(Biomass+1) ~ 
                   sqrt(Agriculture_1000) + 
-                  sqrt(Urban_1000) +
-                  #sqrt(Wetland_50) +
+                  sqrt(Forest_250) +
                 Time_band + 
                 Time_band:cnumberTime + cTL + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
-#stepwise
+library(MuMIn)
+r.squaredGLMM(lme1000)
+#           R2m       R2c
+#[1,] 0.3625144 0.8403325
 
-#now positive effect of farmland and almost negatuve effect of urban
+#add in other land uses to this final model to get their effect
+#for the table in the paper
 
 #check variance inflation factor
 library(car)
 vif(lme1000)
-#some issue
 
-library(MuMIn)
-r.squaredGLMM(lme1000)
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  sqrt(Forest_250) +
+                  sqrt(Urban_1000) +
+                  Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+#some issue
+vif(lme1000)
 
 ###DK simple#########################################################
 # NB! changed cTL to cStops since more data for DK 

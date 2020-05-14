@@ -115,3 +115,29 @@ outputCast <- merge(outputCast, hedgecast, by = "routeID")
 outputCast <- merge(outputCast, urbangreencast, by = "routeID")
 
 write.table(outputCast,file="cleaned-data/environData_DK.txt",sep="\t")
+
+### reformatting urban land use intensity data for analysis in script 06 #####
+# run the above lines for urban only 
+urbanoutputCast_1000 <- dcast(output1000,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+urbanoutputCast_500 <- dcast(output500,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+urbanoutputCast_250 <- dcast(output250,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+urbanoutputCast_50 <- dcast(output50,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+
+urbanoutputCast <- merge(urbanoutputCast_1000, urbanoutputCast_500, by = "routeID")
+urbanoutputCast <- merge(urbanoutputCast, urbanoutputCast_250, by = "routeID")
+urbanoutputCast <- merge(urbanoutputCast, urbanoutputCast_50, by = "routeID")
+
+write.table(urbanoutputCast,file="cleaned-data/urban_landuse_intensity_DK.txt",sep="\t")
+
+### reformatting farmland land use intensity data for analysis in script 06 #####
+# run the above lines for agriculture only 
+farmlandoutputCast_1000 <- dcast(output1000,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+farmlandoutputCast_500 <- dcast(output500,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+farmlandoutputCast_250 <- dcast(output250,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+farmlandoutputCast_50 <- dcast(output50,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+
+farmlandoutputCast <- merge(farmlandoutputCast_1000, farmlandoutputCast_500, by = "routeID")
+farmlandoutputCast <- merge(farmlandoutputCast, farmlandoutputCast_250, by = "routeID")
+farmlandoutputCast <- merge(farmlandoutputCast, farmlandoutputCast_50, by = "routeID")
+
+write.table(farmlandoutputCast,file="cleaned-data/farmland_landuse_intensity_DK.txt",sep="\t")

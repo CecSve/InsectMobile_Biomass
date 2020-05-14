@@ -182,7 +182,9 @@ allInsects <- merge(mergedData,environData,by.x="RouteID_JB",by.y="routeID",all.
 # add land use intensity for urban and agriculture
 landuseUrban <- read.delim("cleaned-data/urban_landuse_intensity_DK.txt",as.is=T)
 landuseFarmland <- read.delim("cleaned-data/farmland_landuse_intensity_DK.txt",as.is=T)
+landuseWetland <- read.delim("cleaned-data/wetland_landuse_intensity_DK.txt",as.is=T)
 
 # add to allInsects data
 allInsects <- merge(allInsects,landuseUrban,by.x="RouteID_JB",by.y="routeID",all.x=T)
 allInsects <- merge(allInsects,landuseFarmland,by.x="RouteID_JB",by.y="routeID",all.x=T)
+allInsects <- merge(allInsects,landuseWetland,by.x="RouteID_JB",by.y="routeID",all.x=T)

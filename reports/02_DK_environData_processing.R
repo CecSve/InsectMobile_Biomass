@@ -141,3 +141,16 @@ farmlandoutputCast <- merge(farmlandoutputCast, farmlandoutputCast_250, by = "ro
 farmlandoutputCast <- merge(farmlandoutputCast, farmlandoutputCast_50, by = "routeID")
 
 write.table(farmlandoutputCast,file="cleaned-data/farmland_landuse_intensity_DK.txt",sep="\t")
+
+### reformatting wetland land use intensity data for analysis in script 06 #####
+# run the above lines for wetland only 
+wetlandoutputCast_1000 <- dcast(output1000,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+wetlandoutputCast_500 <- dcast(output500,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+wetlandoutputCast_250 <- dcast(output250,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+wetlandoutputCast_50 <- dcast(output50,routeID~type+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+
+wetlandoutputCast <- merge(wetlandoutputCast_1000, wetlandoutputCast_500, by = "routeID")
+wetlandoutputCast <- merge(wetlandoutputCast, wetlandoutputCast_250, by = "routeID")
+wetlandoutputCast <- merge(wetlandoutputCast, wetlandoutputCast_50, by = "routeID")
+
+write.table(wetlandoutputCast,file="cleaned-data/wetland_landuse_intensity_DK.txt",sep="\t")

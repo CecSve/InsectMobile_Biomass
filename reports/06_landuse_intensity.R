@@ -1,4 +1,4 @@
-#run mergeData script
+#run 03mergeData script and some 04 to get standardised time etc
 
 library(cowplot)
 library(ggplot2)
@@ -106,6 +106,7 @@ g6 <- ggplot(subset(allInsects, Land_use == "Urban"),
 
 plot_grid(g1,g2, g3, g4, g5, g6)
 
+### DK urban lmer #######################################
 #full model
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
                   sqrt(urbGreenPropArea_1000) + 
@@ -132,6 +133,32 @@ summary(lmeurban1000)
 
 library(MuMIn)
 r.squaredGLMM(lmeurban1000)
+
+### DK urban spatial model ##############################
+library(lme4)
+library(lmerTest)
+library(MuMIn)
+library(nlme)
+
+# for DK jitter x and y slightly - fix later
+allInsects$x2 <- allInsects$utm_x + rnorm(length(allInsects$utm_x),0,10)
+allInsects$y2 <- allInsects$utm_y + rnorm(length(allInsects$utm_y),0,10)
+
+#DK WORK IN PROGRESS
+gls1 <- lme(log(Biomass+1) ~ sqrt(urbGreenPropArea_1000) + 
+              sqrt(byHegnMeterPerHa_1000) +
+              sqrt(Bykerne_1000)+
+              sqrt(Lav.bebyggelse_1000) +
+              sqrt(Høj.bebyggelse_1000) +
+              sqrt(Erhverv_1000) +  
+              Time_band + 
+              Time_band:cnumberTime + cyDay + Temperature + Wind + cStops,
+            random=~1|PilotID/RouteID_JB,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
+            data=subset(allInsects, Land_use == "Urban"),na.action=na.omit)
+
+summary(gls1)
+
 
 ### DK farmland##########################################
 

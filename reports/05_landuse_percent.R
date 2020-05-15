@@ -153,7 +153,7 @@ plot_grid(b50,b250,b1000,ncol=1)
 
 #urban
 u50 <- ggplot(allInsects)+
-  geom_point(aes(x=Urban_50,y=(Biomass+1)),
+  geom_point(aes(log(x=Urban_50),y=(Biomass+1)),
              col=landuseCols[1])+
   scale_y_log10() + 
   theme_bw() +
@@ -539,7 +539,7 @@ vif(lme1000)
 
 #agriculture
 hist(allInsects$Agriculture_1000)
-lme50 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_50) + Time_band + 
+lme50 <- lmer(log(Biomass+1) ~ log(Agriculture_50) + Time_band + 
                 Time_band:cnumberTime + cStops + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_250) + Time_band + 
@@ -722,3 +722,36 @@ ggplot(outAll)+
   xlab("Buffer size (m)") + ylab("Effect of land cover on biomass")
 
 ggsave("plots/DK_Landcover_buffer.png",width=3,height=8)
+
+#DK plus spatial models################################################################
+
+library(nlme)
+
+# for DK jitter x and y slightly - fix later
+allInsects$x2 <- allInsects$utm_x + rnorm(length(allInsects$utm_x),0,10)
+allInsects$y2 <- allInsects$utm_y + rnorm(length(allInsects$utm_y),0,10)
+
+#DK
+gls1 <- lme(log(Biomass+1) ~  sqrt(Agriculture_1000) + 
+              sqrt(Urban_1000) +
+              sqrt(Open.uncultivated.land_250)+
+              sqrt(Wetland_50) +
+              sqrt(Forest_500) + Time_band + 
+              Time_band:cnumberTime + cyDay + Temperature + Wind + cStops,
+            random=~1|PilotID/RouteID_JB,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
+            data=allInsects,na.action=na.omit)
+summary(gls1)
+
+#final model DK - use cStops instead of cTL - sam story as without spatial correlation
+gls1 <- lme(log(Biomass+1) ~ sqrt(Agriculture_1000) + 
+              sqrt(Wetland_50) +
+              sqrt(Forest_500) + Time_band + 
+              Time_band:cnumberTime + cyDay + cStops,
+            random=~1|PilotID/RouteID_JB,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
+            data=allInsects,na.action=na.omit)
+summary(gls1)
+#keep in TL even if not significant
+
+r.squaredGLMM(gls1)

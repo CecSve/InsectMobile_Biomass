@@ -517,8 +517,7 @@ r.squaredGLMM(lme1000)
 #           R2m       R2c
 #[1,] 0.3625144 0.8403325
 
-#add in other land uses to this final model to get their effect
-#for the table in the paper
+#add in other land uses to this final model to get their effect for the table in the paper
 
 #check variance inflation factor
 library(car)
@@ -531,8 +530,35 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band + 
                   Time_band:cnumberTime + cTL + cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
-#some issue
+#some issue for the model with urban cover
 vif(lme1000)
+
+
+#test timeband interactions
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Time_band*sqrt(Agriculture_1000) + 
+                  sqrt(Forest_250) +
+                  Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  Time_band*sqrt(Forest_250) +
+                  Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  sqrt(Forest_250) +
+                  Time_band*sqrt(Urban_1000)+
+                  Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
 
 ###DK simple#########################################################
 # NB! changed cTL to cStops since more data for DK 

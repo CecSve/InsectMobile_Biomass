@@ -781,3 +781,4 @@ summary(gls1)
 #keep in TL even if not significant
 
 r.squaredGLMM(gls1)
+summary(gls1) %>% intervals(which = "fixed")

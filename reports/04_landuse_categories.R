@@ -11,6 +11,9 @@ library(wesanderson)
 
 #decide on common color scheme
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+landuseCols <- landuseCols[c(1,4,3,5,2)]
+
+landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 
 ###Fig 2############################################################
 
@@ -51,6 +54,15 @@ g2 <- ggplot(allInsects,aes(x=Land_use, y=log(Biomass_small+1),colour=Land_use))
   facet_wrap(~Country)+
   theme(legend.position = "none")+
   xlab("Land cover")+ylab("Small insect biomass")
+
+#add total biomass and correct colours and labels
+g3 <- ggplot(allInsects,aes(x=Land_use, y=(Biomass),colour=Land_use))+
+  geom_boxplot(fill="white", lwd = 1.2)+
+  scale_color_manual(values=landuseCols)+
+  scale_y_log10() +
+  theme_bw(base_size = 15)+
+  theme(legend.position = "none")+
+  xlab("Land cover")+ylab("Insect biomass (log-transformed)") + scale_x_discrete(labels=c("Agriculture" = "Farmland"))
 
 plot_grid(g1,g2,ncol=1)
 
@@ -205,14 +217,26 @@ r.squaredGLMM(gls1)
 
 #final model DK - use cStops instead of cTL
 gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
-              Time_band:cnumberTime + cStops,
+              Time_band:cnumberTime + cyDay + cStops,
             random=~1|PilotID/RouteID_JB,
             correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
             data=allInsects,na.action=na.omit)
 summary(gls1)
-#keep in TL even if not significant
 
+# set open uncultivated land as reference instead of urban to get summry statistics for urban
+test <- within(allInsects, Land_use <- relevel(Land_use, ref = "Open uncultivated land"))
+gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
+              Time_band:cnumberTime + cyDay + cStops,
+            random=~1|PilotID/RouteID_JB,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
+            data=test,na.action=na.omit)
+summary(gls1)
+
+#keep in TL even if not significant
 r.squaredGLMM(gls1)
+
+library(lsmeans)
+lsmeans(gls1, "Land_use")
 
 # Summary DK
 #R2m       R2c

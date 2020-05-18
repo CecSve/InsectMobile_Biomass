@@ -11,6 +11,9 @@ library(wesanderson)
 
 #decide on common color scheme
 landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+landuseCols <- landuseCols[c(1,4,3,5,2)]
+landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
+
 
 ###Fig 2############################################################
 
@@ -33,6 +36,15 @@ ggplot(allInsects,aes(x=Land_use, y=(Biomass+1)))+
   scale_color_manual(values=landuseCols)+
   scale_fill_manual(values=landuseCols)+
   xlab("Land cover")+ylab("Total insect biomass")
+
+ggplot(allInsects,aes(x=Land_use, y=(Biomass+1)))+
+  geom_boxplot(aes(colour=Land_use))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_color_manual(values=landuseCols)+
+  scale_fill_manual(values=landuseCols)+
+  xlab("Land cover")+ylab("Total insect biomass")+
+  theme(legend.position = "none")
 
 
 #split by size
@@ -73,6 +85,7 @@ allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime
 
 table(allInsects$Route_length,allInsects$PilotID)
 hist(allInsects$cStops)
+hist(allInsects$cTL)
 
 ###lm##############################################################
 
@@ -170,7 +183,7 @@ allInsects$y2 <- allInsects$utm_y + rnorm(length(allInsects$utm_y),0,10)
 
 # DE
 gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
-              Time_band:cnumberTime + cyDay + cTemp + cWind + cTL,
+              Time_band:cnumberTime + cyDay + cTL,
             random=~1|PilotID/RouteID,
             correlation=corExp(form=~x2+y2|PilotID/RouteID),
             data=allInsects,na.action=na.omit)

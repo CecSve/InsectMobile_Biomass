@@ -249,6 +249,8 @@ r.squaredGLMM(gls1)
 library(lsmeans)
 lsmeans(gls1, "Land_use")
 
+#OPL is significantly lower than forest and wetland. 
+
 # Summary DK
 #R2m       R2c
 #[1,] 0.2686265 0.6022614

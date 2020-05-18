@@ -236,7 +236,7 @@ summary(gls1)
 
 # set open uncultivated land as reference instead of urban to get summry statistics for urban
 test <- within(allInsects, Land_use <- relevel(Land_use, ref = "Open uncultivated land"))
-gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band + 
+gls1 <- lme(log(Biomass) ~ Land_use + Time_band + 
               Time_band:cnumberTime + cyDay + cStops,
             random=~1|PilotID/RouteID_JB,
             correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
@@ -245,13 +245,15 @@ summary(gls1)
 
 #keep in TL even if not significant
 r.squaredGLMM(gls1)
-
-library(lsmeans)
-lsmeans(gls1, "Land_use")
-
-#OPL is significantly lower than forest and wetland. 
-
 # Summary DK
 #R2m       R2c
 #[1,] 0.2686265 0.6022614
-# ? interpretation???
+
+library(lsmeans)
+emm1 <- emmeans(gls1, specs = pairwise ~ Land_use, type = "response") # get results on untransformed response
+emm1$emmeans
+emm1$contrasts
+emm1$contrasts %>% summary(infer = TRUE)
+plot(emm1, comparisons = TRUE) + theme_bw() + 
+  labs(x = "Estimated marginal mean (biomass)", y = "Land use category") + scale_y_discrete(labels=c("Agriculture" = "Farmland")) # The blue bars are confidence intervals for the EMMs, and the red arrows are for the comparisons among them. If an arrow from one mean overlaps an arrow from another group, the difference is not significant.
+

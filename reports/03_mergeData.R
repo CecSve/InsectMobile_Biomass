@@ -181,5 +181,32 @@ mergedData <- plyr::rename(mergedData, c("COUNT_STOPS" = "stops"))
 #add on environmental data
 environData <- read.delim("cleaned-data/environData_DK.txt",as.is=T)
 
-# merge land use intensity data with merged data
+# merge land cover data with merged data
 allInsects <- merge(mergedData,environData,by.x="RouteID_JB",by.y="routeID",all.x=T)
+
+# add land use intensity for urban and agriculture
+landuseUrban <- read.delim("cleaned-data/urban_landuse_intensity_DK.txt",as.is=T)
+landuseFarmland <- read.delim("cleaned-data/farmland_landuse_intensity_DK.txt",as.is=T)
+landuseWetland <- read.delim("cleaned-data/wetland_landuse_intensity_DK.txt",as.is=T)
+
+# add to allInsects data
+allInsects <- merge(allInsects,landuseUrban,by.x="RouteID_JB",by.y="routeID",all.x=T)
+allInsects <- merge(allInsects,landuseFarmland,by.x="RouteID_JB",by.y="routeID",all.x=T)
+allInsects <- merge(allInsects,landuseWetland,by.x="RouteID_JB",by.y="routeID",all.x=T)
+
+# add two columns for the 1000 buffer for land use intensity analysis, where the land use with highest proportion is added and the corresponding areaProp is listed
+allInsects <- allInsects %>% 
+  rownames_to_column('id') %>%
+  left_join(
+    allInsects %>% 
+      rownames_to_column('id') %>%
+      gather(maxLand_use, maxareaProp, Agriculture_1000:Wetland_1000) %>% 
+      group_by(id) %>% 
+      slice(which.max(maxareaProp)), 
+    by = 'id'
+  )
+
+# joining intorduced .y and .x to headers and should be removed
+allInsects <- allInsects[, -grep(".y$", colnames(allInsects))]
+names(allInsects) <- gsub(".x","",names(allInsects),fixed = TRUE)
+allInsects <- column_to_rownames(allInsects, var = "id")

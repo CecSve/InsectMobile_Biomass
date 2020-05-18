@@ -235,7 +235,7 @@ gls1 <- lme(log(Biomass+1) ~ Land_use + Time_band +
 summary(gls1)
 
 # set open uncultivated land as reference instead of urban to get summry statistics for urban
-test <- within(allInsects, Land_use <- relevel(Land_use, ref = "Open uncultivated land"))
+test <- within(allInsects, Land_use <- relevel(Land_use, ref = "Wetland"))
 gls1 <- lme(log(Biomass) ~ Land_use + Time_band + 
               Time_band:cnumberTime + cyDay + cStops,
             random=~1|PilotID/RouteID_JB,

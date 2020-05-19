@@ -180,7 +180,7 @@ gls1 <- lme(log(Biomass+1) ~
             data=subset(allInsects, Urban_1000 > 0.02915))
 
 summary(gls1)
-r.squaredGLMM(lmeurban1000)
+r.squaredGLMM(gls1)
 
 #check variance inflation factor
 library(car)

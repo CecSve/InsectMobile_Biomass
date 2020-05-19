@@ -83,11 +83,6 @@ stopData <- merge(tlData,stopData,by="Codierung",all=T)
 names(stopData)[which(names(stopData)=="osm")] <- "stops"
 allInsects <- merge(allInsects,stopData,by.x="RouteID",by.y="Codierung",all.x=T)
 
-#rescale cover variables
-allNames <- c(names(allInsects)[grepl("50",names(allInsects))], names(allInsects)[grepl("100",names(allInsects))])
-A <- function(x) x/100
-allInsects[allNames] <- lapply(allInsects[allNames] , A)
-
 ####merge all Danish files ###########################################################
 allInsects <- insectsDK
 

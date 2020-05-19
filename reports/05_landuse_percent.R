@@ -781,7 +781,7 @@ summary(gls1)
 #keep in TL even if not significant
 
 r.squaredGLMM(gls1)
-<<<<<<< HEAD
+
 
 ###DE biomass predictions%##############################
 
@@ -812,6 +812,5 @@ predFun <- function(fit) {
 
 bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
 exp(quantile(bb$t,c(0.025,0.975)))
-=======
 summary(gls1) %>% intervals(which = "fixed")
->>>>>>> ac4d3371c9f8f793c56c50fccbf787b3ab8e89cd
+

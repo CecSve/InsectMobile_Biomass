@@ -24,13 +24,21 @@ g2 <- ggplot(subset(allInsects,Land_use=="Urban"),
   geom_smooth(method="lm",color="grey70")+
   xlab("Road density") +ylab("Biomass")
 
-plot_grid(g1,g2)
+g3 <- ggplot(subset(allInsects,Land_use=="Urban"),
+  aes(x=sqrt(Urban_1000),y=(Biomass+1)))+
+  geom_point(col=landuseCols[1])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("Urban cover") +ylab("Biomass")
+
+plot_grid(g1,g2,g3,nrow=1)
 
 ### DE farmland##########################################
 
 g1 <- ggplot(subset(allInsects,Land_use=="Farmland"),
              aes(x=sqrt(hedges_1000),y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
+  geom_point(col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
@@ -38,7 +46,7 @@ g1 <- ggplot(subset(allInsects,Land_use=="Farmland"),
 
 g2 <- ggplot(subset(allInsects,Land_use=="Farmland"),
              aes(x=exAgr_1000,y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
+  geom_point(col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
@@ -46,11 +54,11 @@ g2 <- ggplot(subset(allInsects,Land_use=="Farmland"),
 
 g3 <- ggplot(subset(allInsects,Land_use=="Farmland"),
              aes(x=intAgr_1000,y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
+  geom_point(col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
-  xlab("Intensive farmland") +ylab("Biomass")
+  xlab("Farmland") +ylab("Biomass")
 
 plot_grid(g1,g2,g3,nrow=1)
 

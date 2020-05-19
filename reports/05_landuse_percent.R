@@ -17,7 +17,7 @@ landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 
 ###transformations for land use#####################################
 
-#sqrt to all variables (except farmland??)
+#sqrt to all variables 
 
 ### DE plot land cover##############################################
 
@@ -781,3 +781,33 @@ summary(gls1)
 #keep in TL even if not significant
 
 r.squaredGLMM(gls1)
+
+###DE biomass predictions%##############################
+
+library(lme4)
+library(lmerTest)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Forest_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(tr_signals+1) + cyDay + 
+                  (1|RouteID) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Forest_1000=0.5,
+                     tr_signals=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+exp(predict(lme1000,newdata=newData,re.form=NA))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+exp(quantile(bb$t,c(0.025,0.975)))

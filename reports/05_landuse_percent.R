@@ -812,5 +812,4 @@ predFun <- function(fit) {
 
 bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
 exp(quantile(bb$t,c(0.025,0.975)))
-summary(gls1) %>% intervals(which = "fixed")
 

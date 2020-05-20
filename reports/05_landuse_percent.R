@@ -852,4 +852,33 @@ predFun <- function(fit) {
 bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
 exp(quantile(bb$t,c(0.025,0.975)))
 
+###DK biomass predictions%##############################
+
+library(lme4)
+library(lmerTest)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Wetland_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Wetland_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+exp(predict(lme1000,newdata=newData,re.form=NA))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+exp(quantile(bb$t,c(0.025,0.975)))
 

@@ -882,3 +882,27 @@ predFun <- function(fit) {
 bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
 exp(quantile(bb$t,c(0.025,0.975)))
 
+###DK stop correlation plot #############################
+data1000 <-
+  allInsects %>% select(
+    Biomass,
+    stops,
+    Agriculture_1000,
+    Forest_1000,
+    Wetland_1000,
+    Open.uncultivated.land_1000,
+    Urban_1000,
+    propOeko_1000,
+    hegnLength_1000
+  )
+
+cor1000 <- cor(data1000)
+
+corrplot.mixed(
+  cor1000,
+  lower.col = "black",
+  upper = "color",
+  number.cex = .7,
+  tl.col = "black",
+  tl.cex = 0.5
+)

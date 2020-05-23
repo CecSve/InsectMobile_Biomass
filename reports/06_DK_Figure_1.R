@@ -13,6 +13,7 @@ library(rnaturalearthdata)
 library(ggplot2)
 library(sf)
 library(rnaturalearthhires)
+library(ggsn)
 
 # load merged data
 data <-
@@ -95,7 +96,7 @@ denmark %>%
            fill="white", colour = "black") + 
   coord_sf() + 
   geom_point(data = landuse.map, 
-             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=3, show.legend = T) + theme_void() + theme(legend.title = element_blank())
+             aes(x=lat, y = long, colour = ), alpha = 0.9, size=4.5, show.legend = F, colour = "cadetblue") + theme_void() + theme(legend.title = element_blank()) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07)
 
 # another way of plotting - without the coordinates for Bornholm - not necessary
 denmark_cropped %>%

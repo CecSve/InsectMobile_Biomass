@@ -15,6 +15,8 @@ library(sf)
 library(rnaturalearthhires)
 library(ggsn)
 
+### preparing DK data #######################################
+
 # load merged data
 data <-
   read.delim("cleaned-data/DK_mergedData.txt", sep = "\t")
@@ -61,10 +63,42 @@ landuse.map <-
              lat = dist.location$data.utm_x,
              long = dist.location$data.utm_y)
 
+### World map #######################################
+
 world.map <- map_data ("world") # not a good base
 worldmap <- ne_countries(scale = 'large', type = 'map_units',
                          returnclass = 'sf')
 ggplot() + geom_sf(data = worldmap) + theme_bw()
+
+### EU map ########################
+# Some EU Contries
+some.eu.countries <- c(
+  "Portugal", "Spain", "France", "Switzerland", "Germany",
+  "Austria", "Belgium", "UK", "Netherlands",
+  "Denmark", "Poland", "Italy", 
+  "Croatia", "Slovenia", "Hungary", "Slovakia",
+  "Czech republic", "Luxembourg"
+)
+
+# Retrievethe map data
+some.eu.maps <- map_data("world", region = some.eu.countries)
+
+# Compute the centroid as the mean longitude and lattitude
+# Used as label coordinate for country's names
+region.lab.data <- some.eu.maps %>%
+  group_by(region) %>%
+  summarise(long = mean(long), lat = mean(lat))
+
+ggplot(some.eu.maps, aes(x = long, y = lat)) + coord_sf() +
+  geom_polygon(data=some.eu.maps, aes(group = group, fill = region), colour = "black")+
+  geom_text(aes(label = region, fontface = 2), data = region.lab.data,  size = 3, hjust = 0.5)+
+  scale_fill_manual(values = c("Portugal" = "white", "Spain" = "white", "France" ="white", "Switzerland" ="white", "Germany" ="cadetblue3", "Austria"="white", "Belgium"="white", "UK"="white", "Netherlands"="white",
+                               "Denmark"= "cadetblue", "Poland"="white", "Italy"="white", 
+                               "Croatia"="white", "Slovenia"="white", "Hungary"="white", "Slovakia"="white",
+                               "Czech Republic"= "white", "Luxembourg" = "white")) + theme_void()+
+  theme(legend.position = "none") + scalebar(some.eu.maps, dist = 250, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(some.eu.maps, symbol = 4, scale = 0.07)
+
+### DK map #########################################
 
 DK.map <- world.map %>% filter(region == "Denmark")
 

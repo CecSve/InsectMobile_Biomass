@@ -214,7 +214,7 @@ g2 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
-  xlab("Ecological farmland cover") +ylab("Biomass")
+  xlab("Ecological farmland cover") +ylab("")
 
 g3 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
              aes(sqrt(x=Ekstensiv_1000), y=(Biomass+1)))+
@@ -222,7 +222,7 @@ g3 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
-  xlab("Extensive farmland cover") +ylab("Biomass")
+  xlab("Extensive farmland cover") +ylab("")
 
 g4 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
              aes(sqrt(x=Semi.intensiv_1000), y=(Biomass+1)))+
@@ -238,7 +238,7 @@ g5 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
-  xlab("Intensive farmland cover") +ylab("Biomass")
+  xlab("Intensive farmland cover") +ylab("")
 
 g6 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
              aes(sqrt(x=Markblok_1000), y=(Biomass+1)))+
@@ -246,7 +246,7 @@ g6 <- ggplot(subset(allInsects, Agriculture_1000 > 0.1419),
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
-  xlab("Field cover") +ylab("Biomass")
+  xlab("Unspecified crop cover") +ylab("")
 
 plot_grid(g1,g2,g3,g4,g5,g6)
 

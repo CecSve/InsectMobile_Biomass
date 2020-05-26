@@ -142,7 +142,35 @@ denmark_cropped %>%
 
 ###Germany map#############################################
 
+#get map of germny
+germany <- worldmap[worldmap$name == 'Germany',]
+ggplot() + geom_sf(data = germany) + theme_bw() 
 
+#convert coords into lat lon
+dataGermany <- insectsDE[,c("Land_use","x","y")]
+coordinates(dataGermany) <- c("x","y")
+proj4string(dataGermany) <- CRS("+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs")
+dataGermany <- spTransform(dataGermany,CRS(crs(germany)))
+
+landuse.map <- 
+  data.frame(Land_use = dataGermany@data$Land_use,
+             lat = dataGermany@coords[,2],
+             long = dataGermany@coords[,1])
+landuse.map$Land_use <- factor(landuse.map$Land_use,
+                               levels=c("Urban","Farmland","Dryland",
+                                        "Wetland","Forest"))
+
+DEmap <- germany %>%
+  ggplot() + 
+  geom_sf(data = germany, 
+          fill="white", colour = "black") + 
+  coord_sf() + 
+  geom_point(data = landuse.map, 
+             aes(x=long, y = lat, colour = Land_use), 
+             alpha = 0.9, size=2, show.legend = T) + 
+  theme_void() + 
+  scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"),values=landuseCols) + 
+  scalebar(germany, dist = 100, dist_unit = "km", transform = T, model = "WGS84", st.size = 3)
 
 ###Germany + Denmark data############################################
 

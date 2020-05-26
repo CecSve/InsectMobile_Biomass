@@ -14,6 +14,17 @@ library(ggplot2)
 library(sf)
 library(rnaturalearthhires)
 library(ggsn)
+library(wesanderson)
+library(cowplot)
+
+####colour################################################################
+
+#decide on common color scheme
+landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+landuseCols <- landuseCols[c(1,4,3,5,2)]
+
+landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
+landuseOrderDK <- c("Urban","Farmland","Open uncultivated land","Wetland","Forest")
 
 ### preparing DK data #######################################
 
@@ -124,13 +135,24 @@ DK.map %>%
              aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
 
 # whole of Denmark with better resolution (one plot in the ocean is on the island of Taasinge which is not included in this resolution)
-denmark %>%
+g1 <- denmark %>%
   ggplot() + 
   geom_sf(data = denmark, 
            fill="white", colour = "black") + 
   coord_sf() + 
   geom_point(data = landuse.map, 
-             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=4, show.legend = F) + theme_void() + scale_colour_discrete("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest")) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) 
+             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = F) + theme_void() + scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) 
+
+
+# add DE data
+load("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DEmap.RData")
+
+g2 <- plot(DEmap, main = "Germany")
+
+plot_grid(g1, g2,labels=c('A', 'B'))
+
+ggsave("plots/Fig1.png")
+
 # another way of plotting - without the coordinates for Bornholm - not necessary
 denmark_cropped %>%
   ggplot() + 

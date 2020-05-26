@@ -140,8 +140,11 @@ denmark_cropped %>%
   geom_point(data = main.landuse.map, 
              aes(x=lat, y = long, colour = main.data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
 
+###Germany map#############################################
 
-###adding in Germany data############################################
+
+
+###Germany + Denmark data############################################
 
 #harmomise danish data
 dataDanish <- data

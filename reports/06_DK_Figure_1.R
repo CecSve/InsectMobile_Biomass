@@ -14,14 +14,17 @@ library(ggplot2)
 library(sf)
 library(rnaturalearthhires)
 library(ggsn)
-library(wesanderson)
+#library(wesanderson)
 library(cowplot)
+library(ggsci)
 
 ####colour################################################################
 
 #decide on common color scheme
-landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
-landuseCols <- landuseCols[c(1,4,3,5,2)]
+#landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+#landuseCols <- landuseCols[c(1,4,3,5,2)]
+
+landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73") # colour friendly, ordered by land cover 
 
 landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 landuseOrderDK <- c("Urban","Farmland","Open uncultivated land","Wetland","Forest")
@@ -143,11 +146,10 @@ g1 <- denmark %>%
   geom_point(data = landuse.map, 
              aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = F) + theme_void() + scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) 
 
-
 # add DE data
-load("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/cleaned-data/DEmap.RData")
+load("H:/Documents/Insektmobilen/Analysis/Biomass/InsectMobile_Biomass/cleaned-data/DEmap.RData")
 
-g2 <- plot(DEmap, main = "Germany")
+g2 <- plot(DEmap, main = "Germany") # Fejl i identicalUnits(x) : old version of unit class is no longer allowed
 
 plot_grid(g1, g2,labels=c('A', 'B'))
 

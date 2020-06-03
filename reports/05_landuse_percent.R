@@ -3,15 +3,18 @@
 
 library(cowplot)
 library(ggplot2)
-library(wesanderson)
+#library(wesanderson)
 library(ggpubr)
 library(scales)
+library(ggpmisc)
 
 ####colour################################################################
 
 #decide on common color scheme
-landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
-landuseCols <- landuseCols[c(1,4,3,5,2)]
+#landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
+#landuseCols <- landuseCols[c(1,4,3,5,2)]
+
+landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73") # colour friendly, ordered by land cover 
 
 landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 
@@ -216,9 +219,9 @@ u1000pubr <- ggscatter(allInsects, x = "Urban_1000", y = "Biomass",
                        add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
                        conf.int = TRUE, # Add confidence interval
                        cor.coeff.args = list(method = "spearman")
-) + stat_cor(aes(label = paste(..rr.label..,
+) + font("xy.text", size = 9) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3) + xlab("Urban cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3, size =3) + xlab("Urban cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
 
 plot_grid(u50,u250,u500,u1000,ncol=1)
 plot_grid(u50pubr,u250pubr,u500pubr,u1000pubr,ncol=1)
@@ -229,7 +232,7 @@ a50 <- ggplot(allInsects)+
              col=landuseCols[2])+
   scale_y_log10() + 
   theme_bw() +
-  xlab("Agricultural cover at 50m") +ylab("Biomass")
+  xlab("Farmland cover at 50m") +ylab("Biomass")
 
 a50pubr <- ggscatter(allInsects, x = "Agriculture_50", y = "Biomass",
                     color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -239,14 +242,14 @@ a50pubr <- ggscatter(allInsects, x = "Agriculture_50", y = "Biomass",
                     cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 10, label.y = 1) + xlab("Agriculture cover at 50m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 10, label.y = 1) + xlab("Farmland cover at 50m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
 
 a250 <- ggplot(allInsects)+
   geom_point(aes(x=Agriculture_250,y=(Biomass+1)),
              col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Agricultural cover at 250m") +ylab("Biomass")
+  xlab("Farmland cover at 250m") +ylab("Biomass")
 
 a250pubr <- ggscatter(allInsects, x = "Agriculture_250", y = "Biomass",
                      color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -256,14 +259,14 @@ a250pubr <- ggscatter(allInsects, x = "Agriculture_250", y = "Biomass",
                      cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 5, label.y = 1) + xlab("Agriculture cover at 250m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 5, label.y = 1) + xlab("Farmland cover at 250m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
 
 a500 <- ggplot(allInsects)+
   geom_point(aes(x=Agriculture_500,y=(Biomass+1)),
              col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Agricultural cover at 500m") +ylab("Biomass")
+  xlab("Farmland cover at 500m") +ylab("Biomass")
 
 a500pubr <- ggscatter(allInsects, x = "Agriculture_500", y = "Biomass",
                       color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -273,14 +276,14 @@ a500pubr <- ggscatter(allInsects, x = "Agriculture_500", y = "Biomass",
                       cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 1, label.y = 1) + xlab("Agriculture cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 1, label.y = 1) + xlab("Farmland cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
 
 a1000 <- ggplot(allInsects)+
   geom_point(aes(x=Agriculture_1000,y=(Biomass+1)),
              col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Agricultural cover at 1000m") +ylab("Biomass")
+  xlab("Farmland cover at 1000m") +ylab("Biomass")
 
 a1000pubr <- ggscatter(allInsects, x = "Agriculture_1000", y = "Biomass",
                       color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -288,12 +291,156 @@ a1000pubr <- ggscatter(allInsects, x = "Agriculture_1000", y = "Biomass",
                       add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
                       conf.int = TRUE, # Add confidence interval
                       cor.coeff.args = list(method = "spearman")
-) + stat_cor(aes(label = paste(..rr.label..,
+) + font("xy.text", size = 9) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 0.8) + xlab("Agriculture cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 0.8, size =3) + xlab("Farmland cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
 
 plot_grid(a50,a250,a500,a1000,ncol=1)
 plot_grid(a50pubr,a250pubr,a500pubr,a1000pubr,ncol=1)
+
+# Grassland
+g50 <- ggplot(allInsects)+
+  geom_point(aes(x=Open.uncultivated.land_50,y=(Biomass+1)),
+             col=landuseCols[3])+
+  scale_y_log10() + 
+  theme_bw() +
+  xlab("Grassland cover at 50m") +ylab("Biomass")
+
+g50pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_50", y = "Biomass",
+                     color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
+                     add = "reg.line",  # Add regressin line
+                     add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                     conf.int = TRUE, # Add confidence interval
+                     cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 50m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+g250 <- ggplot(allInsects)+
+  geom_point(aes(x=Open.uncultivated.land_250,y=(Biomass+1)),
+             col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Grassland cover at 250m") +ylab("Biomass")
+
+g250pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_250", y = "Biomass",
+                      color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
+                      add = "reg.line",  # Add regressin line
+                      add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                      conf.int = TRUE, # Add confidence interval
+                      cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 250m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+g500 <- ggplot(allInsects)+
+  geom_point(aes(x=Open.uncultivated.land_500,y=(Biomass+1)),
+             col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Grassland cover at 500m") +ylab("Biomass")
+
+g500pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_500", y = "Biomass",
+                      color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
+                      add = "reg.line",  # Add regressin line
+                      add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                      conf.int = TRUE, # Add confidence interval
+                      cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+g1000 <- ggplot(allInsects)+
+  geom_point(aes(x=Open.uncultivated.land_1000,y=(Biomass+1)),
+             col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Grassland cover at 1000m") +ylab("Biomass")
+
+g1000pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_1000", y = "Biomass",
+                       color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
+                       add = "reg.line",  # Add regressin line
+                       add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                       conf.int = TRUE, # Add confidence interval
+                       cor.coeff.args = list(method = "spearman")
+) + font("xy.text", size = 9) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 0.8, size =3) + xlab("Grassland cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+plot_grid(g50,g250,g500,g1000,ncol=1)
+plot_grid(g50pubr,g250pubr,g500pubr,g1000pubr,ncol=1)
+
+# wetland
+w50 <- ggplot(allInsects)+
+  geom_point(aes(x=Wetland_50,y=(Biomass+1)),
+             col=landuseCols[4])+
+  scale_y_log10() + 
+  theme_bw() +
+  xlab("Wetland cover at 50m") +ylab("Biomass")
+
+w50pubr <- ggscatter(allInsects, x = "Wetland_50", y = "Biomass",
+                     color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
+                     add = "reg.line",  # Add regressin line
+                     add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                     conf.int = TRUE, # Add confidence interval
+                     cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.1, label.y = 1) + xlab("Wetland cover at 50m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+w250 <- ggplot(allInsects)+
+  geom_point(aes(x=Wetland_250,y=(Biomass+1)),
+             col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Wetland cover at 250m") +ylab("Biomass")
+
+w250pubr <- ggscatter(allInsects, x = "Wetland_250", y = "Biomass",
+                      color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
+                      add = "reg.line",  # Add regressin line
+                      add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                      conf.int = TRUE, # Add confidence interval
+                      cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.15, label.y = 1) + xlab("Wetland cover at 250m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+w500 <- ggplot(allInsects)+
+  geom_point(aes(x=Wetland_500,y=(Biomass+1)),
+             col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Wetland cover at 500m") +ylab("Biomass")
+
+w500pubr <- ggscatter(allInsects, x = "Wetland_500", y = "Biomass",
+                      color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
+                      add = "reg.line",  # Add regressin line
+                      add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                      conf.int = TRUE, # Add confidence interval
+                      cor.coeff.args = list(method = "spearman")
+) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.22, label.y = 1) + xlab("Wetland cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+w1000 <- ggplot(allInsects)+
+  geom_point(aes(x=Wetland_1000,y=(Biomass+1)),
+             col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Wetland cover at 1000m") +ylab("Biomass")
+
+w1000pubr <- ggscatter(allInsects, x = "Wetland_1000", y = "Biomass",
+                       color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
+                       add = "reg.line",  # Add regressin line
+                       add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
+                       conf.int = TRUE, # Add confidence interval
+                       cor.coeff.args = list(method = "spearman")
+)+ font("xy.text", size = 9) + stat_cor(aes(label = paste(..rr.label..,
+                               if_else(readr::parse_number(..p.label..) < 0.001, 
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.25, label.y = 0.8, size =3) + xlab("Wetland cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+
+plot_grid(w50,w250,w500,w1000,ncol=1)
+plot_grid(w50pubr,w250pubr,w500pubr,w1000pubr,ncol=1)
 
 #forest
 f50 <- ggplot(allInsects)+
@@ -360,12 +507,15 @@ f1000pubr <- ggscatter(allInsects, x = "Forest_1000", y = "Biomass",
                        add.params = list(color = "Darkgrey", fill = "lightgray"), # Customize reg. line
                        conf.int = TRUE, # Add confidence interval
                        cor.coeff.args = list(method = "spearman")
-) + stat_cor(aes(label = paste(..rr.label..,
+) + font("xy.text", size = 9) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 0.8) + xlab("Forest cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 0.8, size =3) + xlab("Forest cover at 1000m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
 
 plot_grid(f50,f250,f500,f1000,ncol=1)
 plot_grid(f50pubr,f250pubr,f500pubr,f1000pubr,ncol=1)
+
+plot_grid(u1000pubr,a1000pubr,g1000pubr,w1000pubr,f1000pubr,ncol=1)
+ggsave("plots/Landcover_percent_with_stats.png",width=6,height=20)
 
 ###covariation check#########################################
 

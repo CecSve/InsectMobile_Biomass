@@ -144,7 +144,7 @@ g1 <- denmark %>%
            fill="white", colour = "black") + 
   coord_sf() + 
   geom_point(data = landuse.map, 
-             aes(x=lat, y = long, colour = data$Land_use), alpha = 0.9, size=2, show.legend = F) + theme_void() + scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) 
+             aes(x=lat, y = long, colour = data$Land_use), size=4, show.legend = F) + theme_void() + scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) + panel_border()  
 
 # add DE data
 load("H:/Documents/Insektmobilen/Analysis/Biomass/InsectMobile_Biomass/cleaned-data/DEmap.RData")

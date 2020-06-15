@@ -160,7 +160,7 @@ u50 <- ggplot(allInsects)+
              col=landuseCols[1])+
   scale_y_log10() + 
   theme_bw() +
-  xlab("Urban cover at 50m") +ylab("Biomass")
+  xlab("Urban cover at 50m") +ylab("Biomass (mg)")
 
 u50pubr <- ggscatter(allInsects, x = "Urban_50", y = "Biomass",
                      color = landuseCols[1], shape = 19, size = 2, # Points color, shape and size
@@ -177,7 +177,7 @@ u250 <- ggplot(allInsects)+
              col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Urban cover at 250m") +ylab("Biomass")
+  xlab("Urban cover at 250m") +ylab("Biomass (mg)")
 
 u250pubr <- ggscatter(allInsects, x = "Urban_250", y = "Biomass",
                       color = landuseCols[1], shape = 19, size = 2, # Points color, shape and size
@@ -187,14 +187,14 @@ u250pubr <- ggscatter(allInsects, x = "Urban_250", y = "Biomass",
                       cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3) + xlab("Urban cover at 250m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3) + xlab("Urban cover at 250m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
 u500 <- ggplot(allInsects)+
   geom_point(aes(x=Urban_500,y=(Biomass+1)),
              col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Urban cover at 500m") +ylab("Biomass")
+  xlab("Urban cover at 500m") +ylab("Biomass ()mg")
 
 u500pubr <- ggscatter(allInsects, x = "Urban_500", y = "Biomass",
                       color = landuseCols[1], shape = 19, size = 2, # Points color, shape and size
@@ -204,14 +204,14 @@ u500pubr <- ggscatter(allInsects, x = "Urban_500", y = "Biomass",
                       cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3) + xlab("Urban cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3) + xlab("Urban cover at 500m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
-u1000 <- ggplot(allInsects)+
-  geom_point(aes(x=Urban_1000,y=(Biomass+1)),
-             col=landuseCols[1])+
+u1000 <- ggplot(allInsects, aes(x=Urban_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[1])+
+  geom_smooth(method = "lm", formula = y ~ x, colour = "darkgrey", fill = "lightgrey") +
   scale_y_log10() +
   theme_bw() +
-  xlab("Urban cover at 1000m") +ylab("Biomass")
+  xlab("Urban cover at 1000m") +ylab("Biomass (mg)")
 
 u1000pubr <- ggscatter(allInsects, x = "Urban_1000", y = "Biomass",
                        color = landuseCols[1], shape = 19, size = 2, # Points color, shape and size
@@ -232,7 +232,7 @@ a50 <- ggplot(allInsects)+
              col=landuseCols[2])+
   scale_y_log10() + 
   theme_bw() +
-  xlab("Farmland cover at 50m") +ylab("Biomass")
+  xlab("Farmland cover at 50m") +ylab("Biomass (mg)")
 
 a50pubr <- ggscatter(allInsects, x = "Agriculture_50", y = "Biomass",
                     color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -242,14 +242,14 @@ a50pubr <- ggscatter(allInsects, x = "Agriculture_50", y = "Biomass",
                     cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 10, label.y = 1) + xlab("Farmland cover at 50m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 10, label.y = 1) + xlab("Farmland cover at 50m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
 a250 <- ggplot(allInsects)+
   geom_point(aes(x=Agriculture_250,y=(Biomass+1)),
              col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Farmland cover at 250m") +ylab("Biomass")
+  xlab("Farmland cover at 250m") +ylab("Biomass (mg)")
 
 a250pubr <- ggscatter(allInsects, x = "Agriculture_250", y = "Biomass",
                      color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -266,7 +266,7 @@ a500 <- ggplot(allInsects)+
              col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Farmland cover at 500m") +ylab("Biomass")
+  xlab("Farmland cover at 500m") +ylab("Biomass (mg)")
 
 a500pubr <- ggscatter(allInsects, x = "Agriculture_500", y = "Biomass",
                       color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -276,14 +276,14 @@ a500pubr <- ggscatter(allInsects, x = "Agriculture_500", y = "Biomass",
                       cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 1, label.y = 1) + xlab("Farmland cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 1, label.y = 1) + xlab("Farmland cover at 500m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
-a1000 <- ggplot(allInsects)+
-  geom_point(aes(x=Agriculture_1000,y=(Biomass+1)),
-             col=landuseCols[2])+
+a1000 <- ggplot(allInsects, aes(x=Agriculture_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[2])+
+  geom_smooth(method = "lm", formula = y ~ x, colour = "darkgrey", fill = "lightgrey") +
   scale_y_log10() +
   theme_bw() +
-  xlab("Farmland cover at 1000m") +ylab("Biomass")
+  xlab("Farmland cover at 1000m") +ylab("Biomass (mg)")
 
 a1000pubr <- ggscatter(allInsects, x = "Agriculture_1000", y = "Biomass",
                       color = landuseCols[2], shape = 19, size = 2, # Points color, shape and size
@@ -304,7 +304,7 @@ g50 <- ggplot(allInsects)+
              col=landuseCols[3])+
   scale_y_log10() + 
   theme_bw() +
-  xlab("Grassland cover at 50m") +ylab("Biomass")
+  xlab("Grassland cover at 50m") +ylab("Biomass (mg)")
 
 g50pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_50", y = "Biomass",
                      color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
@@ -314,14 +314,14 @@ g50pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_50", y = "Biomass",
                      cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 50m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 50m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
 g250 <- ggplot(allInsects)+
   geom_point(aes(x=Open.uncultivated.land_250,y=(Biomass+1)),
              col=landuseCols[3])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Grassland cover at 250m") +ylab("Biomass")
+  xlab("Grassland cover at 250m") +ylab("Biomass (mg)")
 
 g250pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_250", y = "Biomass",
                       color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
@@ -331,7 +331,7 @@ g250pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_250", y = "Biomass
                       cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 250m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 250m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
 g500 <- ggplot(allInsects)+
   geom_point(aes(x=Open.uncultivated.land_500,y=(Biomass+1)),
@@ -348,14 +348,14 @@ g500pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_500", y = "Biomass
                       cor.coeff.args = list(method = "spearman")
 ) + stat_cor(aes(label = paste(..rr.label..,
                                if_else(readr::parse_number(..p.label..) < 0.001, 
-                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 500m") + ylab("Biomass") + scale_y_continuous(trans = log10_trans())
+                                       "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 1) + xlab("Grassland cover at 500m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
-g1000 <- ggplot(allInsects)+
-  geom_point(aes(x=Open.uncultivated.land_1000,y=(Biomass+1)),
-             col=landuseCols[3])+
+g1000 <- ggplot(allInsects, aes(x=Open.uncultivated.land_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[3])+
+  geom_smooth(method = "lm", formula = y ~ x, colour = "darkgrey", fill = "lightgrey") +
   scale_y_log10() +
   theme_bw() +
-  xlab("Grassland cover at 1000m") +ylab("Biomass")
+  xlab("Grassland cover at 1000m") +ylab("Biomass (mg)")
 
 g1000pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_1000", y = "Biomass",
                        color = landuseCols[3], shape = 19, size = 2, # Points color, shape and size
@@ -376,7 +376,7 @@ w50 <- ggplot(allInsects)+
              col=landuseCols[4])+
   scale_y_log10() + 
   theme_bw() +
-  xlab("Wetland cover at 50m") +ylab("Biomass")
+  xlab("Wetland cover at 50m") +ylab("Biomass (mg)")
 
 w50pubr <- ggscatter(allInsects, x = "Wetland_50", y = "Biomass",
                      color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
@@ -393,7 +393,7 @@ w250 <- ggplot(allInsects)+
              col=landuseCols[4])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Wetland cover at 250m") +ylab("Biomass")
+  xlab("Wetland cover at 250m") +ylab("Biomass (mg)")
 
 w250pubr <- ggscatter(allInsects, x = "Wetland_250", y = "Biomass",
                       color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
@@ -410,7 +410,7 @@ w500 <- ggplot(allInsects)+
              col=landuseCols[4])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Wetland cover at 500m") +ylab("Biomass")
+  xlab("Wetland cover at 500m") +ylab("Biomass (mg)")
 
 w500pubr <- ggscatter(allInsects, x = "Wetland_500", y = "Biomass",
                       color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
@@ -422,12 +422,12 @@ w500pubr <- ggscatter(allInsects, x = "Wetland_500", y = "Biomass",
                                if_else(readr::parse_number(..p.label..) < 0.001, 
                                        "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.22, label.y = 1) + xlab("Wetland cover at 500m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
-w1000 <- ggplot(allInsects)+
-  geom_point(aes(x=Wetland_1000,y=(Biomass+1)),
-             col=landuseCols[4])+
+w1000 <- ggplot(allInsects, aes(x=Wetland_1000,y=(Biomass+1))) +
+  geom_point(col=landuseCols[4])+
+  geom_smooth(method = "lm", formula = y ~ x, colour = "darkgrey", fill = "lightgrey") +
   scale_y_log10() +
   theme_bw() +
-  xlab("Wetland cover at 1000m") +ylab("Biomass")
+  xlab("Wetland cover at 1000m") +ylab("Biomass (mg)")
 
 w1000pubr <- ggscatter(allInsects, x = "Wetland_1000", y = "Biomass",
                        color = landuseCols[4], shape = 19, size = 2, # Points color, shape and size
@@ -448,7 +448,7 @@ f50 <- ggplot(allInsects)+
              col=landuseCols[5])+
   scale_y_log10() + 
   theme_bw() +
-  xlab("Forest cover at 50m") +ylab("Biomass")
+  xlab("Forest cover at 50m") +ylab("Biomass (mg)")
 
 f50pubr <- ggscatter(allInsects, x = "Forest_50", y = "Biomass",
                      color = landuseCols[5], shape = 19, size = 2, # Points color, shape and size
@@ -465,7 +465,7 @@ f250 <- ggplot(allInsects)+
              col=landuseCols[5])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Forest cover at 250m") +ylab("Biomass")
+  xlab("Forest cover at 250m") +ylab("Biomass (mg)")
 
 f250pubr <- ggscatter(allInsects, x = "Forest_250", y = "Biomass",
                       color = landuseCols[5], shape = 19, size = 2, # Points color, shape and size
@@ -482,7 +482,7 @@ f500 <- ggplot(allInsects)+
              col=landuseCols[5])+
   scale_y_log10() +
   theme_bw() +
-  xlab("Forest cover at 500m") +ylab("Biomass")
+  xlab("Forest cover at 500m") +ylab("Biomass (mg)")
 
 f500pubr <- ggscatter(allInsects, x = "Forest_500", y = "Biomass",
                       color = landuseCols[5], shape = 19, size = 2, # Points color, shape and size
@@ -494,12 +494,12 @@ f500pubr <- ggscatter(allInsects, x = "Forest_500", y = "Biomass",
                                if_else(readr::parse_number(..p.label..) < 0.001, 
                                        "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 1) + xlab("Forest cover at 500m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans())
 
-f1000 <- ggplot(allInsects)+
-  geom_point(aes(x=Forest_1000,y=(Biomass+1)),
-             col=landuseCols[5])+
+f1000 <- ggplot(allInsects, aes(x=Forest_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[5])+
+  geom_smooth(method = "lm", formula = y ~ x, colour = "darkgrey", fill = "lightgrey") +
   scale_y_log10() +
   theme_bw() +
-  xlab("Forest cover at 1000m") +ylab("Biomass")
+  xlab("Forest cover at 1000m") +ylab("Biomass (mg)")
 
 f1000pubr <- ggscatter(allInsects, x = "Forest_1000", y = "Biomass",
                        color = landuseCols[5], shape = 19, size = 2, # Points color, shape and size
@@ -514,6 +514,8 @@ f1000pubr <- ggscatter(allInsects, x = "Forest_1000", y = "Biomass",
 plot_grid(f50,f250,f500,f1000,ncol=1)
 plot_grid(f50pubr,f250pubr,f500pubr,f1000pubr,ncol=1)
 
+plot_grid(u1000,a1000,g1000,w1000,f1000,ncol=1, labels = c("A", "B", "C", "D", "E"))
+ggsave("plots/Landcover_percent_with_regline.png",width=5,height=15)
 plot_grid(u1000pubr,a1000pubr,g1000pubr,w1000pubr,f1000pubr,ncol=1, labels = c("A", "B", "C", "D", "E"))
 ggsave("plots/Landcover_percent_with_stats.png",width=6,height=20)
 

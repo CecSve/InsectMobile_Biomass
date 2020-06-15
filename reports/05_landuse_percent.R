@@ -526,6 +526,29 @@ cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_250",names(allInsects
 cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_50",names(allInsects))])])
 #correlations between stops and urban cover...
 
+###pca analysis###############################################
+#taken from the Quick R website
+
+mydata <- allInsects[,c("cStops","cTL",names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,2:9]
+
+fit <- princomp(mydata, cor=TRUE)
+summary(fit) # print variance accounted for
+loadings(fit) # pc loadings
+plot(fit,type="lines") # scree plot
+fit$scores # the principal components
+biplot(fit)
+
+#with ggplot
+library(ggfortify)
+autoplot(fit)
+autoplot(fit, data = allInsects, colour = 'Land_use',
+         loadings = TRUE, 
+         loadings.colour = 'black',
+         loadings.label = TRUE, 
+         loadings.label.size = 2)
+
 ###analysis####################################################
 
 # run 04 to add variables to allInsects used for analysis 

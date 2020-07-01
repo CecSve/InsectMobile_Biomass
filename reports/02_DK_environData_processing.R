@@ -81,6 +81,12 @@ buf_250m$propLand_use[buf_250m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open 
 buf_500m$propLand_use[buf_500m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open uncultivated land"
 buf_1000m$propLand_use[buf_1000m$type %in% c("Hede", "Overdrev", "Eng")] <- "Open uncultivated land"
 
+#unspecified category
+buf_50m$propLand_use[buf_50m$type %in% "Andet"] <- "Unspecified land cover"
+buf_250m$propLand_use[buf_250m$type %in% "Andet"] <- "Unspecified land cover"
+buf_500m$propLand_use[buf_500m$type %in% "Andet"] <- "Unspecified land cover"
+buf_1000m$propLand_use[buf_1000m$type %in% "Andet"] <- "Unspecified land cover"
+
 #subset to the above land-uses for each buffer
 # 50
 table(buf_50m$propLand_use)
@@ -99,10 +105,10 @@ table(buf_1000m$propLand_use)
 output1000 <- subset(buf_1000m,!is.na(propLand_use))
 
 #cast the data
-outputCast50 <- dcast(output50,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
-outputCast250 <- dcast(output250,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
-outputCast500 <- dcast(output500,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
-outputCast1000 <- dcast(output1000,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast50 <- reshape2::dcast(output50,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast250 <- reshape2::dcast(output250,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast500 <- reshape2::dcast(output500,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
+outputCast1000 <- reshape2::dcast(output1000,routeID~propLand_use+bufferDist,value.var="areaProportion",fun=sum,na.rm=T)
 
 #merge buffer zone cast outputs
 outputCast <- merge(outputCast50, outputCast250, by = "routeID")

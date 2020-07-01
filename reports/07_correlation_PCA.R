@@ -12,16 +12,16 @@ par(mfrow = c(2, 2))
 names(allInsects)
 
 # select variables for PCA - we will only use land cover at 1000 m and cStops
-biomass.pca <- prcomp(allInsects[,c(12,121,41:45)], center = TRUE,scale. = TRUE)
+biomass.pca <- prcomp(allInsects[,c(12,125,44:49)], center = TRUE,scale. = TRUE)
 summary(biomass.pca)
 str(biomass.pca)
 
 ggbiplot(biomass.pca)
 
 # correlation plot for 1000 m buffer
-someInsects <- allInsects[,c(12,121,41:45)]
+someInsects <- allInsects[,c(12,125,44:49)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -55,9 +55,9 @@ corrplot(p, method = "color", col = landuseCols,
 
 # correlation plot for 500 m buffer
 
-someInsects <- allInsects[,c(12,121,36:40)]
+someInsects <- allInsects[,c(12,125,38:43)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified cover", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -77,9 +77,9 @@ corrplot(p, method = "color", col = landuseCols,
 
 # correlation plot for 250 m buffer
 
-someInsects <- allInsects[,c(12,121,31:35)]
+someInsects <- allInsects[,c(12,125,32:37)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified cover", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -99,9 +99,9 @@ corrplot(p, method = "color", col = landuseCols,
 
 # correlation plot for 50 m buffer
 
-someInsects <- allInsects[,c(12,121,26:30)]
+someInsects <- allInsects[,c(12,125,26:31)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified cover", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -124,10 +124,10 @@ corrplot(p, method = "color", col = landuseCols,
 
 # subset data for each land cover buffer prior to analysis
 names(allInsects)
-cor50 <- allInsects[,c(1,27:31)]
-cor250 <- allInsects[,c(1,32:36)]
-cor500 <- allInsects[,c(1,37:41)]
-cor1000 <- allInsects[,c(1,42:46)]
+cor50 <- allInsects[,c(1,26:31)]
+cor250 <- allInsects[,c(1,32:37)]
+cor500 <- allInsects[,c(1,38:43)]
+cor1000 <- allInsects[,c(1,44:49)]
 
 # 50 m buffer correlation of land cover variables
 fit <- princomp(cor50, cor=TRUE)

@@ -201,7 +201,7 @@ allInsects <- allInsects %>%
     by = 'id'
   )
 
-# joining intorduced .y and .x to headers and should be removed
+# joining introduced .y and .x to headers and should be removed
 allInsects <- allInsects[, -grep(".y$", colnames(allInsects))]
 names(allInsects) <- gsub(".x","",names(allInsects),fixed = TRUE)
 allInsects <- column_to_rownames(allInsects, var = "id")

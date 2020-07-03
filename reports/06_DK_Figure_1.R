@@ -25,6 +25,7 @@ library(ggsci)
 #landuseCols <- landuseCols[c(1,4,3,5,2)]
 
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73") # colour friendly, ordered by land cover 
+#landuseCols <- landuseCols[c(1,4,3,5,2)]
 
 landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 landuseOrderDK <- c("Urban","Farmland","Open uncultivated land","Wetland","Forest")
@@ -144,7 +145,7 @@ g1 <- denmark %>%
            fill="white", colour = "black") + 
   coord_sf() + 
   geom_point(data = landuse.map, 
-             aes(x=lat, y = long, colour = data$Land_use), size=4, show.legend = F) + theme_void() + scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) + panel_border()  
+             aes(x=lat, y = long, colour = data$Land_use), size=4, show.legend = F) + theme_void() + scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) + panel_border() + labs(subtitle = "A") + theme(plot.subtitle = element_text(face = "bold", size = 20))  
 
 # add DE data
 load("H:/Documents/Insektmobilen/Analysis/Biomass/InsectMobile_Biomass/cleaned-data/DEmap.RData")

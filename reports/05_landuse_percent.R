@@ -1288,6 +1288,85 @@ finalplot <- p + geom_pointrange(aes(ymin = lowCI, ymax = highCI), size =1.5) + 
 
 save_plot("plots/DK_predicted_biomass.png", finalplot, base_width = 8, base_height = 5)
 
+# intensive vs organic farming
+# Intensive
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Intensiv_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Intensiv_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+Intensiv1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+Intensiv2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Intensiv <- cbind(Intensiv1, Intensiv2)
+Intensiv <- as.data.frame(Intensiv)
+colnames(Intensiv)
+names(Intensiv)[1] <- "predBiomass"
+names(Intensiv)[2] <- "lowCI"
+names(Intensiv)[3] <- "highCI"
+row.names(Intensiv) <- "Intensive"
+
+# propOeko
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(propOeko_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(propOeko_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+propOeko1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+propOeko2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+propOeko <- cbind(propOeko1, propOeko2)
+propOeko <- as.data.frame(propOeko)
+colnames(propOeko)
+names(propOeko)[1] <- "predBiomass"
+names(propOeko)[2] <- "lowCI"
+names(propOeko)[3] <- "highCI"
+row.names(propOeko) <- "Organic"
+
+predConfData <- rbind(Intensiv, propOeko)
+predConfData <- rownames_to_column(predConfData, var = "Farmland_type")
+
+# plot
+
+p <- predConfData %>% ggplot(aes(Farmland_type, predBiomass, colour = Farmland_type))
+finalplot <- p + geom_pointrange(aes(ymin = lowCI, ymax = highCI), size =1.5) + scale_colour_manual(values = c("#F09018", "#E3B622" )) + theme_minimal_grid() + theme(legend.title = element_blank(), legend.key = element_rect(size = 0.1), legend.key.size = unit(1, 'cm')) + labs(x = "\nFarming system", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "A") + theme(plot.subtitle = element_text(size = 20, face = "bold"))
+
+save_plot("plots/DK_predicted_biomass_farmtype.png", finalplot, base_width = 8, base_height = 5)
+
 ###DK stop correlation plot #############################
 data1000 <-
   allInsects %>% select(

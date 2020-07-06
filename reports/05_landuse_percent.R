@@ -878,6 +878,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   sqrt(Open.uncultivated.land_250)+
                   sqrt(Wetland_50) +
                   sqrt(Forest_500) +
+                  sqrt(Unspecified.land.cover_500) +
                   Time_band + 
                   Land_use:Time_band +
                   Time_band:cnumberTime + cStops + cyDay + 
@@ -1066,6 +1067,109 @@ exp(quantile(bb$t,c(0.025,0.975)))
 library(lme4)
 library(lmerTest)
 
+# urban
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Urban_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Urban_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+Urban1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+Urban2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Urban <- cbind(Urban1, Urban2)
+Urban <- as.data.frame(Urban)
+colnames(Urban)
+names(Urban)[1] <- "predBiomass"
+names(Urban)[2] <- "lowCI"
+names(Urban)[3] <- "highCI"
+row.names(Urban) <- "Urban"
+
+# farmland
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Agriculture_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+Farmland1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+Farmland2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Farmland <- cbind(Farmland1, Farmland2)
+Farmland <- as.data.frame(Farmland)
+colnames(Farmland)
+names(Farmland)[1] <- "predBiomass"
+names(Farmland)[2] <- "lowCI"
+names(Farmland)[3] <- "highCI"
+row.names(Farmland) <- "Farmland"
+
+# Grassland
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Open.uncultivated.land_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Open.uncultivated.land_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+Grassland1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+Grassland2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Grassland <- cbind(Grassland1, Grassland2)
+Grassland <- as.data.frame(Grassland)
+colnames(Grassland)
+names(Grassland)[1] <- "predBiomass"
+names(Grassland)[2] <- "lowCI"
+names(Grassland)[3] <- "highCI"
+row.names(Grassland) <- "Grassland"
+
+# wetland
 lme1000 <- lmer(log(Biomass+1) ~ 
                   sqrt(Wetland_1000) + 
                   Time_band + 
@@ -1082,14 +1186,106 @@ newData = data.frame(Wetland_1000=0.5,
 
 
 #make predictions
-exp(predict(lme1000,newdata=newData,re.form=NA))
+wetland1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
 
 predFun <- function(fit) {
   predict(fit,newData,re.form=NA)
 }
 
 bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
-exp(quantile(bb$t,c(0.025,0.975)))
+wetland2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Wetland <- cbind(wetland1, wetland2)
+Wetland <- as.data.frame(wetland)
+colnames(Wetland)
+names(Wetland)[1] <- "predBiomass"
+names(Wetland)[2] <- "lowCI"
+names(Wetland)[3] <- "highCI"
+row.names(Wetland) <- "Wetland"
+
+# Forest
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Forest_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Forest_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+Forest1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+Forest2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Forest <- cbind(Forest1, Forest2)
+Forest <- as.data.frame(Forest)
+colnames(Forest)
+names(Forest)[1] <- "predBiomass"
+names(Forest)[2] <- "lowCI"
+names(Forest)[3] <- "highCI"
+row.names(Forest) <- "Forest"
+
+# Unspecified
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Unspecified.land.cover_1000) + 
+                  Time_band + 
+                  Time_band:cnumberTime +
+                  log(cStops+1) + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), 
+                data=allInsects)
+summary(lme1000)
+newData = data.frame(Unspecified.land.cover_1000=0.5,
+                     cStops=0,
+                     cyDay = 0,
+                     Time_band = "midday",
+                     cnumberTime = 0)
+
+
+#make predictions
+Unspecified1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
+
+predFun <- function(fit) {
+  predict(fit,newData,re.form=NA)
+}
+
+bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
+Unspecified2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
+
+Unspecified <- cbind(Unspecified1, Unspecified2)
+Unspecified <- as.data.frame(Unspecified)
+colnames(Unspecified)
+names(Unspecified)[1] <- "predBiomass"
+names(Unspecified)[2] <- "lowCI"
+names(Unspecified)[3] <- "highCI"
+row.names(Unspecified) <- "Unspecified"
+
+predConfData <- rbind(Urban, Farmland)
+predConfData <- rbind(predConfData, Grassland)
+predConfData <- rbind(predConfData, Wetland)
+predConfData <- rbind(predConfData, Forest)
+predConfData <- rbind(predConfData, Unspecified)
+
+predConfData <- rownames_to_column(predConfData, var = "landcover")
+
+# plot
+
+p <- predConfData %>%
+  mutate(landcover = fct_relevel(landcover, "Urban", "Farmland", "Grassland", "Wetland", "Forest", "Unspecified")) %>% ggplot(aes(landcover, predBiomass, colour = landcover))
+finalplot <- p + geom_pointrange(aes(ymin = lowCI, ymax = highCI), size =1.5) + scale_colour_manual(values = landuseCols) + theme_minimal_grid() + theme(legend.title = element_blank(), legend.key = element_rect(size = 0.1), legend.key.size = unit(1, 'cm')) + labs(x = "\nLand cover", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "A") + theme(plot.subtitle = element_text(size = 20, face = "bold"))
+
+save_plot("plots/DK_predicted_biomass.png", finalplot, base_width = 8, base_height = 5)
 
 ###DK stop correlation plot #############################
 data1000 <-

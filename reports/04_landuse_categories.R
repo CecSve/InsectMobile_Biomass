@@ -13,11 +13,11 @@ library(scales)
 
 #decide on common color scheme
 #landuseCols <- wes_palette('Royal2', 5, type = c("discrete"))
-landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73") # colour friendly, ordered by land cover 
+landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 #landuseCols <- landuseCols[c(1,4,3,5,2)]
 
 landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
-landuseOrderDK <- c("Urban","Farmland","Open uncultivated land","Wetland","Forest")
+landuseOrderDK <- c("Urban","Farmland","Open uncultivated land","Wetland","Forest", "Unspecified")
 
 ###Fig 2############################################################
 

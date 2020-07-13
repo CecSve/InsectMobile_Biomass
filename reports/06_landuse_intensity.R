@@ -63,6 +63,7 @@ g3 <- ggplot(subset(allInsects,Land_use=="Farmland"),
 plot_grid(g1,g2,g3,nrow=1)
 
 ### DK urban##############################################
+table(allInsects$maxLand_use)
 
 g1 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
              aes(x=sqrt(urbGreenPropArea_1000),y=(Biomass+1)))+
@@ -135,9 +136,12 @@ lmeurban1000 <- lmer(log(Biomass+1) ~
 
 # as reduced as it can be
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
+                       #sqrt(urbGreenPropArea_1000) + 
                        sqrt(byHegnMeterPerHa_1000) +
+                       #sqrt(Bykerne_1000)+
                        sqrt(Lav.bebyggelse_1000) +
                        sqrt(Høj.bebyggelse_1000) +
+                       #sqrt(Erhverv_1000) +
                        Time_band + 
                        Time_band:cnumberTime + cStops + cyDay + 
                        (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
@@ -249,12 +253,12 @@ g1 <- ggplot(subset(allInsects, maxLand_use = "Agriculture_1000"),
   xlab("Hedgerows m per ha") +ylab("Biomass")
 
 g2 <- ggplot(subset(allInsects, maxLand_use = "Agriculture_1000"),
-             aes(sqrt(x=propOeko_1000),y=(Biomass+1)))+
+             aes(sqrt(x=Ekstensiv_organic_1000),y=(Biomass+1)))+
   geom_point(col=landuseCols[3])+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+
-  xlab("Ecological farmland cover") +ylab("")
+  xlab("Organic extensive farmland cover") +ylab("")
 
 g3 <- ggplot(subset(allInsects, maxLand_use = "Agriculture_1000"),
              aes(sqrt(x=Ekstensiv_1000), y=(Biomass+1)))+
@@ -295,11 +299,14 @@ plot_grid(g1,g2,g3,g4,g5,g6)
 #full model (without weather)
 lme1000 <- lmer(log(Biomass+1) ~ 
                        (hegnMeterPerHa_1000) + 
-                       (propOeko_1000) +
+                       (Ekstensiv_organic_1000) +
                        (Ekstensiv_1000)+
                        (Semi.intensiv_1000) +
+                  (Semi.intensiv_organic_1000) +
                        Intensiv_1000 +
+                  Intensiv_organic_1000 +
                        (Markblok_1000) + 
+                  (Markblok_organic_1000) + 
                        Time_band + 
                        Time_band:cnumberTime + cStops + cyDay + 
                        (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Agriculture_1000"))
@@ -307,7 +314,15 @@ summary(lme1000)
 
 # as reduced as it can be
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  (hegnMeterPerHa_1000) + 
+                  (hegnMeterPerHa_1000) + # a structural thing - not a use indicator
+                  #(Ekstensiv_organic_1000) +
+                  #(Ekstensiv_1000)+
+                  #(Semi.intensiv_1000) +
+                  #(Semi.intensiv_organic_1000) +
+                  #Intensiv_1000 +
+                  #Intensiv_organic_1000 +
+                  #(Markblok_1000) + 
+                  #(Markblok_organic_1000) +  
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Agriculture_1000"))
@@ -319,12 +334,17 @@ r.squaredGLMM(lme1000)
 ### DK agriculture spatial model ######################################
 #full model and final model since stepwise reduction does not lead to significant variables
 gls1 <- lme(log(Biomass+1) ~  
+              #(hegnMeterPerHa_1000) + # only a structural indicator, not a land use type
+              (Ekstensiv_organic_1000) +
               (Ekstensiv_1000)+
               (Semi.intensiv_1000) +
+              (Semi.intensiv_organic_1000) +
               Intensiv_1000 +
+              Intensiv_organic_1000 +
               (Markblok_1000) + 
+              (Markblok_organic_1000) +  
               Time_band + 
-              Time_band:cnumberTime + cyDay + Temperature + Wind + cStops,
+              Time_band:cnumberTime + cyDay+ cStops,
             random=~1|PilotID/RouteID_JB,
             correlation=corExp(form=~x2+y2|PilotID/RouteID_JB), na.action = na.omit,
             data=subset(allInsects, maxLand_use = "Agriculture_1000")) # added na omit
@@ -337,7 +357,7 @@ r.squaredGLMM(gls1)
 CIs <- intervals(gls1, which = "fixed")
 df <- data.frame(CIs$fixed)
 df <- df %>% rownames_to_column(var = "FarmlandLandUse")
-keep <- c("Intensiv_1000","Semi.intensiv_1000","Ekstensiv_1000","Markblok_1000")
+keep <- c("Intensiv_1000", "Intensiv_organic_1000", "Semi.intensiv_1000", "Semi.intensiv_organic_1000", "Ekstensiv_1000", "Ekstensiv_organic_1000","Markblok_1000")# , "Markblok_organic_1000"
 df <- filter(df, FarmlandLandUse %in% keep)
 
 p <-
@@ -345,9 +365,13 @@ p <-
     FarmlandLandUse = fct_relevel(
       FarmlandLandUse,
       "Intensiv_1000",
+      "Intensiv_organic_1000",
       "Semi.intensiv_1000",
+      "Semi.intensiv_organic_1000",
       "Ekstensiv_1000",
-      "Markblok_1000"
+      "Ekstensiv_organic_1000",
+      "Markblok_1000",
+      #"Markblok_organic_1000"
     )
   ) %>% ggplot(aes(FarmlandLandUse, est.))
 finalplot <-
@@ -360,9 +384,13 @@ finalplot <-
                       ) + labs(x = "\nFarmland land use", y = "Estimated biomass (mg) and 95% CIs\n", subtitle = "B") + theme(plot.subtitle = element_text(size = 20, face = "bold")) + scale_x_discrete(
                         labels = c(
                           "Ekstensiv_1000" = "Extensive cover",
+                          "Ekstensiv_organic_1000" = "Organic extensive cover",
                           "Semi.intensiv_1000" = "Semi-intensive cover",
+                          "Semi.intensiv_organic_1000" = "Organic semi-intensive cover",
                           "Intensiv_1000" = "Intensive cover",
+                          "Intensiv_organic_1000" = "Organic intensive cover",
                           "Markblok_1000" = "Unspecified field cover"
+                          #"Markblok_organic_1000" = "Organic unspecified field cover"
                         )
                       ) + theme(axis.text.x = element_text(size = 12, angle = 90))
 

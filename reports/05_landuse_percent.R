@@ -1083,6 +1083,17 @@ gls1 <- lme(log(Biomass+1) ~  (Agriculture_1000) +
             data=allInsects,na.action=na.omit)
 summary(gls1)
 
+library(ncf)
+spline.autocorrelation_glm = spline.correlog(allInsects$x2, allInsects$y2, gls1$residuals, latlon=T, resamp=100)
+plot(spline.autocorrelation_glm)
+summary(spline.autocorrelation_glm)
+
+autocorrelation_glm = correlog(allInsects$x2, allInsects$y2, gls1$residuals, increment = 1000, latlon=T, resamp=100)
+plot(autocorrelation_glm)
+autocorrelation_glm$correlation
+mantel.test(allInsects$x2, allInsects$y2, gls1$residuals, resamp = 100, latlon = T) #does not work
+
+
 #final model DK - use cStops instead of cTL - sam story as without spatial correlation
 gls1 <- lme(log(Biomass+1) ~ (Agriculture_1000) + 
               #sqrt(Urban_1000) +

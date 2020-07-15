@@ -89,12 +89,17 @@ allInsects$cStops <- log(allInsects$stops+1) - median(log(allInsects$stops+1))
 allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signals+1))
 
 #sort time data to standard each around the time band
-allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))
-middayMean <- median(allInsects$numberTime[allInsects$Time_band=="midday"])#23 for DE, 37.5 for DK
-eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"])#69.5 for DK, 124 for DK
+allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark?
+allInsects$numberTime <- as.numeric(hm(allInsects$StartTime))#DE
+
+middayMean <- median(allInsects$numberTime[allInsects$Time_band=="midday"],na.rm=T)#23 for DE, 37.5 for DK
+eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"],na.rm=T)#69.5 for DK, 124 for DK
 allInsects$cnumberTime <- NA
 allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -middayMean
 allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -eveningMean
+
+#for missing german value, just set to 0
+allInsects$cnumberTime[is.na(allInsects$cnumberTime)] <- 0
 
 table(allInsects$Route_length,allInsects$PilotID)
 hist(allInsects$cStops)

@@ -124,12 +124,12 @@ library(lmerTest)
 mean(allInsects$Urban_1000)
 quantile(allInsects$Urban_1000, 0.1) # 0.02915
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                  sqrt(urbGreenPropArea_1000) + 
-                  sqrt(byHegnMeterPerHa_1000) +
-                  sqrt(Bykerne_1000)+
-                  sqrt(Lav.bebyggelse_1000) +
-                  sqrt(Høj.bebyggelse_1000) +
-                  sqrt(Erhverv_1000) +
+                  (urbGreenPropArea_1000) + 
+                  (byHegnMeterPerHa_1000) +
+                  (Bykerne_1000)+
+                  (Lav.bebyggelse_1000) +
+                  (Høj.bebyggelse_1000) +
+                  (Erhverv_1000) +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
@@ -137,10 +137,10 @@ lmeurban1000 <- lmer(log(Biomass+1) ~
 # as reduced as it can be
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
                        #sqrt(urbGreenPropArea_1000) + 
-                       sqrt(byHegnMeterPerHa_1000) +
+                       #(byHegnMeterPerHa_1000) +
                        #sqrt(Bykerne_1000)+
-                       sqrt(Lav.bebyggelse_1000) +
-                       sqrt(Høj.bebyggelse_1000) +
+                       (Lav.bebyggelse_1000) +
+                       (Høj.bebyggelse_1000) +
                        #sqrt(Erhverv_1000) +
                        Time_band + 
                        Time_band:cnumberTime + cStops + cyDay + 
@@ -165,16 +165,24 @@ gls1 <- lme(log(Biomass+1) ~ (urbGreenPropArea_1000) +
               (Høj.bebyggelse_1000) +
               (Erhverv_1000) +
               Time_band + 
-              Time_band:cnumberTime + cyDay + Temperature + Wind + cStops,
+              Time_band:cnumberTime + cyDay + cStops,
             random=~1|PilotID/RouteID_JB,
             correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
             data=subset(allInsects,  maxLand_use = "Urban_1000"))
 
 summary(gls1)
-
-# plot estimated biomass and CIs for urban land use intensity
-CIs <- intervals(gls1, which = "fixed")
+CIs <- intervals(gls1, which = "all")
 df <- data.frame(CIs$fixed)
+df$SE <- NULL
+df$SE <- (df$upper - df$lower)/(2*1.96) # calculate standard error
+df$z <- NULL
+df$z <- df$est./df$SE # calculate test statistic
+df$pval <- NULL
+df$pval <- exp((-0.717*df$z)-(0.416*df$z^2)) # calculate the p-value
+
+# plot estimated biomass and CIs for urban land use intensity#
+#CIs <- interval(gls1, which = "fixed")
+#df <- data.frame(CIs$fixed)
 df <- df %>% rownames_to_column(var = "UrbanLandUse")
 keep <- c("Høj.bebyggelse_1000", "Lav.bebyggelse_1000", "urbGreenPropArea_1000", "byHegnMeterPerHa_1000", "Bykerne_1000", "Erhverv_1000")
 df <- filter(df, UrbanLandUse %in% keep)
@@ -207,7 +215,7 @@ finalplot <-
                           "Bykerne_1000" = "Inner city cover \n(large cities)",
                           "Erhverv_1000" = "Industrial building cover"
                         )
-                      ) + theme(axis.text.x = element_text(size = 12, angle = 90))
+                      ) + theme(axis.text.x = element_text(size = 12, angle = 90)) 
 
 save_plot("plots/DK_estimated_biomass_urbanlanduse.png", finalplot, base_width = 8, base_height = 6)
 

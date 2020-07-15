@@ -19,7 +19,7 @@ landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgre
 landuseOrder <- c("Urban","Farmland","Open uncultivated","Wetland","Forest")
 landuseOrderDK <- c("Urban","Farmland","Open uncultivated land","Wetland","Forest", "Unspecified")
 
-###Fig 2############################################################
+###land use cat plots############################################################
 
 #total biomass
 ggplot(allInsects,aes(x=Land_use, y=(Biomass+1)))+

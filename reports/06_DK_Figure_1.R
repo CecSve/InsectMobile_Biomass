@@ -167,6 +167,8 @@ denmark_cropped %>%
 
 ###Germany map#############################################
 
+#get world map using code above
+
 #get map of germny
 germany <- worldmap[worldmap$name == 'Germany',]
 ggplot() + geom_sf(data = germany) + theme_bw() 
@@ -179,23 +181,25 @@ dataGermany <- spTransform(dataGermany,CRS(crs(germany)))
 
 landuse.map <- 
   data.frame(Land_use = dataGermany@data$Land_use,
-             lat = dataGermany@coords[,2],
-             long = dataGermany@coords[,1])
+             lat = dataGermany@coords[,1],
+             long = dataGermany@coords[,2])
 landuse.map$Land_use <- factor(landuse.map$Land_use,
                                levels=c("Urban","Farmland","Dryland",
                                         "Wetland","Forest"))
 
-DEmap <- germany %>%
-  ggplot() + 
+ggplot(germany) + 
   geom_sf(data = germany, 
           fill="white", colour = "black") + 
   coord_sf() + 
   geom_point(data = landuse.map, 
-             aes(x=long, y = lat, colour = Land_use), 
-             alpha = 0.9, size=2, show.legend = T) + 
+             aes(x=lat, y = long, colour = Land_use), size=4, show.legend = T) + 
   theme_void() + 
-  scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"),values=landuseCols) + 
-  scalebar(germany, dist = 100, dist_unit = "km", transform = T, model = "WGS84", st.size = 3)
+  scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + 
+  scalebar(germany, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + 
+  north(germany, symbol = 4, scale = 0.07) + panel_border() + labs(subtitle = "B") + 
+  theme(plot.subtitle = element_text(face = "bold", size = 20))  
+
+ggsave("plots/Fig1b.png")
 
 ###Germany + Denmark data############################################
 

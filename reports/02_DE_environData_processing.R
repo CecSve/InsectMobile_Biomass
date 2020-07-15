@@ -92,18 +92,19 @@ output$Land_use[grepl("urbanArea",output$File)] <- "Urban"
 
 #grassland
 output$Land_use[grepl("greenland",output$File)] <- "Open uncultivated"
-output$Land_use[output$OBJART_TXT %in% 
-                  c("AX_Heide","AX_Moor")] <- "Open uncultivated"
+#output$Land_use[output$OBJART_TXT %in% 
+#                  c("AX_Heide","AX_Moor")] <- "Open uncultivated"
 
+#to make the analysis neater we will drop these 2 land covers
 #how much heath do we have?
-temp <- subset(output,OBJART_TXT=="AX_Heide")
-nrow(temp)#13 routes
-temp$value
+#temp <- subset(output,OBJART_TXT=="AX_Heide")
+#nrow(temp)#13 routes
+#temp$value
 
 #how much moor do we have?
-temp <- subset(output,OBJART_TXT=="AX_Moor")
-nrow(temp)#17 routes
-temp$value#also rare
+#temp <- subset(output,OBJART_TXT=="AX_Moor")
+#nrow(temp)#17 routes
+#temp$value#also rare
 
 
 table(output$Land_use)

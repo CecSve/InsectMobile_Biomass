@@ -1142,20 +1142,45 @@ gls1 <- lme(log(Biomass+1) ~  (Agriculture_1000) +
               sqrt(Forest_250) + Time_band + 
               Time_band:cnumberTime + cyDay + Temperature + Wind + cStops,
             random=~1|PilotID/RouteID_JB,
-            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
+            #correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
             data=allInsects,na.action=na.omit)
 summary(gls1)
 
+### spatial autocorrelation ###########
+#plot residuals
+#full model
+lme1000 <- lme4::lmer(log(Biomass+1) ~ 
+                        (Agriculture_1000) + 
+                        (Urban_1000) +
+                        (Open.uncultivated.land_1000)+
+                        (Wetland_1000) +
+                        (Forest_250) +
+                        Time_band + 
+                        Time_band:cnumberTime + cTL + cyDay + 
+                        (1|RouteID) + (1|PilotID), data=allInsects)
+
+allInsects$resids <- as.numeric(residuals(lme1000))
+allInsects$resids_binary <- as.factor(ifelse(allInsects$resids>0,1,-1))
+qplot(x,y,data=allInsects,colour=resids)+
+  scale_colour_viridis_c()
+qplot(x,y,data=allInsects,colour=resids_binary)+
+  scale_colour_viridis_d()
+
+# visualise it 
 library(ncf)
-spline.autocorrelation_glm = spline.correlog(allInsects$x2, allInsects$y2, gls1$residuals, latlon=T, resamp=100)
+spline.autocorrelation_glm = spline.correlog(allInsects$x2, allInsects$y2, residuals(lme1000), latlon=T, resamp=100)
 plot(spline.autocorrelation_glm)
 summary(spline.autocorrelation_glm)
 
-autocorrelation_glm = correlog(allInsects$x2, allInsects$y2, gls1$residuals, increment = 1000, latlon=T, resamp=100)
+autocorrelation_glm = correlog(allInsects$x2, allInsects$y2, residuals(lme1000), increment = 1000, latlon=T, resamp=100)
 plot(autocorrelation_glm)
 autocorrelation_glm$correlation
-mantel.test(allInsects$x2, allInsects$y2, gls1$residuals, resamp = 100, latlon = T) #does not work
+mantel.test(allInsects$x2, allInsects$y2, residuals(lme1000), resamp = 100, latlon = T) #does not work
 
+#test it
+library(DHARMa)
+res = simulateResiduals(lme1000)
+testSpatialAutocorrelation(res, x =  allInsects$x2, y = allInsects$y2)
 
 #final model DK - use cStops instead of cTL - sam story as without spatial correlation
 gls1 <- lme(log(Biomass+1) ~ (Agriculture_1000) + 

@@ -84,10 +84,20 @@ buf_500m$propLand_use[buf_500m$type %in% c("Lav bebyggelse", "Erhverv", "Høj be
 buf_1000m$propLand_use[buf_1000m$type %in% c("Lav bebyggelse", "Erhverv", "Høj bebyggelse", "Bykerne")] <- "Urban"
 
 #open uncultivated land
-buf_50m$propLand_use[buf_50m$type %in% c("Hede", "Hede_organic", "Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
-buf_250m$propLand_use[buf_250m$type %in% c("Hede", "Hede_organic", "Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
-buf_500m$propLand_use[buf_500m$type %in% c("Hede", "Hede_organic", "Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
-buf_1000m$propLand_use[buf_1000m$type %in% c("Hede", "Hede_organic", "Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
+#temp <- subset(buf_1000m,type=="Hede")
+#nrow(temp)
+#max(temp$areaProportion)
+
+# based on the code above we will make a separate category for heathland
+buf_50m$propLand_use[buf_50m$type %in% c("Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
+buf_250m$propLand_use[buf_250m$type %in% c("Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
+buf_500m$propLand_use[buf_500m$type %in% c("Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
+buf_1000m$propLand_use[buf_1000m$type %in% c("Overdrev", "Overdrev_organic", "Eng", "Eng_organic", "Strandeng", "Strandeng_organic")] <- "Open uncultivated land"
+
+buf_50m$propLand_use[buf_50m$type %in% c("Hede", "Hede_organic")] <- "Heathland"
+buf_250m$propLand_use[buf_250m$type %in% c("Hede", "Hede_organic")] <- "Heathland"
+buf_500m$propLand_use[buf_500m$type %in% c("Hede", "Hede_organic")] <- "Heathland"
+buf_1000m$propLand_use[buf_1000m$type %in% c("Hede", "Hede_organic")] <- "Heathland"
 
 #unspecified category
 buf_50m$propLand_use[buf_50m$type %in% "Andet"] <- "Unspecified land cover"

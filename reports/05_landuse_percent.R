@@ -24,6 +24,7 @@ landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgre
 
 landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified")
 
+
 ###transformations for land use#####################################
 
 #sqrt to all variables 
@@ -630,6 +631,21 @@ plot_grid(u1000,a1000,g1000,w1000,f1000,ncol=1, labels = c("A", "B", "C", "D", "
 ggsave("plots/Landcover_percent_with_regline.png",width=5,height=15)
 plot_grid(u1000pubr,a1000pubr,g1000pubr,w1000pubr,f1000pubr,ncol=1, labels = c("A", "B", "C", "D", "E"))
 ggsave("plots/Landcover_percent_with_stats.png",width=6,height=20)
+
+###land use check###################################################
+
+#check land covers within a buffer of the same size
+#DE check
+data1000m <- allInsects[,grepl("_1000",names(allInsects))]
+summary(apply(data1000m[,1:5],1,sum))#does not exceed 100
+data500m <- allInsects[,grepl("_500",names(allInsects))]
+summary(apply(data500m[,1:5],1,sum))#does not exceed 100
+data250m <- allInsects[,grepl("_250",names(allInsects))]
+summary(apply(data250m[,1:5],1,sum))#exceeds by 0.01 - probably just rounding error
+data50m <- allInsects[,grepl("_50",names(allInsects))]
+data50m <- data50m[,!grepl("_500",names(data50m))]
+summary(apply(data50m[,1:5],1,sum))#does not exceed 100
+           
 
 ###covariation check#########################################
 

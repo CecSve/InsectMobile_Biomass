@@ -22,6 +22,7 @@ library(lmerTest)
 
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
+landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest")
 landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified")
 
 
@@ -863,6 +864,51 @@ lme1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
+###check DE spatial autocorrelation#################################
+
+#DE jitter x and y slightly - fix later
+allInsects$x2 <- allInsects$x + rnorm(length(allInsects$x),0,10)
+allInsects$y2 <- allInsects$y + rnorm(length(allInsects$y),0,10)
+
+#plot residuals
+#full model
+lme1000 <- lme4::lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  sqrt(Urban_1000) +
+                  sqrt(Open.uncultivated_1000)+
+                  sqrt(Wetland_1000) +
+                  sqrt(Forest_250) +
+                  Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+
+allInsects$resids <- as.numeric(residuals(lme1000))
+allInsects$resids_binary <- as.factor(ifelse(allInsects$resids>0,1,-1))
+qplot(x,y,data=allInsects,colour=resids)+
+  scale_colour_viridis_c()
+qplot(x,y,data=allInsects,colour=resids_binary)+
+  scale_colour_viridis_d()
+
+
+#plot autocorrelation
+library(ncf)
+correlog1 <- correlog(allInsects$x2, allInsects$y2, residuals(lme1000),
+                        na.rm=T, increment=1000, resamp=0)
+plot(correlog1$correlation, type="b", pch=16, cex=1.5, lwd=1.5,
+     xlab="distance", ylab="Moran's I", cex.lab=2, cex.axis=1.5); abline(h=0)
+
+
+spline.autocorrelation_glm = spline.correlog(allInsects$x2, allInsects$y2, 
+                                             residuals(lme1000), 
+                                             latlon=F, resamp=100)
+plot(spline.autocorrelation_glm)
+summary(spline.autocorrelation_glm)
+
+#test it
+library(DHARMa)
+res = simulateResiduals(lme1000)
+testSpatialAutocorrelation(res, x =  allInsects$x2, y = allInsects$y2)
+
 ###DK simple#########################################################
 # NB! changed cTL to cStops since more data for DK 
 str(allInsects)
@@ -1036,6 +1082,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 #some issue
 vif(lme1000)
+
 
 ###plot buffer effects########################################
 

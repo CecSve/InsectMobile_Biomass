@@ -34,6 +34,8 @@ allInsects$Time_band <- factor(allInsects$Time_band,levels=c("midday","evening")
 allInsects$Land_use <- factor(allInsects$Land_use,levels=c("Urban","Farmland",
                                                            "Dryland","Wetland","Forest"))
 
+#Agrar 18 PM has missing time data - KJC..
+
 #add on environmental data
 environData <- read.delim("cleaned-data/environData_DE.txt",as.is=T)
 windData <- read.delim("cleaned-data/routeWind_DE.txt",as.is=T)
@@ -43,14 +45,14 @@ tlData <- read.delim("cleaned-data/trafficlights_DE.txt",as.is=T)
 luiData <- read.delim("cleaned-data/landuseIntensity_DE.txt",as.is=T)
 
 #merge weather
-windData <- melt(windData[,-1],id=c("RouteID","Date"))
+windData <- reshape2::melt(windData[,-1],id=c("RouteID","Date"))
 names(windData)[which(names(windData)=="value")] <- "Wind"
 names(windData)[which(names(windData)=="variable")] <- "Time_band"
 windData$Time_band <- as.character(windData$Time_band)
 windData$Time_band[which(windData$Time_band=="middayTemp")] <- "midday"
 windData$Time_band[which(windData$Time_band=="eveningTemp")] <- "evening"
 
-tempData <- melt(tempData[,-1],id=c("RouteID","Date"))
+tempData <- reshape2::melt(tempData[,-1],id=c("RouteID","Date"))
 names(tempData)[which(names(tempData)=="value")] <- "Temp"
 names(tempData)[which(names(tempData)=="variable")] <- "Time_band"
 tempData$Time_band <- as.character(tempData$Time_band)

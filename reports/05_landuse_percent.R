@@ -1370,7 +1370,25 @@ testSpatialAutocorrelation(res, x =  unique_coords$x2, y = unique_coords$y2)
 # calculating summaries per group since we have several observations per location
 #simulationOutput = recalculateResiduals(simulationOutput, group = allInsects$RouteID_JB)
 
-# spatial models (DK) - model selection
+# spatial models (DK) 
+# full model
+gls1 <- lme(
+  log(Biomass + 1) ~ Urban_1000 + 
+    Agriculture_1000 +
+    Open.uncultivated.land_1000 +
+    Wetland_50 +
+    Forest_250 +
+    Time_band +
+    Time_band:cnumberTime +
+    cStops +
+    cyDay,
+  random =  ~ 1 | PilotID / RouteID,
+  data = allInsects
+)
+summary(gls1)
+AICc(gls1) # 915 (best fit is 913, but with insignificant wetland and grassland)
+
+# model selection
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
               Forest_250 +
               Wetland_50 +
@@ -1385,7 +1403,7 @@ summary(gls1)
 
 #range     nugget 
 #0.1668    0.1198  
-AICc(gls1)#925.4
+AICc(gls1)#925.34
 
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
               Forest_250 +
@@ -1402,7 +1420,7 @@ summary(gls1)
 #Parameter estimate(s):
 #  range     nugget 
 #0.1109   0.2492 
-#AIC 925.5
+AICc(gls1)#923
 
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
               Forest_250 +
@@ -1449,10 +1467,10 @@ AICc(gls1) # 921
 
 #final model DK - use cStops instead of cTL - sam story as without spatial correlation
 gls1 <- lme(log(Biomass+1) ~ (Agriculture_1000) + 
-              #sqrt(Urban_1000) +
-              #sqrt(Open.uncultivated.land_50)+
-              sqrt(Wetland_50) +
-              sqrt(Forest_250) + Time_band + 
+              (Urban_1000) +
+              (Open.uncultivated.land_50)+
+              (Wetland_50) +
+              (Forest_250) + Time_band + 
               Time_band:cnumberTime + cyDay + cStops,
             random=~1|PilotID/RouteID_JB,
             correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
@@ -1539,7 +1557,7 @@ library(lmerTest)
 
 # urban
 lme100 <- lmer(log(Biomass+1) ~ 
-                  sqrt(Urban_1000) + 
+                  Urban_1000 + 
                   Time_band + 
                   Time_band:cnumberTime +
                   log(cStops+1) + cyDay + 

@@ -197,7 +197,7 @@ allInsects <- allInsects %>%
   left_join(
     allInsects %>% 
       rownames_to_column('id') %>%
-      gather(maxLand_use, maxareaProp, Agriculture_1000:Wetland_1000) %>% 
+      tidyr::gather(maxLand_use, maxareaProp, Agriculture_1000:Wetland_1000) %>% 
       group_by(id) %>% 
       slice(which.max(maxareaProp)), 
     by = 'id'

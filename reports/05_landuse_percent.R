@@ -13,6 +13,7 @@ library(corrplot)
 library(car)
 library(lme4)
 library(lmerTest)
+library(nlme)
 
 ####colour################################################################
 
@@ -697,6 +698,11 @@ getEffect <- function(model){
   data.frame(t(coefs),t(cis))
   }
 
+fitModels <- function(variable){
+  myformula()
+
+}
+
 ###DE simple#########################################################
 
 #agriculture
@@ -864,6 +870,71 @@ lme1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
+#spatial models
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=TRUE),
+            data=allInsects)
+#0.0003768015
+#     range     nugget 
+#45.8854417  0.148841
+AICc(gls1)#451.1499
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=TRUE),
+            data=allInsects)
+#Parameter estimate(s):
+#  range     nugget 
+#45.8854582  0.1488418
+#AIC 448.687
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=FALSE),
+            data=allInsects)
+#range 
+#6.984794
+#451.5497
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=FALSE),
+            data=allInsects)
+#range 
+#24.58072 
+#AICc 450.6248
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            data=allInsects)
+#AICc(gls1)449.7846
+
 ###check DE spatial autocorrelation#################################
 
 #DE jitter x and y slightly - fix later
@@ -880,7 +951,7 @@ lme1000 <- lme4::lmer(log(Biomass+1) ~
                   sqrt(Forest_250) +
                   Time_band + 
                   Time_band:cnumberTime + cTL + cyDay + 
-                  (1|RouteID) + (1|PilotID), data=allInsects)
+                    (1|PilotID), data=allInsects)
 
 allInsects$resids <- as.numeric(residuals(lme1000))
 allInsects$resids_binary <- as.factor(ifelse(allInsects$resids>0,1,-1))
@@ -1082,6 +1153,8 @@ lme1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 #some issue
 vif(lme1000)
+
+#as spatial model
 
 
 ###plot buffer effects########################################

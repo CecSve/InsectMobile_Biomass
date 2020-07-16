@@ -89,7 +89,7 @@ allInsects$cStops <- log(allInsects$stops+1) - median(log(allInsects$stops+1))
 allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signals+1))
 
 #sort time data to standard each around the time band
-allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark?
+allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark
 allInsects$numberTime <- as.numeric(hm(allInsects$StartTime))#DE
 
 #transform to minutes?

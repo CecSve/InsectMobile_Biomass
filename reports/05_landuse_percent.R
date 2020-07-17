@@ -825,11 +825,11 @@ library(car)
 vif(lme1000)
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  sqrt(Agriculture_1000) + 
-                  sqrt(Forest_250) +
-                  sqrt(Open.uncultivated.land_50)+
-                  sqrt(Wetland_50) +
-                  sqrt(Urban_1000) +
+                  Agriculture_1000 + 
+                  Forest_250 +
+                  Open.uncultivated.land_1000 +
+                  Wetland_50 +
+                  Urban_1000 +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
@@ -1346,7 +1346,7 @@ finalplot <-
                       show.legend = F) + scale_colour_manual(values = landuseCols) + theme_minimal_grid() + theme(legend.title = element_blank(),
                         legend.key = element_rect(size = 0.1),
                         legend.key.size = unit(1, 'cm')
-                      ) + labs(x = "\nLand cover", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "A") + theme(plot.subtitle = element_text(size = 20, face = "bold")) + scale_y_log10()
+                      ) + labs(x = "\nLand cover", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "B") + theme(plot.subtitle = element_text(size = 20, face = "bold")) + scale_y_log10()
 
 save_plot("plots/DK_predicted_biomass.png", finalplot, base_width = 8, base_height = 5)
 
@@ -1454,7 +1454,7 @@ effectplot <- test %>% mutate(
     limits = c(0, 1),
     labels = function(x)
       paste0(x * 100, "%"))  + scale_y_continuous(
-        limits = c(2.5, 8),
+        limits = c(2.5, 7.5),
         labels = function(x)
           paste0(x * 1, "%")
       ) + geom_ribbon(
@@ -1469,222 +1469,8 @@ effectplot <- test %>% mutate(
       ) + labs(
         x = "Land cover",
         y = "Predicted effect change on biomass",
-        subtitle = "A",
+        subtitle = "B",
         colour = "Land cover type"
       ) + scale_fill_manual(values = landuseCols)
 
 save_plot("plots/DK_predictedeffect_landcover.png", effectplot, base_width = 10, base_height = 6)
-
-### intensive vs organic farming ###############################
-# Intensive
-lme1000 <- lmer(log(Biomass+1) ~ 
-                  Intensiv_1000 +
-                  Ekstensiv_1000 +
-                  Semi.intensiv_1000 +
-                  Markblok_1000 +
-                  Time_band + 
-                  Time_band:cnumberTime +
-                  log(cStops+1) + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), 
-                data=allInsects)
-summary(lme1000)
-newData = data.frame(Intensiv_1000=0.5, Ekstensiv_1000 = 0.5, Semi.intensiv_1000 = 0.5, Markblok_1000 = 0.5, cStops=0, cyDay = 0, Time_band = "midday",cnumberTime = 0)
-
-#make predictions
-Intensiv1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
-
-predFun <- function(fit) {
-  predict(fit,newData,re.form=NA)
-}
-
-bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
-conventional <- bb[["data"]]
-Intensiv2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
-
-Intensiv <- cbind(Intensiv1, Intensiv2)
-Intensiv <- as.data.frame(Intensiv)
-colnames(Intensiv)
-names(Intensiv)[1] <- "predBiomass"
-names(Intensiv)[2] <- "lowCI"
-names(Intensiv)[3] <- "highCI"
-row.names(Intensiv) <- "Intensive"
-
-# propOeko
-lme1000 <- lmer(log(Biomass+1) ~ 
-                  Intensiv_organic_1000 +
-                  Ekstensiv_organic_1000 +
-                  Semi.intensiv_organic_1000 +
-                  Markblok_organic_1000 +  
-                  Time_band + 
-                  Time_band:cnumberTime +
-                  log(cStops+1) + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), 
-                data=allInsects)
-summary(lme1000)
-newData = data.frame(Intensiv_organic_1000=0.5, Ekstensiv_organic_1000 = 0.5, Semi.intensiv_organic_1000 = 0.5, Markblok_organic_1000 = 0.5,
-                     cStops=0,
-                     cyDay = 0,
-                     Time_band = "midday",
-                     cnumberTime = 0)
-
-#make predictions
-propOeko1 <- t(as_tibble(exp(predict(lme1000,newdata=newData,re.form=NA))))
-
-predFun <- function(fit) {
-  predict(fit,newData,re.form=NA)
-}
-
-bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
-organic <- bb[["data"]]
-propOeko2 <- t(as_tibble(exp(quantile(bb$t,c(0.025,0.975)))))
-
-propOeko <- cbind(propOeko1, propOeko2)
-propOeko <- as.data.frame(propOeko)
-colnames(propOeko)
-names(propOeko)[1] <- "predBiomass"
-names(propOeko)[2] <- "lowCI"
-names(propOeko)[3] <- "highCI"
-row.names(propOeko) <- "Organic"
-
-predConfData <- rbind(Intensiv, propOeko)
-predConfData <- rownames_to_column(predConfData, var = "Farmland_type")
-
-# plot
-
-p <- predConfData %>% ggplot(aes(Farmland_type, predBiomass, colour = Farmland_type))
-finalplot <- p + geom_pointrange(aes(ymin = lowCI, ymax = highCI), size =1.5) + scale_colour_manual(values = c("#F09018", "#E3B622" )) + theme_minimal_grid() + theme(legend.title = element_blank(), legend.key = element_rect(size = 0.1), legend.key.size = unit(1, 'cm')) + labs(x = "\nFarming system", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "A") + theme(plot.subtitle = element_text(size = 20, face = "bold")) + scale_y_log10()
-
-save_plot("plots/DK_predicted_biomass_farmtype.png", finalplot, base_width = 8, base_height = 5)
-
-### combining the predicted data to re-run model and calculate effects ####
-predeffect <- merge(conventional, organic)
-
-predeffect <- predeffect %>% rename(Biomass = `log(Biomass + 1)`) # be mindful that biomass is +1 and logtransformed here, the sme for stops
-predeffect <- predeffect %>% rename(cStops = `log(cStops + 1)`) 
-
-# run model
-gls1 <- lme(Biomass ~ Intensiv_1000 +
-              Ekstensiv_1000 +
-              Semi.intensiv_1000 +
-              Markblok_1000 + Intensiv_organic_1000 +
-              Ekstensiv_organic_1000 +
-              Semi.intensiv_organic_1000 +
-              Markblok_organic_1000 + 
-              Time_band +
-              Time_band:cnumberTime + 
-              cStops + 
-              cyDay,
-            random=~1|PilotID/RouteID_JB,
-            data=predeffect)
-
-summary(gls1)
-
-gls1.alleffects <- allEffects(gls1)
-effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
-
-eall.lm1 <- predictorEffects(gls1)
-plot(eall.lm1, lines=list(multiline=TRUE))
-plot(predictorEffects(gls1, ~ Intensiv_1000 + Ekstensiv_1000 + Semi.intensiv_1000 + Intensiv_organic_1000 + Ekstensiv_organic_1000 + Semi.intensiv_organic_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
-
-### ggplot effect plot ####
-temp <- effectdata$Intensiv_1000
-temp$landcover <- "Intensiv_1000"
-farm <- temp %>% 
-  rename(
-    propcover = Intensiv_1000
-  )%>% select(landcover, propcover, fit, se, lower, upper)
-
-# urban
-temp <- effectdata$Ekstensiv_1000
-temp$landcover <- "Ekstensiv_1000"
-urb <- temp %>% 
-  rename(
-    propcover = Ekstensiv_1000
-  )%>% select(landcover, propcover, fit, se, lower, upper)
-
-# Open.uncultivated.land
-temp <- effectdata$Semi.intensiv_1000
-temp$landcover <- "Semi.intensiv_1000"
-grass <- temp %>% 
-  rename(
-    propcover = Semi.intensiv_1000
-  ) %>% select(landcover, propcover, fit, se, lower, upper)
-
-# Wetland
-temp <- effectdata$Intensiv_organic_1000
-temp$landcover <- "Intensiv_organic_1000"
-wet <- temp %>% 
-  rename(
-    propcover = Intensiv_organic_1000
-  )%>% select(landcover, propcover, fit, se, lower, upper)
-
-# Forest
-temp <- effectdata$Ekstensiv_organic_1000
-temp$landcover <- "Ekstensiv_organic_1000"
-forest <- temp %>% 
-  rename(
-    propcover = Ekstensiv_organic_1000
-  ) %>% select(landcover, propcover, fit, se, lower, upper)
-
-# Forest
-temp <- effectdata$Semi.intensiv_organic_1000
-temp$landcover <- "Semi.intensiv_organic_1000"
-semiint <- temp %>% 
-  rename(
-    propcover = Semi.intensiv_organic_1000
-  ) %>% select(landcover, propcover, fit, se, lower, upper)
-
-
-test <- rbind(urb, farm, grass, wet, forest, semiint)
-
-# Visualization
-effectplot <- test %>% mutate(
-  landcover = fct_relevel(
-    landcover,
-    "Intensiv_1000",
-    "Intensiv_organic_1000",
-    "Semi.intensiv_1000",
-    "Semi.intensiv_organic_1000",
-    "Ekstensiv_1000",
-    "Ekstensiv_organic_1000"
-  )
-) %>% ggplot(aes(x = propcover, y = fit, fill = landcover)) +
-  geom_line(aes(color = landcover), size = 2) +
-  scale_color_manual(
-    values = landuseCols,
-    labels = c(
-      "Intensive cover", "Intensive organic cover",
-        "Semi-intensive",
-        "Semi-intensive organic cover",
-        "Exstensive cover",
-        "Exstensive organic cover" 
-    )
-  ) + theme_minimal_grid() + theme(
-    plot.subtitle = element_text(size = 20, face = "bold"),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 8),
-    legend.position = "bottom"
-  ) + scale_x_continuous(
-    limits = c(0, 1),
-    labels = function(x)
-      paste0(x * 100, "%"))  + scale_y_continuous(
-        limits = c(4.3, 5.8),
-        labels = function(x)
-          paste0(x * 1, "%")
-      ) + geom_ribbon(
-        aes(
-          ymin = fit-se,
-          ymax = fit+se,
-          group = landcover
-        ),
-        linetype = 2,
-        alpha = 0.2,
-        show.legend = F
-      ) + labs(
-        x = "Land cover",
-        y = "Predicted effect change on biomass",
-        subtitle = "A",
-        colour = "Land cover type"
-      ) + scale_fill_manual(values = landuseCols)
-
-#save_plot("plots/DK_predictedeffect_landcover.png", effectplot, base_width = 10, base_height = 6)

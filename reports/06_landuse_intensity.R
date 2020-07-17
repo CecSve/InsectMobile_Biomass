@@ -66,7 +66,7 @@ plot_grid(g1,g2,g3,nrow=1)
 table(allInsects$maxLand_use)
 
 g1 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=sqrt(urbGreenPropArea_1000),y=(Biomass+1)))+
+             aes(x=urbGreenPropArea_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
@@ -74,7 +74,7 @@ g1 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
   xlab("Urban green space cover") +ylab("Biomass")
 
 g2 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=sqrt(byHegnMeterPerHa_1000),y=(Biomass+1)))+
+             aes(x=byHegnMeterPerHa_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
@@ -82,7 +82,7 @@ g2 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
   xlab("Hedges m per ha") +ylab(" ")
 
 g3 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=sqrt(Bykerne_1000),y=(Biomass+1)))+
+             aes(x=Bykerne_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
@@ -90,7 +90,7 @@ g3 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
   xlab("Inner city cover (large cities)") +ylab(" ")
 
 g4 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=sqrt(Lav.bebyggelse_1000),y=(Biomass+1)))+
+             aes(x=Lav.bebyggelse_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
@@ -98,7 +98,7 @@ g4 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
   xlab("Residential area cover") +ylab("Biomass")
 
 g5 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=sqrt(Høj.bebyggelse_1000),y=(Biomass+1)))+
+             aes(x=Høj.bebyggelse_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
@@ -106,7 +106,7 @@ g5 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
   xlab("Multistory buildings cover (large cities)") +ylab(" ")
 
 g6 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=sqrt(Erhverv_1000),y=(Biomass+1)))+
+             aes(x=Erhverv_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
@@ -133,6 +133,8 @@ lmeurban1000 <- lmer(log(Biomass+1) ~
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
+
+summary(lmeurban1000)
 
 # as reduced as it can be
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
@@ -167,10 +169,17 @@ gls1 <- lme(log(Biomass+1) ~ (urbGreenPropArea_1000) +
               Time_band + 
               Time_band:cnumberTime + cyDay + cStops,
             random=~1|PilotID/RouteID_JB,
-            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB),
             data=subset(allInsects,  maxLand_use = "Urban_1000"))
 
 summary(gls1)
+
+gls1.alleffects <- allEffects(gls1)
+effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
+
+eall.lm1 <- predictorEffects(gls1)
+plot(eall.lm1, lines=list(multiline=TRUE))
+plot(predictorEffects(gls1, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
+
 CIs <- intervals(gls1, which = "all")
 df <- data.frame(CIs$fixed)
 df$SE <- NULL
@@ -219,10 +228,31 @@ finalplot <-
 
 save_plot("plots/DK_estimated_biomass_urbanlanduse.png", finalplot, base_width = 8, base_height = 6)
 
+# correlation plot 
+someInsects <- allInsects[,c(12,141, 62, 70, 74:77)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Stops", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
+
+p <- cor(someInsects, use="pairwise.complete.obs")
+
+# add significance
+res1 <- cor.mtest(someInsects, conf.level = .95)
+res2 <- cor.mtest(someInsects, conf.level = .99)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation of urban land use variables", mar=c(0,0,1,0))
+
 #final model
 # removed in order: temperature, Erhverv, urban green area, bykerne, wind 
 gls1 <- lme(log(Biomass+1) ~ 
-              (Lav.bebyggelse_1000) +
+              (Bykerne_1000) +
               (Høj.bebyggelse_1000) +
               Time_band + 
               Time_band:cnumberTime + cyDay + cStops,
@@ -238,12 +268,12 @@ r.squaredGLMM(gls1)
 library(car)
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  sqrt(urbGreenPropArea_1000) + 
-                  sqrt(byHegnMeterPerHa_1000) +
-                  sqrt(Bykerne_1000)+
-                  sqrt(Lav.bebyggelse_1000) +
-                  sqrt(Høj.bebyggelse_1000) +
-                  sqrt(Erhverv_1000) +
+                  (urbGreenPropArea_1000) + 
+                  (byHegnMeterPerHa_1000) +
+                  (Bykerne_1000)+
+                  (Lav.bebyggelse_1000) +
+                  (Høj.bebyggelse_1000) +
+                  (Erhverv_1000) +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
@@ -350,11 +380,10 @@ gls1 <- lme(log(Biomass+1) ~
               Intensiv_1000 +
               Intensiv_organic_1000 +
               (Markblok_1000) + 
-              (Markblok_organic_1000) +  
+              #(Markblok_organic_1000) + # data for this variable is weird 
               Time_band + 
               Time_band:cnumberTime + cyDay+ cStops,
-            random=~1|PilotID/RouteID_JB,
-            correlation=corExp(form=~x2+y2|PilotID/RouteID_JB), na.action = na.omit,
+            random=~1|PilotID/RouteID_JB, na.action = na.omit,
             data=subset(allInsects, maxLand_use = "Agriculture_1000")) # added na omit
 
 summary(gls1)
@@ -403,3 +432,24 @@ finalplot <-
                       ) + theme(axis.text.x = element_text(size = 12, angle = 90))
 
 save_plot("plots/DK_estimated_biomass_farmlandlanduse.png", finalplot, base_width = 8, base_height = 6)
+
+# correlation plot 
+someInsects <- allInsects[,c(12,141,90:94,96:97)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Stops", "Extensive", "Extensive_organic", "Intensive", "Intensive_organic", "Unspecified", "Semi-intensive", "Semi-intensive_organic")
+
+p <- cor(someInsects, use="pairwise.complete.obs")
+
+# add significance
+res1 <- cor.mtest(someInsects, conf.level = .95)
+res2 <- cor.mtest(someInsects, conf.level = .99)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation of farmland land use variables", mar=c(0,0,1,0))

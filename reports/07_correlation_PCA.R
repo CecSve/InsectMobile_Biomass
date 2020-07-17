@@ -12,16 +12,16 @@ par(mfrow = c(2, 2))
 names(allInsects)
 
 # select variables for PCA - we will only use land cover at 1000 m and cStops
-biomass.pca <- prcomp(allInsects[,c(12,125,44:49)], center = TRUE,scale. = TRUE)
+biomass.pca <- prcomp(allInsects[,c(12,141,44:49)], center = TRUE,scale. = TRUE)
 summary(biomass.pca)
 str(biomass.pca)
 
 ggbiplot(biomass.pca)
 
 # correlation plot for 1000 m buffer
-someInsects <- allInsects[,c(12,125,44:49)]
+someInsects <- allInsects[,c(12,141,44:49)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -51,13 +51,13 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE)
+         diag = FALSE, title = "Correlation at 1000 m", mar=c(0,0,1,0))
 
 # correlation plot for 500 m buffer
 
-someInsects <- allInsects[,c(12,125,38:43)]
+someInsects <- allInsects[,c(12,141,38:43)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified cover", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -73,13 +73,12 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE)
+         diag = FALSE, title = "Correlation at 500 m", mar=c(0,0,1,0))
 
 # correlation plot for 250 m buffer
-
-someInsects <- allInsects[,c(12,125,32:37)]
+someInsects <- allInsects[,c(12,141,32:37)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified cover", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -95,13 +94,12 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE)
+         diag = FALSE, title = "Correlation at 250 m", mar=c(0,0,1,0))
 
 # correlation plot for 50 m buffer
-
-someInsects <- allInsects[,c(12,125,26:31)]
+someInsects <- allInsects[,c(12,141,26:31)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Unspecified cover", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -117,7 +115,7 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE)
+         diag = FALSE, title = "Correlation at 50 m", mar=c(0,0,1,0))
 
 
 ### PCA #########

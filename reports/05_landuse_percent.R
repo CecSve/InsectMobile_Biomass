@@ -956,6 +956,19 @@ gls1 <- lme(
 summary(gls1)
 AICc(gls1) # 915 (best fit is 913, but with insignificant wetland and grassland)
 
+exp(1.759399 - 1) # farmland: 2.136992
+(exp(1.759399 - 1)-1) * 100 # farmland: 113.6992%
+exp(3.397661 - 1) # grassland: 10.99742
+(exp(3.397661 - 1)-1) * 100 # grassland: 999.7423%
+exp(-0.409933 - 1) # stops: 0.2441596
+(exp(-0.409933 - 1)-1) * 100 # stops: -75.58404%
+exp(6.884685 - 1) # wetland: 359.4895
+(exp(6.884685 - 1)-1) * 100 # wetland: 35848.95%
+exp(1.765569 - 1) # forest: 2.150218
+(exp(1.765569 - 1)-1) * 100 # forest: 115.0218%
+exp(0.323129 - 1) # evening: 0.5082047
+(exp(0.323129 - 1)-1) * 100 # evening: 49.17953%
+
 # model selection
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
               Forest_250 +
@@ -1360,6 +1373,7 @@ predeffect <- predeffect %>% rename(Biomass = `log(Biomass + 1)`) # be mindful t
 predeffect <- predeffect %>% rename(cStops = `log(cStops + 1)`) 
  
 # run model
+library(nlme)
 gls1 <- lme(Biomass ~ Agriculture_1000 + 
               Urban_1000 +
               Open.uncultivated.land_1000 +
@@ -1372,10 +1386,16 @@ gls1 <- lme(Biomass ~ Agriculture_1000 +
             random=~1|PilotID/RouteID_JB,
             data=predeffect)
 
-summary(gls1)
+summary(gls1) # urban non-significant
+exp(1.867667-1) # farmland: 2.381349
+exp(3.345569-1) # grassland: 10.43921
+exp(2.202820-1) # forest: 3.329493
+exp(2.369767-1) # wetland: 3.934434
+exp(0.319483-1) # evening: 0.5063551
 
+library(effects)
 gls1.alleffects <- allEffects(gls1)
-plot(gls1.alleffects, 'Urban_1000', ylab="Biomass")
+#plot(gls1.alleffects, 'Urban_1000', ylab="Biomass")
 effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
 
 eall.lm1 <- predictorEffects(gls1)
@@ -1456,8 +1476,7 @@ effectplot <- test %>% mutate(
       paste0(x * 100, "%"))  + scale_y_continuous(
         limits = c(2.5, 7.5),
         labels = function(x)
-          paste0(x * 1, "%")
-      ) + geom_ribbon(
+          paste0(((x-1)) * 1, "%")) + geom_ribbon( # -1 since +1 is used in biomass response, but exp() also? - then it introduced a lot of decimals, but gives the right effect size
         aes(
           ymin = fit-se,
           ymax = fit+se,

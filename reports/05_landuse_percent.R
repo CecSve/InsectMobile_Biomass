@@ -1493,3 +1493,56 @@ effectplot <- test %>% mutate(
       ) + scale_fill_manual(values = landuseCols)
 
 save_plot("plots/DK_predictedeffect_landcover.png", effectplot, base_width = 10, base_height = 6)
+
+###pie chart#####################################
+
+library(dplyr)
+library(tidyr)
+
+routeMeans <- allInsects %>% 
+              group_by(RouteID) %>%
+              summarise(meanBiomass = mean(Biomass))
+
+allInsects <- inner_join(allInsects,routeMeans,by="RouteID")
+
+#remove duplicates
+allInsects <- allInsects %>%
+              select(RouteID,meanBiomass,Agriculture_1000,
+                     Forest_1000,Open.uncultivated_1000,
+                     Urban_1000,Wetland_1000) %>%
+              distinct()
+
+#fill in missing column
+allInsects$totalLand <- apply(allInsects[,3:7],1,sum)
+allInsects$Other_1000 <- 100-allInsects$totalLand
+
+#divide up biomass into quantiles
+allInsects$BiomassCats <- cut_number(allInsects$meanBiomass,n=5)
+
+
+#mean land cover per biomass cats
+allInsects_cat <- allInsects %>%
+                  group_by(BiomassCats) %>%
+                  summarise(Agriculture_1000 = mean(Agriculture_1000),
+                            Forest_1000 = mean(Forest_1000),
+                            Open.uncultivated_1000 = mean(Open.uncultivated_1000),
+                            Urban_1000 = mean(Urban_1000),
+                            Wetland_1000 = mean(Wetland_1000),
+                            Other_1000 = mean(Other_1000))
+
+#plot data by biomass categories
+allInsects_melt <- gather(allInsects_cat, Land_cover, value, -BiomassCats)
+
+#plot
+ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover))+
+  geom_bar(stat="identity")+
+  facet_wrap(~BiomassCats,nrow=1)+
+  coord_polar("y")+
+  theme_classic() + 
+  theme(axis.line = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  theme(legend.position="top")
+
+                          

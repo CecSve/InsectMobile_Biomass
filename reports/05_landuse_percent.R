@@ -1545,4 +1545,66 @@ ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover))+
         axis.ticks = element_blank())+
   theme(legend.position="top")
 
-                          
+###DK pie chart#####################################
+
+library(dplyr)
+library(tidyr)
+
+routeMeans <- allInsects %>% 
+  group_by(RouteID_JB) %>%
+  dplyr::summarise(meanBiomass = mean(Biomass))
+
+allInsects <- inner_join(allInsects,routeMeans,by="RouteID_JB")
+
+#remove duplicates
+allInsects_pie <- allInsects %>%
+  select(RouteID_JB,meanBiomass,Agriculture_1000,
+         Forest_1000,Open.uncultivated.land_1000,
+         Urban_1000,Wetland_1000) %>%
+  distinct()
+
+#fill in missing column
+allInsects_pie$totalLand <- apply(allInsects_pie[,3:7],1,sum)
+allInsects_pie$Other_1000 <- 1-allInsects_pie$totalLand
+
+#divide up biomass into quantiles
+allInsects_pie$BiomassCats <- cut_number(allInsects_pie$meanBiomass,n=5)
+
+#mean land cover per biomass cats
+allInsects_cat <- allInsects_pie %>%
+  group_by(BiomassCats) %>%
+  dplyr::summarise(Agriculture_1000 = mean(Agriculture_1000),
+            Forest_1000 = mean(Forest_1000),
+            Open.uncultivated.land_1000 = mean(Open.uncultivated.land_1000),
+            Urban_1000 = mean(Urban_1000),
+            Wetland_1000 = mean(Wetland_1000),
+            Other_1000 = mean(Other_1000))
+
+#plot data by biomass categories
+allInsects_melt <- gather(allInsects_cat, Land_cover, value, -BiomassCats)
+
+#plot
+allInsects_melt <- allInsects_melt %>% mutate(
+  Land_cover = fct_relevel(
+    Land_cover,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Open.uncultivated.land_1000",
+    "Wetland_1000",
+    "Forest_1000",
+    "Other_1000"))  
+
+biomass.labs <- c("[3,48.8]"="3-48.8 mg", "(48.8,84.2]"="48.8-84.2 mg", "(84.2,135]"="84.2-135 mg", "(135,262]"="135-262 mg", "(262,4.36e+03]"="262-4360 mg")
+#names(biomass.labs) <- c("3-48.8 mg", "48.8-84.2 mg", "84.2-135 mg", "135-262 mg", "262-4360 mg")
+
+ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
+  geom_bar(stat="identity")+
+  facet_grid(~BiomassCats, labeller = labeller(BiomassCats=biomass.labs))+
+  coord_polar("y")+
+  theme_classic() + 
+  theme(axis.line = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Unspecified")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
+       

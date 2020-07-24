@@ -1,8 +1,13 @@
-# run script 03 and some of 04 to get all variables
+# run script 03 first
+
+### Load required libraries ###########################
 
 library(ggbiplot)
 library(corrplot)
 library(Hmisc)
+library(ggfortify) # to plot PCA
+
+### Denmark ###########################
 
 ### Correlation plot ##################
 
@@ -12,7 +17,7 @@ par(mfrow = c(2, 2))
 names(allInsects)
 
 # select variables for PCA - we will only use land cover at 1000 m and cStops
-biomass.pca <- prcomp(allInsects[,c(12,141,44:49)], center = TRUE,scale. = TRUE)
+biomass.pca <- prcomp(allInsects[,c(12,141,44:49)], center = TRUE,scale. = TRUE) #choose biomass, stops and land covers
 summary(biomass.pca)
 str(biomass.pca)
 
@@ -158,3 +163,27 @@ loadings(fit) # pc loadings
 plot(fit,type="lines") # scree plot 
 fit$scores # the principal components
 biplot(fit)
+
+### Germany ###########################
+
+###pca analysis###############################################
+#taken from the Quick R website
+
+mydata <- allInsects[,c("cStops","cTL",names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,2:9]
+
+fit <- princomp(mydata, cor=TRUE)
+summary(fit) # print variance accounted for
+loadings(fit) # pc loadings
+plot(fit,type="lines") # scree plot
+fit$scores # the principal components
+biplot(fit)
+
+#with ggplot
+autoplot(fit)
+autoplot(fit, data = allInsects, colour = 'Land_use',
+         loadings = TRUE, 
+         loadings.colour = 'black',
+         loadings.label = TRUE, 
+         loadings.label.size = 4) + scale_colour_manual(values = landuseCols)

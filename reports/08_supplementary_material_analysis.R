@@ -2,6 +2,7 @@
 
 # run script 03 before the analysis
 
+#### Load required libraries ################################################################
 library(cowplot)
 library(ggplot2)
 #library(wesanderson)
@@ -17,16 +18,27 @@ library(lmerTest)
 library(nlme)
 library(effects)
 
-####colour################################################################
-
-#decide on common color scheme
-#landuseCols <- wes_palette('Darjeeling1', 5, type = c("discrete"))
-#landuseCols <- landuseCols[c(1,4,3,5,2)]
+#### Set colour scheme ################################################################
 
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
 landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest")
 landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified")
+
+### get effect function #############################################################
+
+#function to extract summary components of simpel buffer effect models
+getEffect <- function(model){
+  coefs <- summary(model)$coef[2,]
+  temp <- confint(model)
+  cis <- temp[5,]
+  data.frame(t(coefs),t(cis))
+}
+
+fitModels <- function(variable){
+  myformula()
+  
+}
 
 ### Denmark ####################
 
@@ -674,3 +686,347 @@ effectplot <- test %>% mutate(
 
 #save_plot("plots/DK_predictedeffect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
+### buffer effect plots ######################
+# NB! changed cTL to cStops since more data for DK 
+str(allInsects)
+#agriculture
+hist(allInsects$Agriculture_500)
+hist(sqrt(allInsects$Agriculture_500)) # does not help
+lme50 <- lmer(log(Biomass+1) ~ (Agriculture_50) + Time_band + 
+                Time_band:cnumberTime + cStops + cyDay + 
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ (Agriculture_250) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ (Agriculture_500) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ (Agriculture_1000) + Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay +  
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+outAgri <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outAgri <- as.data.frame(outAgri)
+outAgri$Buffer <- c(50,250,500,1000)
+outAgri$Land_use <- "Farmland"
+
+#urban
+hist(allInsects$Urban_1000)#should we log it?
+hist(sqrt(allInsects$Urban_1000)) #sqrt is bettwe
+lme50 <- lmer(log(Biomass+1) ~ (Urban_50) + Time_band + 
+                Time_band:cnumberTime + cStops + cyDay + 
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ (Urban_250) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ (Urban_500) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ (Urban_1000) + Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay +  
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+outUrban <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outUrban <- as.data.frame(outUrban)
+outUrban$Buffer <- c(50,250,500,1000)
+outUrban$Land_use <- "Urban"
+
+#Open.uncultivated
+hist(allInsects$Open.uncultivated.land_250)#log??
+lme50 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_50) + Time_band + 
+                Time_band:cnumberTime + cStops + cyDay + 
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_250) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_500) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_1000) + Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay +  
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+outOpen.uncultivated <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outOpen.uncultivated <- as.data.frame(outOpen.uncultivated)
+outOpen.uncultivated$Buffer <- c(50,250,500,1000)
+outOpen.uncultivated$Land_use <- "Grassland"
+
+#forest
+hist(allInsects$Forest_250)#log??
+lme50 <- lmer(log(Biomass+1) ~ (Forest_50) + Time_band + 
+                Time_band:cnumberTime + cStops + cyDay + 
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ (Forest_250) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ (Forest_500) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ (Forest_1000) + Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay +  
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+outForest<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outForest <- as.data.frame(outForest)
+outForest$Buffer <- c(50,250,500,1000)
+outForest$Land_use <- "Forest"
+
+#wetland
+hist(allInsects$Wetland_1000)#log??
+lme50 <- lmer(log(Biomass+1) ~ (Wetland_50) + Time_band + 
+                Time_band:cnumberTime + cStops + cyDay +  
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ (Wetland_250) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ (Wetland_500) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ (Wetland_1000) + Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay +  
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+outWetland<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outWetland <- as.data.frame(outWetland)
+outWetland$Buffer <- c(50,250,500,1000)
+outWetland$Land_use <- "Wetland"
+
+#unspecified
+hist(allInsects$Unspecified.land.cover_1000)#log??
+hist(log(allInsects$Unspecified.land.cover_1000))
+lme50 <- lmer(log(Biomass+1) ~ log(Unspecified.land.cover_50) + Time_band + 
+                Time_band:cnumberTime + cStops + cyDay +  
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ log(Unspecified.land.cover_250) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ log(Unspecified.land.cover_500) + Time_band + 
+                 Time_band:cnumberTime + cStops + cyDay +  
+                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ log(Unspecified.land.cover_1000) + Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay +  
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+outUnspecified<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outUnspecified <- as.data.frame(outUnspecified)
+outUnspecified$Buffer <- c(50,250,500,1000)
+outUnspecified$Land_use <- "Unspecified"
+
+#combine all effects
+outAll <- rbind(outForest,outAgri,outUrban,outWetland,outOpen.uncultivated)
+outAll$Land_use <- factor(outAll$Land_use,levels=landuseOrder)
+
+ggplot(outAll)+
+  geom_crossbar(aes(x=factor(Buffer),y=Estimate,
+                    ymin=X2.5..,ymax=X97.5..,
+                    fill=Land_use),
+                width=0.5)+
+  facet_wrap(~Land_use,scales="free",ncol=1)+
+  scale_fill_manual(values=landuseCols)+
+  coord_flip()+
+  theme_bw()+
+  theme(legend.position = "none")+
+  geom_hline(yintercept=0,colour="black",linetype="dashed")+
+  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass") + labs(subtitle = "A")+ theme(plot.subtitle=element_text(size=18, face="bold", color="black"))
+
+ggsave("plots/DK_Landcover_buffer.png",width=3,height=8)
+
+### Germany ########################################################
+### DE plot land cover##############################################
+
+qU <- ggplot(allInsects,aes(x=sqrt(Urban_1000),y=(Biomass+1)))+
+  geom_point(col=landuseCols[1])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("Urban cover") +ylab("Biomass")
+
+qF <- ggplot(allInsects,aes(x=sqrt(Agriculture_1000),y=(Biomass+1)))+
+  geom_point(col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("Farmland cover") +ylab("Biomass")
+
+qD <- ggplot(allInsects,aes(x=sqrt(Open.uncultivated_1000),y=(Biomass+1)))+
+  geom_point(col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("Open uncultivated land cover") +ylab("Biomass")
+
+qW <- ggplot(allInsects,aes(x=sqrt(Wetland_1000),y=(Biomass+1)))+
+  geom_point(col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("Wetland cover") +ylab("Biomass")
+
+qFo <- ggplot(allInsects,aes(x=sqrt(Forest_1000),y=(Biomass+1)))+
+  geom_point(col=landuseCols[5])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("Forest cover") +ylab("Biomass")
+
+plot_grid(qU,qF,qD,qW,qFo,ncol=1)
+ggsave("plots/Landcover_percent.png",width=3,height=8)
+
+### DE plot buffers#################################################
+
+#farmland
+b50 <- ggplot(allInsects)+
+  geom_point(aes(x=Agriculture_50,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Farmland cover at 50m") +ylab("Biomass")
+
+b250 <- ggplot(allInsects)+
+  geom_point(aes(x=Agriculture_250,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Farmland cover at 250m") +ylab("Biomass")
+
+b1000 <- ggplot(allInsects)+
+  geom_point(aes(x=Agriculture_1000,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Farmland cover at 1000m") +ylab("Biomass")
+
+plot_grid(b50,b250,b1000,ncol=1)
+
+#urban
+b50 <- ggplot(allInsects)+
+  geom_point(aes(x=Urban_50,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Urban cover at 50m") +ylab("Biomass")
+
+b250 <- ggplot(allInsects)+
+  geom_point(aes(x=Urban_250,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Urban cover at 250m") +ylab("Biomass")
+
+b1000 <- ggplot(allInsects)+
+  geom_point(aes(x=Urban_1000,y=(Biomass+1)),
+             col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  xlab("Urban cover at 1000m") +ylab("Biomass")
+
+plot_grid(b50,b250,b1000,ncol=1)
+
+### buffer effect plots ######################
+#agriculture
+hist(allInsects$Agriculture_1000)
+lme50 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_50) + Time_band + 
+                Time_band:cnumberTime + cTL + cyDay + 
+                (1|RouteID) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_250) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_500) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Agriculture_1000) + Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay +  
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+outAgri <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outAgri <- as.data.frame(outAgri)
+outAgri$Buffer <- c(50,250,500,1000)
+outAgri$Land_use <- "Farmland"
+
+#urban
+hist(allInsects$Urban_1000)#should we log it?
+lme50 <- lmer(log(Biomass+1) ~ sqrt(Urban_50) + Time_band + 
+                Time_band:cnumberTime + cTL + cyDay + 
+                (1|RouteID) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ sqrt(Urban_250) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ sqrt(Urban_500) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Urban_1000) + Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay +  
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+outUrban <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outUrban <- as.data.frame(outUrban)
+outUrban$Buffer <- c(50,250,500,1000)
+outUrban$Land_use <- "Urban"
+
+#Open.uncultivated
+hist(allInsects$Open.uncultivated_250)#log??
+lme50 <- lmer(log(Biomass+1) ~ sqrt(Open.uncultivated_50) + Time_band + 
+                Time_band:cnumberTime + cTL + cyDay + 
+                (1|RouteID) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ sqrt(Open.uncultivated_250) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ sqrt(Open.uncultivated_500) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Open.uncultivated_1000) + Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay +  
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+outOpen.uncultivated <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outOpen.uncultivated <- as.data.frame(outOpen.uncultivated)
+outOpen.uncultivated$Buffer <- c(50,250,500,1000)
+outOpen.uncultivated$Land_use <- "Open uncultivated"
+
+#forest
+hist(allInsects$Forest_250)#log??
+lme50 <- lmer(log(Biomass+1) ~ sqrt(Forest_50) + Time_band + 
+                Time_band:cnumberTime + cTL + cyDay + 
+                (1|RouteID) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ sqrt(Forest_250) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ sqrt(Forest_500) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Forest_1000) + Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay +  
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+outForest<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outForest <- as.data.frame(outForest)
+outForest$Buffer <- c(50,250,500,1000)
+outForest$Land_use <- "Forest"
+
+#wetland
+hist(allInsects$Wetland_1000)#log??
+lme50 <- lmer(log(Biomass+1) ~ sqrt(Wetland_50) + Time_band + 
+                Time_band:cnumberTime + cTL + cyDay +  
+                (1|RouteID) + (1|PilotID), data=allInsects)
+lme250 <- lmer(log(Biomass+1) ~ sqrt(Wetland_250) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme500 <- lmer(log(Biomass+1) ~ sqrt(Wetland_500) + Time_band + 
+                 Time_band:cnumberTime + cTL + cyDay +  
+                 (1|RouteID) + (1|PilotID), data=allInsects)
+lme1000 <- lmer(log(Biomass+1) ~ sqrt(Wetland_1000) + Time_band + 
+                  Time_band:cnumberTime + cTL + cyDay +  
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+outWetland<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
+outWetland <- as.data.frame(outWetland)
+outWetland$Buffer <- c(50,250,500,1000)
+outWetland$Land_use <- "Wetland"
+
+# combine
+outAll <- rbind(outForest,outAgri,outUrban,outWetland,outOpen.uncultivated)
+outAll$Land_use <- factor(outAll$Land_use,levels=landuseOrder)
+
+ggplot(outAll)+
+  geom_crossbar(aes(x=factor(Buffer),y=Estimate,
+                    ymin=X2.5..,ymax=X97.5..,
+                    fill=Land_use),
+                width=0.5)+
+  facet_wrap(~Land_use,scales="free",ncol=1)+
+  scale_fill_manual(values=landuseCols)+
+  coord_flip()+
+  theme_bw()+
+  theme(legend.position = "none")+
+  geom_hline(yintercept=0,colour="black",linetype="dashed")+
+  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass")
+
+ggsave("plots/Landcover_buffer.png",width=3,height=8)

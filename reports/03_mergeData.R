@@ -126,7 +126,6 @@ allInsects$Time_band <- factor(allInsects$Time_band,levels=c("midday","evening")
 #order habitat
 allInsects$Land_use <- factor(allInsects$Land_use,levels=c("Urban","Farmland",
                                                            "Dryland","Wetland","Forest"))
-
 # load pilotripids and routeids (prepared by Jesper)
 tripids <- read.delim("cleaned-data/DK_pilotTripIdToRouteID.txt")
 

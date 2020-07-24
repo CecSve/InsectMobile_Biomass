@@ -158,3 +158,176 @@ r.squaredGLMM(gls1)
 summary(gls1) %>% intervals(which = "fixed")
 
 ### Germany ########################################
+
+###check DE spatial autocorrelation#################################
+
+#DE jitter x and y slightly - fix later
+allInsects$x2 <- allInsects$x + rnorm(length(allInsects$x),0,10)
+allInsects$y2 <- allInsects$y + rnorm(length(allInsects$y),0,10)
+
+#plot residuals
+#full model
+lme1000 <- lme4::lmer(log(Biomass+1) ~ 
+                        sqrt(Agriculture_1000) + 
+                        sqrt(Urban_1000) +
+                        sqrt(Open.uncultivated_1000)+
+                        sqrt(Wetland_1000) +
+                        sqrt(Forest_250) +
+                        Time_band + 
+                        Time_band:cnumberTime + cTL + cyDay + 
+                        (1|PilotID), data=allInsects)
+
+allInsects$resids <- as.numeric(residuals(lme1000))
+allInsects$resids_binary <- as.factor(ifelse(allInsects$resids>0,1,-1))
+qplot(x,y,data=allInsects,colour=resids)+
+  scale_colour_viridis_c()
+qplot(x,y,data=allInsects,colour=resids_binary)+
+  scale_colour_viridis_d()
+
+#plot autocorrelation
+correlog1 <- correlog(allInsects$x2, allInsects$y2, residuals(lme1000),
+                      na.rm=T, increment=1000, resamp=0)
+plot(correlog1$correlation, type="b", pch=16, cex=1.5, lwd=1.5,
+     xlab="distance", ylab="Moran's I", cex.lab=2, cex.axis=1.5); abline(h=0)
+
+
+spline.autocorrelation_glm = spline.correlog(allInsects$x2, allInsects$y2, 
+                                             residuals(lme1000), 
+                                             latlon=F, resamp=100)
+plot(spline.autocorrelation_glm)
+summary(spline.autocorrelation_glm)
+
+#test it
+res = simulateResiduals(lme1000)
+testSpatialAutocorrelation(res, x =  allInsects$x2, y = allInsects$y2)
+
+### model selection ###########
+# spatial models
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=TRUE),
+            data=allInsects)
+#0.0003768015
+#     range     nugget 
+#45.8854417  0.148841
+AICc(gls1)#451.1499
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=TRUE),
+            data=allInsects)
+#Parameter estimate(s):
+#  range     nugget 
+#45.8854582  0.1488418
+#AIC 448.687
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=FALSE),
+            data=allInsects)
+#range 
+#6.984794
+#451.5497
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=FALSE),
+            data=allInsects)
+#range 
+#24.58072 
+#AICc 450.6248
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            data=allInsects)
+#AICc(gls1)449.7846
+
+#spatial models
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=TRUE),
+            data=allInsects)
+#0.0003768015
+#     range     nugget 
+#45.8854417  0.148841
+AICc(gls1)#451.1499
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=TRUE),
+            data=allInsects)
+#Parameter estimate(s):
+#  range     nugget 
+#45.8854582  0.1488418
+#AIC 448.687
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=FALSE),
+            data=allInsects)
+#range 
+#6.984794
+#451.5497
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=FALSE),
+            data=allInsects)
+#range 
+#24.58072 
+#AICc 450.6248
+
+gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cTL + 
+              cyDay,
+            random=~1|PilotID/RouteID,
+            data=allInsects)
+#AICc(gls1)449.7846

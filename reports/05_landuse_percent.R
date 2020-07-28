@@ -769,42 +769,143 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Wetland_1000 +
                   Forest_250 +
                   Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
-
 summary(lme1000)
-
-library(MuMIn)
+vif(lme1000)
 r.squaredGLMM(lme1000)
 #           R2m       R2c
 #[1,] 0.3625144 0.8403325
 
-#add in other land uses to this final model to get their effect for the table in the paper
+#with model simplification
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  cUrban_1000 +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
 
-#check variance inflation factor
-library(car)
+#as gls
+lme1000 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
+              Forest_250 +
+              Time_band + 
+              Time_band:cnumberTime + 
+              cStops + 
+              cyDay,
+            random=~1|PilotID,
+            correlation=corExp(form=~x2+y2|PilotID,nugget=TRUE),
+            data=allInsects)
+summary(lme1000)
 vif(lme1000)
+r.squaredGLMM(lme1000)
 
-#check results with AIC
+### AIC check ##############################################
 
 library(MuMIn)
 options(na.action = "na.fail")
 dd <- dredge(lme1000)
-subset(dd, delta < 4)
+subset(dd, delta < 2)
 
 # Visualize the model selection table:
 par(mar = c(3,5,6,4))
 plot(dd, labAsExpr = TRUE)
 
 # Model average models with delta AICc < 4
-model.avg(dd, subset = delta < 4)
+model.avg(dd, subset = delta < 2)
 
-#only urban remains
+#only urban remains in best set
 
 ### Figure 4: effect plots ##########################
 
+getEffects <- function(predEffects,var){
+  temp <- predEffects[var]
+  data.frame(fit = temp[[1]]$fit,
+             se = temp[[1]]$se,
+             lower = temp[[1]]$lower,
+             upper = temp[[1]]$upper,
+             propcover = temp[[1]]$x[,1],
+             landcover = rep(var,length(temp[[1]]$fit)))
+}
 
+#apply to each land cover
+urb <- getEffects(predEffects,var="Urban_1000")
+farm <- getEffects(predEffects,var="Agriculture_1000")
+grass <- getEffects(predEffects,var="Open.uncultivated_1000")
+wet <- getEffects(predEffects,var="Wetland_1000")
+forest <- getEffects(predEffects,var="Forest_250")
+test <- rbind(urb, farm, grass, wet, forest)
 
+# Visualization
+effectplot <- test %>% mutate(
+  landcover = fct_relevel(
+    landcover,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Open.uncultivated_1000",
+    "Wetland_1000",
+    "Forest_250"
+  )
+  
+) %>% ggplot(aes(x = propcover, y = fit, fill = landcover)) +
+  geom_line(aes(color = landcover), size = 2) +
+  scale_color_manual(
+    values = landuseCols,
+    labels = c(
+      "Urban cover (1000 m)",
+      "Farmland cover (1000 m)",
+      "Grassland cover (1000 m)",
+      "Wetland cover (1000 m)",
+      "Forest cover (250 m)")) + 
+    theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom") + 
+  scale_x_continuous(
+    limits = c(0, 100),
+    labels = function(x)
+      paste0(x, "%"))  + 
+  #      scale_y_continuous(
+  #      limits = c(2.5, 7),
+  #      labels = function(x)
+  #        paste0(x * 1, "%")) + 
+  geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = landcover
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "Land cover",
+        y = "log Predicted biomass (mg)",
+        subtitle = "B - Germany",
+        colour = "Land cover type"
+      ) + 
+  scale_fill_manual(values = landuseCols)
+
+# Another vizualisation of proportional cover differences
+test %>% mutate(
+  landcover = fct_relevel(
+    landcover,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Grassland_1000",
+    "Wetland_50",
+    "Forest_250"
+  )
+) %>% ggplot(aes(propcover, fit, color = landcover)) + geom_point() + geom_errorbar(aes(ymin = fit - se, ymax = fit + se), width = 0.4) + theme_bw(base_size = 12) + scale_colour_manual(values = landuseCols) + labs(x = "Land cover") + scale_x_continuous(limits = c(0, 1), labels = function(x) paste0(x * 100, "%")) + facet_wrap(~landcover, scales = "free")
+
+save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
 ### DE biomass predictions% ##############################
 
 library(lme4)

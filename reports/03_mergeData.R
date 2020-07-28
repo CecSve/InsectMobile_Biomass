@@ -235,6 +235,7 @@ allInsects <- column_to_rownames(allInsects, var = "id")
 allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark
 
 ###sort vars###############################################################################
+
 #centering
 allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
 

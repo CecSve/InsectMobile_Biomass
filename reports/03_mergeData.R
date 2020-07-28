@@ -244,6 +244,7 @@ allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signal
 #transform to minutes
 allInsects$numberTime <- allInsects$numberTime/60 
 
+#centre time around each time band
 middayMean <- median(allInsects$numberTime[allInsects$Time_band=="midday"],na.rm=T)#23 for DE, 37.5 for DK
 eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"],na.rm=T)#69.5 for DK, 124 for DK
 

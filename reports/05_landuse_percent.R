@@ -19,7 +19,7 @@ library(effects) # Graphical and tabular effect displays, e.g., of interactions,
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
 landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest")
-landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified") # if including unspecified/other category
+#landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified") # if including unspecified/other category
 
 #### General check-ups ################################################################
 ### Land cover check ###################################################

@@ -921,16 +921,16 @@ plot_grid(b50,b250,b1000,ncol=1)
 #agriculture
 hist(allInsects$Agriculture_1000)
 lme50 <- lmer(log(Biomass+1) ~ (Agriculture_50) + Time_band + 
-                Time_band:cnumberTime + cTL + cyDay + 
+                Time_band:cnumberTime + cStops + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~ (Agriculture_250) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme500 <- lmer(log(Biomass+1) ~ (Agriculture_500) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme1000 <- lmer(log(Biomass+1) ~ (Agriculture_1000) + Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay +  
+                  Time_band:cnumberTime + cStops + cyDay +  
                   (1|RouteID) + (1|PilotID), data=allInsects)
 outAgri <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outAgri <- as.data.frame(outAgri)
@@ -940,16 +940,16 @@ outAgri$Land_use <- "Farmland"
 #urban
 hist(allInsects$Urban_1000)#should we log it?
 lme50 <- lmer(log(Biomass+1) ~ (Urban_50) + Time_band + 
-                Time_band:cnumberTime + cTL + cyDay + 
+                Time_band:cnumberTime + cStops + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~ (Urban_250) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme500 <- lmer(log(Biomass+1) ~ (Urban_500) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme1000 <- lmer(log(Biomass+1) ~(Urban_1000) + Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay +  
+                  Time_band:cnumberTime + cStops + cyDay +  
                   (1|RouteID) + (1|PilotID), data=allInsects)
 outUrban <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outUrban <- as.data.frame(outUrban)
@@ -959,16 +959,16 @@ outUrban$Land_use <- "Urban"
 #Open.uncultivated
 hist(allInsects$Open.uncultivated_250)#log??
 lme50 <- lmer(log(Biomass+1) ~ (Open.uncultivated_50) + Time_band + 
-                Time_band:cnumberTime + cTL + cyDay + 
+                Time_band:cnumberTime + cStops + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~ (Open.uncultivated_250) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme500 <- lmer(log(Biomass+1) ~ (Open.uncultivated_500) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme1000 <- lmer(log(Biomass+1) ~(Open.uncultivated_1000) + Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay +  
+                  Time_band:cnumberTime + cStops + cyDay +  
                   (1|RouteID) + (1|PilotID), data=allInsects)
 outOpen.uncultivated <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outOpen.uncultivated <- as.data.frame(outOpen.uncultivated)
@@ -978,16 +978,16 @@ outOpen.uncultivated$Land_use <- "Open uncultivated"
 #forest
 hist(allInsects$Forest_250)#log??
 lme50 <- lmer(log(Biomass+1) ~ (Forest_50) + Time_band + 
-                Time_band:cnumberTime + cTL + cyDay + 
+                Time_band:cnumberTime + cStops + cyDay + 
                 (1|RouteID) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~ (Forest_250) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme500 <- lmer(log(Biomass+1) ~ (Forest_500) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme1000 <- lmer(log(Biomass+1) ~ (Forest_1000) + Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay +  
+                  Time_band:cnumberTime + cStops + cyDay +  
                   (1|RouteID) + (1|PilotID), data=allInsects)
 outForest<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outForest <- as.data.frame(outForest)
@@ -997,16 +997,16 @@ outForest$Land_use <- "Forest"
 #wetland
 hist(allInsects$Wetland_1000)#log??
 lme50 <- lmer(log(Biomass+1) ~ (Wetland_50) + Time_band + 
-                Time_band:cnumberTime + cTL + cyDay +  
+                Time_band:cnumberTime + cStops + cyDay +  
                 (1|RouteID) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~(Wetland_250) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme500 <- lmer(log(Biomass+1) ~ (Wetland_500) + Time_band + 
-                 Time_band:cnumberTime + cTL + cyDay +  
+                 Time_band:cnumberTime + cStops + cyDay +  
                  (1|RouteID) + (1|PilotID), data=allInsects)
 lme1000 <- lmer(log(Biomass+1) ~(Wetland_1000) + Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay +  
+                  Time_band:cnumberTime + cStops + cyDay +  
                   (1|RouteID) + (1|PilotID), data=allInsects)
 outWetland<- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outWetland <- as.data.frame(outWetland)

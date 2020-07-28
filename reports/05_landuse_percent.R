@@ -799,6 +799,8 @@ plot(dd, labAsExpr = TRUE)
 # Model average models with delta AICc < 4
 model.avg(dd, subset = delta < 4)
 
+#only urban remains
+
 ### Figure 4: effect plots ##########################
 
 

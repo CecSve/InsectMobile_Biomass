@@ -237,12 +237,11 @@ allInsects$cnumberTime[is.na(allInsects$cnumberTime)]<- 0
 #centering other land use variables
 
 centreVars<-function(df){
-  #centering
   centring <- function(x)scale(x,scale=F) #this will just centre the variables
   newd <- df %>% 
     mutate(across(contains("0"),centring))
   names(newd) <- sapply(names(newd),function(x)paste0("c",x))
-  df2<-cbind(df,newd)
+  df2 <- cbind(df,newd)
   df2
 }
 

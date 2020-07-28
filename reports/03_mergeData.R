@@ -252,3 +252,7 @@ eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"],na.
 allInsects$cnumberTime <- NA
 allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -middayMean
 allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -eveningMean
+
+
+allInsects$cnumberTime[is.na(allInsects$cnumberTime)]<- 0
+

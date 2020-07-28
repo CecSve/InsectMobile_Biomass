@@ -85,29 +85,8 @@ stopData <- merge(tlData,stopData,by="Codierung",all=T)
 names(stopData)[which(names(stopData)=="osm")] <- "stops"
 allInsects <- merge(allInsects,stopData,by.x="RouteID",by.y="Codierung",all.x=T)
 
-#sort vars
-#centreing
-allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
-allInsects$cWind <- allInsects$Wind - median(allInsects$Wind) 
-allInsects$cTemp <- allInsects$Temp - median(allInsects$Temp) 
-allInsects$cStops <- log(allInsects$stops+1) - median(log(allInsects$stops+1))
-allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signals+1))
-
 #sort time data to standard each around the time band
 allInsects$numberTime <- as.numeric(hm(allInsects$StartTime))#DE
-
-#transform to minutes
-allInsects$numberTime <- allInsects$numberTime/60 
-
-middayMean <- median(allInsects$numberTime[allInsects$Time_band=="midday"],na.rm=T)#23 for DE, 37.5 for DK
-eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"],na.rm=T)#69.5 for DK, 124
-
-allInsects$cnumberTime <- NA
-allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -middayMean
-allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -eveningMean
-
-#for missing german value, just set to 0
-allInsects$cnumberTime[is.na(allInsects$cnumberTime)] <- 0
 
 ####merge all Danish files ###########################################################
 allInsects <- insectsDK
@@ -238,7 +217,6 @@ allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark
 
 #centering
 allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
-
 allInsects$cStops <- log(allInsects$stops+1) - median(log(allInsects$stops+1))
 allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signals+1))
 

@@ -6,6 +6,7 @@ library(lme4)# Fit linear and generalized linear mixed-effects models
 library(lmerTest) # Provides p-values in type I, II or III anova and summary tables for lmer model fits (cf. lme4) 
 library(ncf) # visualise spatial autocorrelation
 library(DHARMa) # test spatial autocorrelation
+library(MuMIn)
 
 ### Denmark ########################################
 
@@ -168,14 +169,15 @@ allInsects$y2 <- allInsects$y + rnorm(length(allInsects$y),0,10)
 #plot residuals
 #full model
 lme1000 <- lme4::lmer(log(Biomass+1) ~ 
-                        sqrt(Agriculture_1000) + 
-                        sqrt(Urban_1000) +
-                        sqrt(Open.uncultivated_1000)+
-                        sqrt(Wetland_1000) +
-                        sqrt(Forest_250) +
+                        Agriculture_1000 + 
+                        Urban_1000 +
+                        Open.uncultivated_1000+
+                        Wetland_1000 +
+                        Forest_250 +
                         Time_band + 
-                        Time_band:cnumberTime + cTL + cyDay + 
-                        (1|PilotID), data=allInsects)
+                        Time_band:cnumberTime + 
+                        cStops + cyDay + 
+                        (1|PilotID) + (1|RouteID), data=allInsects)
 
 allInsects$resids <- as.numeric(residuals(lme1000))
 allInsects$resids_binary <- as.factor(ifelse(allInsects$resids>0,1,-1))
@@ -199,11 +201,19 @@ summary(spline.autocorrelation_glm)
 
 #test it
 res = simulateResiduals(lme1000)
-testSpatialAutocorrelation(res, x =  allInsects$x2, y = allInsects$y2)
+res = recalculateResiduals(res, group = factor(allInsects$RouteID))#first aggregate by route
+testSpatialAutocorrelation(res, 
+                           x =  unique(allInsects$x), 
+                            y = unique(allInsects$y))
+#says highly significant still
 
 ### model selection ###########
+
 # spatial models
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
               Forest_250 +
               Time_band + 
               Time_band:cnumberTime + 
@@ -212,12 +222,12 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
             random=~1|PilotID/RouteID,
             correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=TRUE),
             data=allInsects)
-#0.0003768015
-#     range     nugget 
-#45.8854417  0.148841
-AICc(gls1)#451.1499
+AICc(gls1)#459.6515
 
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
               Forest_250 +
               Time_band + 
               Time_band:cnumberTime + 
@@ -226,13 +236,13 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
             random=~1|PilotID,
             correlation=corExp(form=~x2+y2|PilotID,nugget=TRUE),
             data=allInsects)
-#Parameter estimate(s):
-#  range     nugget 
-#45.8854582  0.1488418
-#AIC 448.687
+#AIC 449.9827
 
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
-              Forest_250 +
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
+              Forest_250 + 
               Time_band + 
               Time_band:cnumberTime + 
               cTL + 
@@ -240,11 +250,12 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
             random=~1|PilotID/RouteID,
             correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=FALSE),
             data=allInsects)
-#range 
-#6.984794
-#451.5497
+#457.059
 
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
               Forest_250 +
               Time_band + 
               Time_band:cnumberTime + 
@@ -253,11 +264,12 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
             random=~1|PilotID,
             correlation=corExp(form=~x2+y2|PilotID,nugget=FALSE),
             data=allInsects)
-#range 
-#24.58072 
-#AICc 450.6248
+#AICc 465.7069
 
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
               Forest_250 +
               Time_band + 
               Time_band:cnumberTime + 
@@ -265,24 +277,14 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
               cyDay,
             random=~1|PilotID/RouteID,
             data=allInsects)
-#AICc(gls1)449.7846
+#AICc(gls1)
+#454.5108
 
-#spatial models
+#formal test
 gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
-              Forest_250 +
-              Time_band + 
-              Time_band:cnumberTime + 
-              cTL + 
-              cyDay,
-            random=~1|PilotID/RouteID,
-            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=TRUE),
-            data=allInsects)
-#0.0003768015
-#     range     nugget 
-#45.8854417  0.148841
-AICc(gls1)#451.1499
-
-gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
               Forest_250 +
               Time_band + 
               Time_band:cnumberTime + 
@@ -291,38 +293,11 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
             random=~1|PilotID,
             correlation=corExp(form=~x2+y2|PilotID,nugget=TRUE),
             data=allInsects)
-#Parameter estimate(s):
-#  range     nugget 
-#45.8854582  0.1488418
-#AIC 448.687
 
-gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
-              Forest_250 +
-              Time_band + 
-              Time_band:cnumberTime + 
-              cTL + 
-              cyDay,
-            random=~1|PilotID/RouteID,
-            correlation=corExp(form=~x2+y2|PilotID/RouteID,nugget=FALSE),
-            data=allInsects)
-#range 
-#6.984794
-#451.5497
-
-gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
-              Forest_250 +
-              Time_band + 
-              Time_band:cnumberTime + 
-              cTL + 
-              cyDay,
-            random=~1|PilotID,
-            correlation=corExp(form=~x2+y2|PilotID,nugget=FALSE),
-            data=allInsects)
-#range 
-#24.58072 
-#AICc 450.6248
-
-gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+gls2 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
+              Urban_1000 +
+              Open.uncultivated_1000+
+              Wetland_1000 +
               Forest_250 +
               Time_band + 
               Time_band:cnumberTime + 
@@ -330,4 +305,5 @@ gls1 <- lme(log(Biomass+1) ~ Agriculture_1000 +
               cyDay,
             random=~1|PilotID/RouteID,
             data=allInsects)
-#AICc(gls1)449.7846
+anova(gls1,gls2)
+#spatial model is better

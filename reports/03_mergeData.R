@@ -231,7 +231,7 @@ allInsects <- allInsects[, -grep(".y$", colnames(allInsects))]
 names(allInsects) <- gsub(".x","",names(allInsects),fixed = TRUE)
 allInsects <- column_to_rownames(allInsects, var = "id")
 
-#sort vars
+###sort vars###############################################################################
 #centering
 allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
 

@@ -650,6 +650,46 @@ summary(lme1000)
 ### Germany ##############################################
 
 ### Figure 3: the data ##########################
+
+qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[1])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("% Urban cover") +ylab("Biomass")
+
+qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("% Farmland cover") +ylab("Biomass")
+
+qD <- ggplot(allInsects,aes(x=Open.uncultivated_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("% Grassland cover") +ylab("Biomass")
+
+qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("% Wetland cover") +ylab("Biomass")
+
+qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[5])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+
+  xlab("% Forest cover") +ylab("Biomass")
+
+plot_grid(qU,qF,qD,qW,qFo,nrow=2,ncol=3)
+
+ggsave("plots/Landcover_percent.png")
+
 ###pie chart#####################################
 
 library(dplyr)

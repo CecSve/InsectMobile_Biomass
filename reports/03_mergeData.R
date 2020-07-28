@@ -231,6 +231,9 @@ allInsects <- allInsects[, -grep(".y$", colnames(allInsects))]
 names(allInsects) <- gsub(".x","",names(allInsects),fixed = TRUE)
 allInsects <- column_to_rownames(allInsects, var = "id")
 
+#sort time data to standard each around the time band
+allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark
+
 ###sort vars###############################################################################
 #centering
 allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
@@ -238,14 +241,12 @@ allInsects$cyDay <- allInsects$yDay - median(allInsects$yDay)
 allInsects$cStops <- log(allInsects$stops+1) - median(log(allInsects$stops+1))
 allInsects$cTL <- log(allInsects$tr_signals+1) - median(log(allInsects$tr_signals+1))
 
-#sort time data to standard each around the time band
-allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark
-
 #transform to minutes
 allInsects$numberTime <- allInsects$numberTime/60 
 
 middayMean <- median(allInsects$numberTime[allInsects$Time_band=="midday"],na.rm=T)#23 for DE, 37.5 for DK
 eveningMean <- median(allInsects$numberTime[allInsects$Time_band=="evening"],na.rm=T)#69.5 for DK, 124 for DK
+
 allInsects$cnumberTime <- NA
 allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -middayMean
 allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -eveningMean

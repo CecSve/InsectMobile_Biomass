@@ -166,6 +166,40 @@ biplot(fit)
 
 ### Germany ###########################
 
+###correlation plot
+
+#1000m plot
+someInsects <- allInsects[,c(5,24,28,32,36,40,66)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
+
+p <- cor(someInsects)
+
+par(mfrow = c(2, 1))
+# with correlation coefficient 
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "AOE", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation at 1000 m", mar=c(0,0,1,0))
+
+
+#50 m plot
+someInsects <- allInsects[,c(5,21,25,29,33,37,66)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
+
+p <- cor(someInsects)
+
+# with correlation coefficient 
+corrplot(p, method = "color", col = landuseCols,
+               type = "upper", order = "AOE", number.cex = .7,
+               addCoef.col = "black", # Add coefficient of correlation
+               tl.col = "black", tl.srt = 90, # Text label color and rotation
+               # hide correlation coefficient on the principal diagonal 
+               diag = FALSE, title = "Correlation at 50 m", mar=c(0,0,1,0))
+
 ###pca analysis###############################################
 #taken from the Quick R website
 

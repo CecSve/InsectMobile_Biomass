@@ -688,7 +688,7 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
 
 plot_grid(qU,qF,qD,qW,qFo,nrow=2,ncol=3)
 
-ggsave("plots/Landcover_percent.png")
+ggsave("plots/Landcover_percent.png",width=8,height=5)
 
 ###pie chart#####################################
 
@@ -760,6 +760,7 @@ ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
 ggsave("plots/piecharts_DE.png")
 
 ### Linear Mixed Effects Model: Land covers (Table 1) #################
+
 #full model and final
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
@@ -768,7 +769,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Wetland_1000 +
                   Forest_250 +
                   Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay + 
+                  Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 
 summary(lme1000)
@@ -784,7 +785,19 @@ r.squaredGLMM(lme1000)
 library(car)
 vif(lme1000)
 
+#check results with AIC
 
+library(MuMIn)
+options(na.action = "na.fail")
+dd <- dredge(lme1000)
+subset(dd, delta < 4)
+
+# Visualize the model selection table:
+par(mar = c(3,5,6,4))
+plot(dd, labAsExpr = TRUE)
+
+# Model average models with delta AICc < 4
+model.avg(dd, subset = delta < 4)
 
 ### Figure 4: effect plots ##########################
 

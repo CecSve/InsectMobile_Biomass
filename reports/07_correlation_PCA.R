@@ -169,9 +169,14 @@ biplot(fit)
 ###pca analysis###############################################
 #taken from the Quick R website
 
-mydata <- allInsects[,c("cStops","cTL",names(allInsects)[grepl("_1000",names(allInsects))])]
+mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,2:9]
+mydata <- mydata[,2:6]
+names(mydata)[names(mydata)=="Open.uncultivated_1000"] <- "Grassland_1000"
+names(mydata) <- gsub("_1000","",names(mydata))
+allInsects$Land_use <- as.character(allInsects$Land_use)
+allInsects$Land_use[allInsects$Land_use=="Dryland"] <- "Grassland"
+allInsects$Land_use <- factor(allInsects$Land_use, levels=landuseOrder)
 
 fit <- princomp(mydata, cor=TRUE)
 summary(fit) # print variance accounted for
@@ -186,4 +191,8 @@ autoplot(fit, data = allInsects, colour = 'Land_use',
          loadings = TRUE, 
          loadings.colour = 'black',
          loadings.label = TRUE, 
-         loadings.label.size = 4) + scale_colour_manual(values = landuseCols)
+         loadings.label.size = 2.5) + 
+  scale_colour_manual(values = landuseCols[1:5])+
+theme_bw()
+
+ggsave("plots/pca_1000_DE.png")

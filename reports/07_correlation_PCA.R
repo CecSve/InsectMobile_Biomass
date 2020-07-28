@@ -169,7 +169,7 @@ biplot(fit)
 ###correlation plot
 
 #1000m plot
-someInsects <- allInsects[,c(5,24,28,32,36,40,66)]
+someInsects <- allInsects[,c(5,24,28,32,36,40,65)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
 
@@ -177,8 +177,8 @@ p <- cor(someInsects)
 
 par(mfrow = c(2, 1))
 # with correlation coefficient 
-corrplot(p, method = "color", col = landuseCols,
-         type = "upper", order = "AOE", number.cex = .7,
+corrplot(p, method = "color", 
+         type = "upper", order = "FPC", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
          # hide correlation coefficient on the principal diagonal 
@@ -186,15 +186,15 @@ corrplot(p, method = "color", col = landuseCols,
 
 
 #50 m plot
-someInsects <- allInsects[,c(5,21,25,29,33,37,66)]
+someInsects <- allInsects[,c(5,21,25,29,33,37,65)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
 
 p <- cor(someInsects)
 
 # with correlation coefficient 
-corrplot(p, method = "color", col = landuseCols,
-               type = "upper", order = "AOE", number.cex = .7,
+corrplot(p, method = "color", 
+               type = "upper", order = "FPC", number.cex = .7,
                addCoef.col = "black", # Add coefficient of correlation
                tl.col = "black", tl.srt = 90, # Text label color and rotation
                # hide correlation coefficient on the principal diagonal 
@@ -207,6 +207,7 @@ mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsect
 names(mydata)
 mydata <- mydata[,2:6]
 names(mydata)[names(mydata)=="Open.uncultivated_1000"] <- "Grassland_1000"
+names(mydata)[names(mydata)=="Agriculture_1000"] <- "Farmland_1000"
 names(mydata) <- gsub("_1000","",names(mydata))
 allInsects$Land_use <- as.character(allInsects$Land_use)
 allInsects$Land_use[allInsects$Land_use=="Dryland"] <- "Grassland"

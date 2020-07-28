@@ -111,7 +111,7 @@ ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
         axis.title = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank()) +
-  theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Unspecified")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
+  theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Other")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
 
 ### Linear Mixed Effects Model: Land covers (Table 1) #################
 # used cStops instead of cTL for DK data
@@ -675,7 +675,6 @@ allInsects$Other_1000 <- 100-allInsects$totalLand
 #divide up biomass into quantiles
 allInsects$BiomassCats <- cut_number(allInsects$meanBiomass,n=5)
 
-
 #mean land cover per biomass cats
 allInsects_cat <- allInsects %>%
   group_by(BiomassCats) %>%
@@ -690,16 +689,35 @@ allInsects_cat <- allInsects %>%
 allInsects_melt <- gather(allInsects_cat, Land_cover, value, -BiomassCats)
 
 #plot
-ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover))+
+library(forcats)
+allInsects_melt <- allInsects_melt %>% mutate(
+  Land_cover = fct_relevel(
+    Land_cover,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Open.uncultivated_1000",
+    "Wetland_1000",
+    "Forest_1000",
+    "Other_1000"))  
+
+levels(allInsects_melt$BiomassCats)
+
+biomass.labs <- c("[0,46]"=" < 46 mg", "(46,115]"="486-115 mg", "(115,209]"="115-209 mg", 
+                  "(209,502]"="209-502 mg", "(502,1.38e+03]"="> 502 mg")
+
+
+ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
   geom_bar(stat="identity")+
-  facet_wrap(~BiomassCats,nrow=1)+
+  facet_grid(~BiomassCats, labeller = labeller(BiomassCats=biomass.labs))+
   coord_polar("y")+
   theme_classic() + 
   theme(axis.line = element_blank(),
         axis.title = element_blank(),
         axis.text = element_blank(),
-        axis.ticks = element_blank())+
-  theme(legend.position="top")
+        axis.ticks = element_blank()) +
+  theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Other")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
+
+ggsave("plots/piecharts_DE.png")
 
 ### Linear Mixed Effects Model: Land covers (Table 1) #################
 #full model and final

@@ -194,8 +194,8 @@ ggplot(germany) +
   geom_point(data = landuse.map, 
              aes(x=lat, y = long, colour = Land_use), size=4, show.legend = T) + 
   theme_void() + 
-  scale_colour_manual("Predominant land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + 
-  scalebar(germany, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + 
+  scale_colour_manual("Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"), values = landuseCols) + 
+  scalebar(germany, dist = 50, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + 
   north(germany, symbol = 4, scale = 0.07) + panel_border() + labs(subtitle = "B") + 
   theme(plot.subtitle = element_text(face = "bold", size = 20))  
 

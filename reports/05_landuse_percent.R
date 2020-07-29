@@ -13,6 +13,7 @@ library(lme4) # Fit linear and generalized linear mixed-effects models
 library(lmerTest) # Provides p-values in type I, II or III anova and summary tables for lmer model fits (cf. lme4) 
 library(nlme) # Fit and compare Gaussian linear and nonlinear mixed-effects models
 library(effects) # Graphical and tabular effect displays, e.g., of interactions, for various statistical models with linear predictors
+library(MuMIn)#AIC, R2
 
 #### Set colour scheme ################################################################
 
@@ -906,6 +907,35 @@ test %>% mutate(
 ) %>% ggplot(aes(propcover, fit, color = landcover)) + geom_point() + geom_errorbar(aes(ymin = fit - se, ymax = fit + se), width = 0.4) + theme_bw(base_size = 12) + scale_colour_manual(values = landuseCols) + labs(x = "Land cover") + scale_x_continuous(limits = c(0, 1), labels = function(x) paste0(x * 100, "%")) + facet_wrap(~landcover, scales = "free")
 
 save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
+
+###PCA axes as variables##################################
+
+#run script in script 07 to get PCA axes variables
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Urbanization_gradient +
+                  Forest_gradient +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+vif(lme1000)
+r.squaredGLMM(lme1000)
+
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Urbanization_gradient * Time_band +
+                  Forest_gradient * Time_band +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+#no significant interactions
+
 ### DE biomass predictions% ##############################
 
 library(lme4)

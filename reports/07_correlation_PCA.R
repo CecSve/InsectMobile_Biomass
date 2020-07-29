@@ -211,6 +211,8 @@ names(mydata)[names(mydata)=="Agriculture_1000"] <- "Farmland_1000"
 names(mydata) <- gsub("_1000","",names(mydata))
 allInsects$Land_use <- as.character(allInsects$Land_use)
 allInsects$Land_use[allInsects$Land_use=="Dryland"] <- "Grassland"
+allInsects$Land_use[allInsects$Land_use=="Open uncultivated"] <- "Grassland"
+landuseOrder
 allInsects$Land_use <- factor(allInsects$Land_use, levels=landuseOrder)
 
 fit <- princomp(mydata, cor=TRUE)
@@ -219,6 +221,17 @@ loadings(fit) # pc loadings
 plot(fit,type="lines") # scree plot
 fit$scores # the principal components
 biplot(fit)
+
+#Maximum Likelihood Factor Analysis
+# entering raw data and extracting 3 factors,
+# with varimax rotation
+fit <- factanal(mydata, 2, rotation="varimax")
+print(fit, digits=2, cutoff=.3, sort=TRUE)
+# plot factor 1 by factor 2
+load <- fit$loadings[,1:2]
+plot(load,type="n") # set up plot
+text(load,labels=names(mydata),cex=.7) # add variable names 
+
 
 #with ggplot
 autoplot(fit)

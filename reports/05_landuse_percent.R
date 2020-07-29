@@ -924,6 +924,13 @@ test %>% mutate(
 
 save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
+### Test of land cover diffs##############################
+
+calZ <- function(beta1,se1,beta2,se2){
+  (beta1 - beta2)/sqrt(beta1^2 + beta2^2)
+}
+
+
 ###PCA axes as variables##################################
 
 #run script in script 07 to get PCA axes variables

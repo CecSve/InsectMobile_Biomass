@@ -780,6 +780,22 @@ r.squaredGLMM(lme1000)
 #           R2m       R2c
 #[1,] 0.3625144 0.8403325
 
+#with sqrt
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  sqrt(Agriculture_1000) + 
+                  sqrt(Urban_1000) +
+                  sqrt(Open.uncultivated_1000) +
+                  sqrt(Wetland_1000) +
+                  sqrt(Forest_250) +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+vif(lme1000)
+#now agriculture is most important... but urban comes out on top with AIC
+
 #with model simplification
 lme1000 <- lmer(log(Biomass+1) ~ 
                   cUrban_1000 +

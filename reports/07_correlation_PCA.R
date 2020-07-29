@@ -222,16 +222,27 @@ plot(fit,type="lines") # scree plot
 fit$scores # the principal components
 biplot(fit)
 
-#Maximum Likelihood Factor Analysis
-# entering raw data and extracting 3 factors,
+#Maximum Likelihood Factor Analysis - from Quick R
 # with varimax rotation
 fit <- factanal(mydata, 2, rotation="varimax")
-print(fit, digits=2, cutoff=.3, sort=TRUE)
-# plot factor 1 by factor 2
+print(fit, digits=2, sort=TRUE)
 load <- fit$loadings[,1:2]
-plot(load,type="n") # set up plot
-text(load,labels=names(mydata),cex=.7) # add variable names 
+plot(load,type="n")
+text(load,labels=names(mydata),cex=.7)  
 
+#pca with rotation
+library(psych)
+#packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
+#install.packages(packageurl, repos=NULL, type="source")
+pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
+biplot(pca_rotated)
+print(pca_rotated)
+
+ggsave("plots/pca_with_rotation_1000_DE.png")
+
+#add PCA axes scores to the dataset
+allInsects$Urbanization_gradient <- pca_rotated$scores[,1]
+allInsects$Forest_gradient <- pca_rotated$scores[,2]
 
 #with ggplot
 autoplot(fit)

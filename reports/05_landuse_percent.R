@@ -926,14 +926,27 @@ save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_hei
 
 ### Test of land cover diffs##############################
 
-calZ <- function(beta1,se1,beta2,se2){
-  (beta1 - beta2)/sqrt(beta1^2 + beta2^2)
+Ztest <- function(beta1,se1,beta2,se2){
+  myZ <- (beta1 - beta2)/sqrt(beta1^2 + beta2^2)
+  pvalue = 2*pnorm(abs(myZ), lower.tail = F)
+  return(pvalue)
 }
 
+mySummary <-  summary(lme1000)$coefficients
+
+#Difference between Agriculture and Open uncultivated
+Ztest(mySummary["Agriculture_1000","Estimate"],mySummary["Agriculture_1000","Std. Error"],
+     mySummary["Open.uncultivated_1000","Estimate"],mySummary["Open.uncultivated_1000","Std. Error"])
+
+#Difference between Urban and Open uncultivated
+Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
+      mySummary["Open.uncultivated_1000","Estimate"],mySummary["Open.uncultivated_1000","Std. Error"])
 
 ###PCA axes as variables##################################
 
 #run script in script 07 to get PCA axes variables
+
+
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbanization_gradient +

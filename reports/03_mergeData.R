@@ -231,11 +231,10 @@ allInsects$cnumberTime <- NA
 allInsects$cnumberTime[allInsects$Time_band=="midday"] <- allInsects$numberTime[allInsects$Time_band=="midday"] -middayMean
 allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime[allInsects$Time_band=="evening"] -eveningMean
 
-
+#set missing values to mean of time band
 allInsects$cnumberTime[is.na(allInsects$cnumberTime)]<- 0
 
 #centering other land use variables
-
 centreVars<-function(df){
   centring <- function(x)scale(x,scale=F) #this will just centre the variables
   newd <- df %>% 

@@ -196,6 +196,31 @@ r.squaredGLMM(lme1000)
 #check variance inflation factor
 vif(lme1000)
 
+### AIC check ##############################################
+
+library(MuMIn)
+options(na.action = "na.fail")
+dd <- dredge(lme1000)
+subset(dd, delta < 2)
+
+# Visualize the model selection table:
+par(mar = c(3,5,6,4))
+plot(dd, labAsExpr = TRUE)
+
+# Model average models with delta AICc < 4
+#model.avg(dd, subset = delta < 2)
+
+# best model with AIC 901.4
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Agriculture_1000 + 
+                  Urban_1000 +
+                  Open.uncultivated.land_1000+
+                  Wetland_50 +
+                  Forest_250 +
+                  Time_band + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+summary(lme1000)
+
 ### Figure 4: effect plots ##########################
 gls1.alleffects <- allEffects(lme1000)
 plot(gls1.alleffects, 'Urban_1000', ylab="Biomass")
@@ -305,6 +330,24 @@ test %>% mutate(
 ) %>% ggplot(aes(propcover, fit, color = landcover)) + geom_point() + geom_errorbar(aes(ymin = fit - se, ymax = fit + se), width = 0.4) + theme_bw(base_size = 12) + scale_colour_manual(values = landuseCols) + labs(x = "Land cover") + scale_x_continuous(limits = c(0, 1), labels = function(x) paste0(x * 100, "%")) + facet_wrap(~landcover, scales = "free")
 
 save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
+
+### Test of land cover diffs##############################
+
+Ztest <- function(beta1,se1,beta2,se2){
+  myZ <- (beta1 - beta2)/sqrt(beta1^2 + beta2^2)
+  pvalue = 2*pnorm(abs(myZ), lower.tail = F)
+  return(pvalue)
+}
+
+mySummary <-  summary(lme1000)$coefficients
+
+#Difference between Agriculture and Open uncultivated
+Ztest(mySummary["Agriculture_1000","Estimate"],mySummary["Agriculture_1000","Std. Error"],
+      mySummary["Open.uncultivated.land_1000","Estimate"],mySummary["Open.uncultivated.land_1000","Std. Error"])
+
+#Difference between Urban and Open uncultivated
+Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
+      mySummary["Open.uncultivated.land_1000","Estimate"],mySummary["Open.uncultivated.land_1000","Std. Error"])
 
 ###DK biomass predictions%##############################
 

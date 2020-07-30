@@ -51,6 +51,60 @@ cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_50",names(allInsects)
 ### Denmark ##############################################
 
 ### Figure 3: the data ##########################
+qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[1])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70") + scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) +
+  xlab("") +ylab("Biomass") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+
+qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[2])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) +
+  xlab("") +ylab("Biomass") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+
+qD <- ggplot(allInsects,aes(x=Open.uncultivated.land_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[3])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) +
+  xlab("") +ylab("Biomass") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+
+qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[4])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) +
+  xlab("") +ylab("Biomass") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+
+qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
+  geom_point(col=landuseCols[5])+
+  scale_y_log10() +
+  theme_bw() +
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) +
+  xlab("") +ylab("Biomass") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+
+fig3 <- plot_grid(qU,qF,qD,qW,qFo,nrow=2,ncol=3)
+
+save_plot("plots/Landcover_percent.png", fig3, base_width = 12, base_height = 6)
+#ggsave("plots/Landcover_percent.png",width=12,height=4)
 ###DK pie chart#####################################
 
 library(dplyr)
@@ -103,7 +157,7 @@ allInsects_melt <- allInsects_melt %>% mutate(
 biomass.labs <- c("[3,48.8]"="3-48.8 mg", "(48.8,84.2]"="48.8-84.2 mg", "(84.2,135]"="84.2-135 mg", "(135,262]"="135-262 mg", "(262,4.36e+03]"="262-4360 mg")
 #names(biomass.labs) <- c("3-48.8 mg", "48.8-84.2 mg", "84.2-135 mg", "135-262 mg", "262-4360 mg")
 
-ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
+fig3_2 <- ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
   geom_bar(stat="identity")+
   facet_grid(~BiomassCats, labeller = labeller(BiomassCats=biomass.labs))+
   coord_polar("y")+
@@ -113,6 +167,8 @@ ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
         axis.text = element_blank(),
         axis.ticks = element_blank()) +
   theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Other")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
+
+save_plot("plots/Landcover_biomass_proportions.png", fig3_2, base_width = 12, base_height = 6)
 
 ### Linear Mixed Effects Model: Land covers (Table 1) #################
 # used cStops instead of cTL for DK data

@@ -7,6 +7,10 @@ library(corrplot)
 library(Hmisc)
 library(ggfortify) # to plot PCA
 
+#### Set colour scheme ################################################################
+
+landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
+
 ### Denmark ###########################
 
 ### Correlation plot ##################
@@ -163,6 +167,46 @@ loadings(fit) # pc loadings
 plot(fit,type="lines") # scree plot 
 fit$scores # the principal components
 biplot(fit)
+
+mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,2:7]
+names(mydata)[names(mydata)=="Open.uncultivated.land_1000"] <- "Grassland_1000"
+names(mydata)[names(mydata)=="Agriculture_1000"] <- "Farmland_1000"
+names(mydata) <- gsub("_1000","",names(mydata))
+allInsects$Land_use <- as.character(allInsects$Land_use)
+allInsects$Land_use[allInsects$Land_use=="Dryland"] <- "Grassland"
+allInsects$Land_use[allInsects$Land_use=="Open uncultivated land"] <- "Grassland"
+landuseOrder
+allInsects$Land_use <- factor(allInsects$Land_use, levels=landuseOrder)
+
+fit <- princomp(mydata, cor=TRUE)
+
+#pca with rotation
+library(psych)
+#packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
+#install.packages(packageurl, repos=NULL, type="source")
+pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
+biplot(pca_rotated)
+print(pca_rotated)
+
+ggsave("plots/pca_with_rotation_1000_DK.png")
+
+#add PCA axes scores to the dataset
+allInsects$Urbanization_gradient <- pca_rotated$scores[,1]
+allInsects$Forest_gradient <- pca_rotated$scores[,2]
+
+#with ggplot
+autoplot(fit)
+autoplot(fit, data = allInsects, colour = 'Land_use',
+         loadings = TRUE, 
+         loadings.colour = 'black',
+         loadings.label = TRUE, 
+         loadings.label.size = 2.5) + 
+  scale_colour_manual(values = landuseCols[1:6])+
+  theme_bw()
+
+ggsave("plots/pca_1000_DK.png")
 
 ### Germany ###########################
 

@@ -276,11 +276,7 @@ effectplot <- test %>% mutate(
   ) + scale_x_continuous(
     limits = c(0, 1),
     labels = function(x)
-      paste0(x * 100, "%"))  + scale_y_continuous(
-        limits = c(2.5, 7),
-        labels = function(x)
-          paste0(x * 1, "%")
-      ) + geom_ribbon(
+      paste0(x * 100, "%")) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,
@@ -291,7 +287,7 @@ effectplot <- test %>% mutate(
         show.legend = F
       ) + labs(
         x = "Land cover",
-        y = "Effect change on biomass",
+        y = "log Predicted biomass (mg)",
         subtitle = "A",
         colour = "Land cover type"
       ) + scale_fill_manual(values = landuseCols)

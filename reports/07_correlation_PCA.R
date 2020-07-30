@@ -170,7 +170,7 @@ biplot(fit)
 
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,2:7]
+mydata <- mydata[,c(2:3, 5:7)]
 names(mydata)[names(mydata)=="Open.uncultivated.land_1000"] <- "Grassland_1000"
 names(mydata)[names(mydata)=="Agriculture_1000"] <- "Farmland_1000"
 names(mydata) <- gsub("_1000","",names(mydata))
@@ -198,15 +198,28 @@ allInsects$Forest_gradient <- pca_rotated$scores[,2]
 
 #with ggplot
 autoplot(fit)
-autoplot(fit, data = allInsects, colour = 'Land_use',
+dk_autoplot <- autoplot(fit, data = allInsects, colour = 'Land_use', 
          loadings = TRUE, 
          loadings.colour = 'black',
          loadings.label = TRUE, 
-         loadings.label.size = 2.5) + 
+         loadings.label.size = 5) + 
   scale_colour_manual(values = landuseCols[1:6])+
-  theme_bw()
+  theme_bw() + labs(colour = "Land cover")
 
 ggsave("plots/pca_1000_DK.png")
+dk_autoplot <- plot_grid(dk_autoplot, labels = "AUTO")
+save_plot("plots/pca_1000_DK_numbered.png", dk_autoplot, base_height = 8, base_width = 12)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Urbanization_gradient + 
+                  Forest_gradient +
+                  Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+summary(lme1000)
+
+library(MuMIn)
+r.squaredGLMM(lme1000)
 
 ### Germany ###########################
 

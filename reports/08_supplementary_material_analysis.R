@@ -733,16 +733,16 @@ outUrban$Land_use <- "Urban"
 hist(allInsects$Open.uncultivated.land_250)#log??
 lme50 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_50) + Time_band + 
                 Time_band:cnumberTime + cStops + cyDay + 
-                (1|RouteID_JB) + (1|PilotID), data=allInsects)
+                (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
 lme250 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_250) + Time_band + 
                  Time_band:cnumberTime + cStops + cyDay +  
-                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+                 (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
 lme500 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_500) + Time_band + 
                  Time_band:cnumberTime + cStops + cyDay +  
-                 (1|RouteID_JB) + (1|PilotID), data=allInsects)
+                 (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
 lme1000 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_1000) + Time_band + 
                   Time_band:cnumberTime + cStops + cyDay +  
-                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
 outOpen.uncultivated <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outOpen.uncultivated <- as.data.frame(outOpen.uncultivated)
 outOpen.uncultivated$Buffer <- c(50,250,500,1000)

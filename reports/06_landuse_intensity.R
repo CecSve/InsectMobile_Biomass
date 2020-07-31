@@ -65,7 +65,7 @@ plot_grid(g1,g2,g3,nrow=1)
 ### DK urban##############################################
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,c(6,11,13:17)]
+mydata <- mydata[,c(11,13:15,17)]
 names(mydata) <- gsub("_1000","",names(mydata))
 allInsects$Land_use <- as.character(allInsects$Land_use)
 allInsects$Land_use[allInsects$Land_use=="Dryland"] <- "Grassland"

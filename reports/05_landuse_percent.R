@@ -58,7 +58,7 @@ qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70") + scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[2])+
@@ -67,7 +67,7 @@ qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qD <- ggplot(allInsects,aes(x=Open.uncultivated.land_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[3])+
@@ -77,7 +77,7 @@ qD <- ggplot(allInsects,aes(x=Open.uncultivated.land_1000,y=(Biomass+1)))+
     #limits = c(0, 0.16),
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[4])+
@@ -86,7 +86,7 @@ qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[5])+
@@ -95,11 +95,11 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
-fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1, align = "hv")
+fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
-save_plot("plots/Landcover_percent.png", fig3, base_width = 12, base_height = 24)
+save_plot("plots/Landcover_percent.png", fig3, base_width = 4, base_height = 12)
 #ggsave("plots/Landcover_percent.png",width=12,height=4)
 ###DK pie chart#####################################
 
@@ -178,7 +178,8 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
+                  (1|RouteID_JB) + (1|PilotID), data = allInsects)
+# data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
 
 library(MuMIn)
@@ -214,7 +215,8 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Wetland_50 +
                   Forest_250 +
                   Time_band + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
+                  (1|RouteID_JB) + (1|PilotID), data = allInsects)
+# data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
 
 ### Figure 4: effect plots ##########################
@@ -382,12 +384,26 @@ Ztest <- function(beta1,se1,beta2,se2){
 mySummary <-  summary(lme1000)$coefficients
 
 #Difference between Agriculture and Open uncultivated
+# we predicted (1) to find lower biomass in agricultural areas compared to open semi-natural habitats (wetland and grassland) due to agricultural practices such as pesticide use, lower habitat complexity and increased human disturbance
 Ztest(mySummary["Agriculture_1000","Estimate"],mySummary["Agriculture_1000","Std. Error"],
       mySummary["Open.uncultivated.land_1000","Estimate"],mySummary["Open.uncultivated.land_1000","Std. Error"])
 
+Ztest(mySummary["Agriculture_1000","Estimate"],mySummary["Agriculture_1000","Std. Error"],
+      mySummary["Wetland_50","Estimate"],mySummary["Wetland_50","Std. Error"])
+
 #Difference between Urban and Open uncultivated
+# we predicted (2) that urban cover would have the lowest biomass among all land covers due to the high proportion of impervious surfaces and low proportion of blue and green space.
 Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
       mySummary["Open.uncultivated.land_1000","Estimate"],mySummary["Open.uncultivated.land_1000","Std. Error"])
+
+Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
+      mySummary["Wetland_50","Estimate"],mySummary["Wetland_50","Std. Error"])
+
+Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
+      mySummary["Forest_250","Estimate"],mySummary["Forest_250","Std. Error"])
+
+Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
+      mySummary["Agriculture_1000","Estimate"],mySummary["Agriculture_1000","Std. Error"])
 
 ###DK biomass predictions%##############################
 

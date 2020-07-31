@@ -58,7 +58,7 @@ qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70") + scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
 
 qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[2])+
@@ -67,17 +67,17 @@ qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
 
 qD <- ggplot(allInsects,aes(x=Open.uncultivated.land_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[3])+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
-    limits = c(0, 0.16),
+    #limits = c(0, 0.16),
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
 
 qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[4])+
@@ -86,7 +86,7 @@ qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
 
 qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[5])+
@@ -95,11 +95,11 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x * 100, "%")) +
-  xlab("") +ylab("Biomass") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
 
-fig3 <- plot_grid(qU,qF,qD,qW,qFo,nrow=2,ncol=3)
+fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1, align = "hv")
 
-save_plot("plots/Landcover_percent.png", fig3, base_width = 12, base_height = 6)
+save_plot("plots/Landcover_percent.png", fig3, base_width = 12, base_height = 24)
 #ggsave("plots/Landcover_percent.png",width=12,height=4)
 ###DK pie chart#####################################
 
@@ -150,7 +150,7 @@ allInsects_melt <- allInsects_melt %>% mutate(
     "Forest_1000",
     "Other_1000"))  
 
-biomass.labs <- c("[3,48.8]"="3-48.8 mg", "(48.8,84.2]"="48.8-84.2 mg", "(84.2,135]"="84.2-135 mg", "(135,262]"="135-262 mg", "(262,4.36e+03]"="262-4360 mg")
+biomass.labs <- c("[3,48.8]"="3 mg", "(48.8,84.2]"="48.8-84.2 mg", "(84.2,135]"="84.2-135 mg", "(135,262]"="135-262 mg", "(262,4.36e+03]"="4360 mg")
 #names(biomass.labs) <- c("3-48.8 mg", "48.8-84.2 mg", "84.2-135 mg", "135-262 mg", "262-4360 mg")
 
 fig3_2 <- ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
@@ -173,12 +173,12 @@ save_plot("plots/Landcover_biomass_proportions.png", fig3_2, base_width = 12, ba
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
                   Urban_1000 +
-                  Open.uncultivated.land_1000+
+                  Open.uncultivated.land_1000+ # test if outlier drives the pattern
                   Wetland_50 +
                   Forest_250 +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 summary(lme1000)
 
 library(MuMIn)
@@ -210,11 +210,11 @@ plot(dd, labAsExpr = TRUE)
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
                   Urban_1000 +
-                  Open.uncultivated.land_1000+
+                  Open.uncultivated.land_1000 + # test if grassland outlier modifies results
                   Wetland_50 +
                   Forest_250 +
                   Time_band + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 summary(lme1000)
 
 ### Figure 4: effect plots ##########################
@@ -230,7 +230,7 @@ plot(predictorEffects(lme1000, ~ Agriculture_1000 + Urban_1000 + Open.uncultivat
 temp <- effectdata$Agriculture_1000
 temp$landcover <- "Agriculture_1000"
 farm <- temp %>% 
-  rename(
+  dplyr::rename(
     propcover = Agriculture_1000
   )%>% select(landcover, propcover, fit, se, lower, upper)
 
@@ -238,7 +238,7 @@ farm <- temp %>%
 temp <- effectdata$Urban_1000
 temp$landcover <- "Urban_1000"
 urb <- temp %>% 
-  rename(
+  dplyr::rename(
     propcover = Urban_1000
   )%>% select(landcover, propcover, fit, se, lower, upper)
 
@@ -246,7 +246,7 @@ urb <- temp %>%
 temp <- effectdata$Open.uncultivated.land_1000
 temp$landcover <- "Grassland_1000"
 grass <- temp %>% 
-  rename(
+  dplyr::rename(
     propcover = Open.uncultivated.land_1000
   ) %>% select(landcover, propcover, fit, se, lower, upper)
 
@@ -254,7 +254,7 @@ grass <- temp %>%
 temp <- effectdata$Wetland_50
 temp$landcover <- "Wetland_50"
 wet <- temp %>% 
-  rename(
+  dplyr::rename(
     propcover = Wetland_50
   )%>% select(landcover, propcover, fit, se, lower, upper)
 
@@ -262,9 +262,14 @@ wet <- temp %>%
 temp <- effectdata$Forest_250
 temp$landcover <- "Forest_250"
 forest <- temp %>% 
-  rename(
+  dplyr::rename(
     propcover = Forest_250
   ) %>% select(landcover, propcover, fit, se, lower, upper)
+
+# Timeband
+temp <- effectdata$`Time_band:cnumberTime`
+#temp$landcover <- "Time_band:cnumberTime"
+time <- temp
 
 test <- rbind(urb, farm, grass, wet, forest)
 
@@ -309,7 +314,7 @@ effectplot <- test %>% mutate(
       ) + labs(
         x = "Land cover",
         y = "log Predicted biomass (mg)",
-        subtitle = "A",
+        subtitle = "A: Denmark",
         colour = "Land cover type"
       ) + scale_fill_manual(values = landuseCols)
 
@@ -326,6 +331,45 @@ test %>% mutate(
 ) %>% ggplot(aes(propcover, fit, color = landcover)) + geom_point() + geom_errorbar(aes(ymin = fit - se, ymax = fit + se), width = 0.4) + theme_bw(base_size = 12) + scale_colour_manual(values = landuseCols) + labs(x = "Land cover") + scale_x_continuous(limits = c(0, 1), labels = function(x) paste0(x * 100, "%")) + facet_wrap(~landcover, scales = "free")
 
 save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
+
+### Figure 5: time band ###############################
+# Visualization
+effectplot_time <- time %>% mutate(
+  Time_band = fct_relevel(
+    Time_band,
+    "midday",
+    "evening"
+  )
+) %>% ggplot(aes(x = cnumberTime, y = fit, fill = Time_band)) +
+  geom_line(aes(color = Time_band), size = 2) +
+  scale_color_manual(
+    values = c("lightgrey", "darkgrey"),
+    labels = c(
+      "Midday",
+      "Evening"
+    )
+  ) + theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom"
+  ) + geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = Time_band
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "Time within band",
+        y = "log Predicted biomass (mg)",
+        subtitle = "A: Denmark",
+        colour = "Land cover type"
+      ) + scale_fill_manual(values = c("lightgrey", "darkgrey"))
+
+save_plot("plots/DK_effect_timeband.png", effectplot_time, base_width = 10, base_height = 6)
 
 ### Test of land cover diffs##############################
 
@@ -683,15 +727,15 @@ effectplot <- test %>% mutate(
 
 save_plot("plots/DK_predictedeffect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
-### Test timeband interactions ################################
+### Test timeband interactions  ################################
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urban_1000 +
-                  Time_band*(Agriculture_1000) + 
+                  Time_band*Agriculture_1000 + 
                   Open.uncultivated.land_1000 +
-                  (Forest_250) +
-                  (Wetland_50) +
+                  Forest_250 +
+                  Wetland_50 +
                   Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
+                  cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
@@ -702,7 +746,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Wetland_50 +
                   Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
+                  cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
@@ -713,7 +757,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Wetland_50 +
                   Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
+                  cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
@@ -724,7 +768,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250*Time_band +
                   Wetland_50 +
                   Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
+                  cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
@@ -735,7 +779,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Wetland_50*Time_band +
                   Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
+                  cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=allInsects)
 summary(lme1000)
 

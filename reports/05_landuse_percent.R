@@ -56,7 +56,6 @@ qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70") + scale_x_continuous(
-    limits = c(0, 1),
     labels = function(x)
       paste0(x * 100, "%")) +
   xlab("") +ylab("Biomass") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
@@ -66,7 +65,6 @@ qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
-    limits = c(0, 1),
     labels = function(x)
       paste0(x * 100, "%")) +
   xlab("") +ylab("Biomass") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
@@ -76,7 +74,7 @@ qD <- ggplot(allInsects,aes(x=Open.uncultivated.land_1000,y=(Biomass+1)))+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
-    limits = c(0, 1),
+    limits = c(0, 0.16),
     labels = function(x)
       paste0(x * 100, "%")) +
   xlab("") +ylab("Biomass") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
@@ -86,7 +84,6 @@ qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
-    limits = c(0, 1),
     labels = function(x)
       paste0(x * 100, "%")) +
   xlab("") +ylab("Biomass") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))
@@ -96,7 +93,6 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   scale_y_log10() +
   theme_bw() +
   geom_smooth(method="lm",color="grey70")+scale_x_continuous(
-    limits = c(0, 1),
     labels = function(x)
       paste0(x * 100, "%")) +
   xlab("") +ylab("Biomass") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"))

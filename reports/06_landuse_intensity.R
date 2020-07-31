@@ -67,17 +67,17 @@ mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsect
 names(mydata)
 mydata <- mydata[,c(11,13:15,17)]
 names(mydata) <- gsub("_1000","",names(mydata))
-allInsects$Land_use <- as.character(allInsects$Land_use)
-allInsects$Land_use[allInsects$Land_use=="Dryland"] <- "Grassland"
-allInsects$Land_use[allInsects$Land_use=="Open uncultivated land"] <- "Grassland"
-landuseOrder
-allInsects$Land_use <- factor(allInsects$Land_use, levels=landuseOrder)
+mydata <- plyr::rename(mydata, c("byHegnMeterPerHa" = "Hedge"))
+mydata <- plyr::rename(mydata, c("urbGreenPropArea" = "Urban green cover"))
+mydata <- plyr::rename(mydata, c("Bykerne" = "Inner city cover"))
+mydata <- plyr::rename(mydata, c("Erhverv" = "Commercial cover"))
+mydata <- plyr::rename(mydata, c("Lav.bebyggelse" = "Residential cover"))
 
 fit <- princomp(mydata, cor=TRUE)
 
 #with ggplot
 autoplot(fit)
-dk_autoplot <- autoplot(fit, data = allInsects, colour = 'Land_use', 
+dk_autoplot <- autoplot(fit, data = allInsects, 
                         loadings = TRUE, 
                         loadings.colour = 'black',
                         loadings.label = TRUE, 
@@ -85,7 +85,89 @@ dk_autoplot <- autoplot(fit, data = allInsects, colour = 'Land_use',
   scale_colour_manual(values = landuseCols[1:6])+
   theme_bw() + labs(colour = "Land cover")
 
-table(allInsects$maxLand_use)
+save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_width = 12)
+
+library(psych)
+#packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
+#install.packages(packageurl, repos=NULL, type="source")
+pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
+biplot(pca_rotated)
+print(pca_rotated)
+
+ggsave("plots/pca_with_rotation_1000_DK.png")
+
+#add PCA axes scores to the dataset
+allInsects$Urbangreen_gradient <- pca_rotated$scores[,1]
+allInsects$Largecity_gradient <- pca_rotated$scores[,2]
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Urbangreen_gradient + 
+                  Largecity_gradient +
+                  Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
+summary(lme1000)
+
+library(MuMIn)
+r.squaredGLMM(lme1000)
+
+# effect
+gls1.alleffects <- allEffects(lme1000)
+effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
+
+eall.lm1 <- predictorEffects(lme1000)
+plot(eall.lm1, lines=list(multiline=TRUE))
+#plot(predictorEffects(lmeurban1000, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
+
+### ggplot effect plot ####
+temp <- effectdata$Urbangreen_gradient
+temp$landuse <- "Urbangreen_gradient"
+urbgreen <- temp %>% 
+  dplyr::rename(
+    propcover = Urbangreen_gradient
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+# Høj.bebyggelse_1000
+temp <- effectdata$Largecity_gradient
+temp$landuse <- "Largecity_gradient"
+largecity <- temp %>% 
+  dplyr::rename(
+    propcover = Largecity_gradient
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+test <- rbind(urbgreen, largecity)
+
+# Visualization
+effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
+  geom_line(aes(color = landuse), size = 2) +
+  scale_color_manual(
+    values = c("#A66287", "#663C53"),
+    labels = c(
+      "Urban green gradient",
+      "Large city gradient"
+    )
+  ) + theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom"
+  )  + geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = landuse
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "Urban land use gradient",
+        y = "log Predicted biomass (mg)",
+        subtitle = "A",
+        colour = "Land use type"
+      ) + scale_fill_manual(values = "#CC79A7")
+
+save_plot("plots/DK_effect_landuse_urban.png", effectplot_urban, base_width = 10, base_height = 6)
 
 #g1 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),aes(x=urbGreenPropArea_1000,y=(Biomass+1)))+geom_point(col=landuseCols[1])+scale_y_log10() +theme_bw() +geom_smooth(method="lm",color="grey70")+xlab("Urban green space cover") +ylab("Biomass")
 
@@ -284,6 +366,60 @@ g6 <- ggplot(subset(allInsects, maxLand_use = "Agriculture_1000"),
 
 plot_grid(g1,g2,g3,g4,g5,g6)
 
+### PCA ###
+mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,c(18:21,24:25)]
+names(mydata) <- gsub("_1000","",names(mydata))
+mydata <- mydata %>% drop_na(Ekstensiv)
+#mydata <- plyr::rename(mydata, c("hegnMeterPerHa" = "Hedgerows"))
+mydata <- plyr::rename(mydata, c("Ekstensiv" = "Extensive"))
+mydata <- plyr::rename(mydata, c("Ekstensiv_organic" = "Organic extensive"))
+mydata <- plyr::rename(mydata, c("Intensiv" = "Intensive"))
+mydata <- plyr::rename(mydata, c("Intensiv_organic" = "Organic intensive"))
+mydata <- plyr::rename(mydata, c("Semi.intensiv" = "Semi-intensive"))
+mydata <- plyr::rename(mydata, c("Semi.intensiv_organic" = "Organic semi-intensive cover"))
+
+fit <- princomp(mydata, cor=TRUE)
+fit_data <- allInsects %>% drop_na(Ekstensiv_1000)
+
+#with ggplot
+autoplot(fit)
+dk_autoplot <- autoplot(fit, data = fit_data, 
+                        loadings = TRUE, 
+                        loadings.colour = 'black',
+                        loadings.label = TRUE, 
+                        loadings.label.size = 5) + 
+  scale_colour_manual(values = landuseCols[1:6])+
+  theme_bw() + labs(colour = "Land cover")
+
+save_plot("plots/pca_landuse_farmland.png", dk_autoplot, base_height = 8, base_width = 12)
+
+library(psych)
+#packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
+#install.packages(packageurl, repos=NULL, type="source")
+pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
+biplot(pca_rotated)
+print(pca_rotated)
+
+ggsave("plots/pca_with_rotation_1000_DK.png")
+
+#add PCA axes scores to the dataset
+fit_data$Farmingpractice_gradient <- pca_rotated$scores[,1]
+fit_data$Greeness_gradient <- pca_rotated$scores[,2]
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Farmingpractice_gradient + 
+                  Greeness_gradient +
+                  Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=subset(fit_data, maxLand_use = "Agriculture_1000"))
+summary(lme1000)
+
+library(MuMIn)
+r.squaredGLMM(lme1000)
+
+
 ### DK agriculture lmer ######################################
 test <- subset(allInsects, maxLand_use = "Agriculture_1000")
 test <- test %>% drop_na(Intensiv_organic_1000)
@@ -395,11 +531,11 @@ effectplot_farmland <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#E69F
         y = "log Predicted biomass (mg)",
         subtitle = "B",
         colour = "Land use type"
-      ) + scale_fill_manual(values = "#E69F00")
+      ) + scale_fill_manual(values = "#E69F00") + guides(colour = guide_legend(nrow = 1))
 
 effectplot <- plot_grid(effectplot_urban, effectplot_farmland)
 
-save_plot("plots/DK_effect_landuse.png", effectplot, base_width = 18, base_height = 6)
+save_plot("plots/DK_effect_landuse_farmland.png", effectplot_farmland,base_width = 12, base_height = 6)
 
 # correlation plot 
 someInsects <- allInsects[,c(12,141,90:94,96:97)]

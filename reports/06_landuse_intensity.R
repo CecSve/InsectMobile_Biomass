@@ -10,6 +10,7 @@ library(psych)
 library(ggfortify)
 library(lme4)
 library(lmerTest)
+library(effects)
 
 #### Set colour scheme ################################################################
 
@@ -433,7 +434,7 @@ test <- subset(allInsects, maxLand_use = "Agriculture_1000")
 test <- test %>% drop_na(Intensiv_organic_1000)
 
 #full model (without weather)
-lme1000 <- lmer(log(Biomass+1) ~ hegnMeterPerHa_1000 + Ekstensiv_organic_1000 + Ekstensiv_1000 + Semi.intensiv_1000 + Semi.intensiv_organic_1000 + Intensiv_1000 + Intensiv_organic_1000 + Time_band + Time_band:cnumberTime + cStops + cyDay + (1|RouteID_JB) + (1|PilotID), data= test)
+lme1000 <- lmer(log(Biomass+1) ~ Ekstensiv_organic_1000 + Ekstensiv_1000 + Semi.intensiv_1000 + Semi.intensiv_organic_1000 + Intensiv_1000 + Intensiv_organic_1000 + Time_band + Time_band:cnumberTime + cStops + cyDay + (1|RouteID_JB) + (1|PilotID), data= test)
 
 summary(lme1000)
 
@@ -505,10 +506,20 @@ int_org <- temp %>%
 test <- rbind(ex, ex_org, semi, semi_org, int, int_org)
 
 # Visualization
-effectplot_farmland <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#E69F00")) +
+effectplot_farmland <- test %>% mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Ekstensiv_1000",
+    "Ekstensiv_organic_1000",
+    "Semi.intensiv_1000",
+    "Semi.intensiv_organic_1000",
+    "Intensiv_1000",
+    "Intensiv_organic_1000"
+  )
+)%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2) +
   scale_color_manual(
-    values = c("#A67100", "#664600", "#A69A16", "#F2CA27", "#E69D1E", "#E6BF25"),
+    values = c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05"),
     labels = c(
       "Extensive",
       "Organic extensive",
@@ -539,7 +550,7 @@ effectplot_farmland <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#E69F
         y = "log Predicted biomass (mg)",
         subtitle = "B",
         colour = "Land use type"
-      ) + scale_fill_manual(values = "#E69F00") + guides(colour = guide_legend(nrow = 1))
+      ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1))
 
 effectplot <- plot_grid(effectplot_urban, effectplot_farmland)
 

@@ -1,10 +1,19 @@
 #run 03mergeData script and some 04 to get standardised time etc
 
+### Load required libraries ###########################
 library(cowplot)
 library(ggplot2)
 library(wesanderson)
 library(ggpubr)
 library(scales)
+library(psych)
+library(ggfortify)
+library(lme4)
+library(lmerTest)
+
+#### Set colour scheme ################################################################
+
+landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
 ### DE urban##############################################
 
@@ -87,7 +96,6 @@ dk_autoplot <- autoplot(fit, data = allInsects,
 
 save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_width = 12)
 
-library(psych)
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)

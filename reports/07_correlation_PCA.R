@@ -187,7 +187,7 @@ library(psych)
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
-biplot(pca_rotated)
+biplot(pca_rotated, main = "A: Denmark")
 print(pca_rotated)
 
 ggsave("plots/pca_with_rotation_1000_DK.png")

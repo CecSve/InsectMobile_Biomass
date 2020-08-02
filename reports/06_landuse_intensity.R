@@ -528,13 +528,13 @@ effectplot_farmland <- test %>% mutate(
       "Intensive",
       "Organic intensive"
     )
-  ) + theme_minimal_grid() + theme(
+  ) + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
     legend.position = "bottom"
   ) + scale_x_continuous(
-    limits = c(0, 0.40),
+    #limits = c(0, 0.40),
     labels = function(x)
       paste0(x * 100, "%")) + geom_ribbon(
         aes(
@@ -552,9 +552,59 @@ effectplot_farmland <- test %>% mutate(
         colour = "Land use type"
       ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1))
 
-effectplot <- plot_grid(effectplot_urban, effectplot_farmland)
+effectplot_farmland_zoom <- test %>% dplyr::mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Ekstensiv_1000",
+    "Ekstensiv_organic_1000",
+    "Semi.intensiv_1000",
+    "Semi.intensiv_organic_1000",
+    "Intensiv_1000",
+    "Intensiv_organic_1000"
+  )
+)%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
+  geom_line(aes(color = landuse), size = 2, show.legend = F) +
+  scale_color_manual(
+    values = c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05"),
+    labels = c(
+      "Extensive",
+      "Organic extensive",
+      "Semi-intensive",
+      "Organic semi-intensive",
+      "Intensive",
+      "Organic intensive"
+    )
+  ) + theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom"
+  ) + scale_x_continuous(
+    limits = c(0, 0.1),
+    labels = function(x)
+      paste0(x * 100, "%")) + geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = landuse
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "",
+        y = "",
+        #subtitle = "B",
+        colour = "Land use type"
+      ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1)) + theme(panel.background = element_rect(fill = "white"), plot.margin = margin(0, 0, 0, 0, "cm"), panel.border = element_rect(colour = "darkgrey"))
 
-save_plot("plots/DK_effect_landuse_farmland.png", effectplot_farmland,base_width = 12, base_height = 6)
+#effectplot <- plot_grid(effectplot_urban, effectplot_farmland)
+effectplot_farmland_zoom
+
+effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xmin = 0.4, xmax = 0.8, 
+                       ymin = 5, ymax = 5.9)
+
+ggsave("plots/zoom_farmland_landuse.png")
 
 # correlation plot 
 someInsects <- allInsects[,c(12,141,90:94,96:97)]

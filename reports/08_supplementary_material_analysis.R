@@ -1026,11 +1026,11 @@ ggplot(outAll)+
                     fill=Land_use),
                 width=0.5)+
   facet_wrap(~Land_use,scales="free",ncol=1)+
-  scale_fill_manual(values=landuseCols)+
   coord_flip()+
   theme_bw()+
   theme(legend.position = "none")+
+  scale_fill_manual(values=landuseCols[1:5])+
   geom_hline(yintercept=0,colour="black",linetype="dashed")+
-  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass")
+  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass") + labs(subtitle = "B")+ theme(plot.subtitle=element_text(size=18, face="bold", color="black"))
 
 ggsave("plots/Landcover_buffer.png",width=3,height=8)

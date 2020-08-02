@@ -866,6 +866,8 @@ qFo <- ggplot(allInsects,aes(x=sqrt(Forest_1000),y=(Biomass+1)))+
 plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 ggsave("plots/Landcover_percent.png",width=3,height=8)
 
+#save_plot("plots/DE_Landcover_percent.png", plot, base_width = 3, base_height = 8)
+
 ### DE plot buffers#################################################
 
 #farmland
@@ -1024,11 +1026,11 @@ ggplot(outAll)+
                     fill=Land_use),
                 width=0.5)+
   facet_wrap(~Land_use,scales="free",ncol=1)+
-  scale_fill_manual(values=landuseCols)+
   coord_flip()+
   theme_bw()+
   theme(legend.position = "none")+
+  scale_fill_manual(values=landuseCols[1:5])+
   geom_hline(yintercept=0,colour="black",linetype="dashed")+
-  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass")
+  xlab("Buffer size (m)") + ylab("Effect of land cover on biomass") + labs(subtitle = "B")+ theme(plot.subtitle=element_text(size=18, face="bold", color="black"))
 
 ggsave("plots/Landcover_buffer.png",width=3,height=8)

@@ -101,6 +101,7 @@ fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
 save_plot("plots/Landcover_percent.png", fig3, base_width = 4, base_height = 12)
 #ggsave("plots/Landcover_percent.png",width=12,height=4)
+
 ###DK pie chart#####################################
 
 library(dplyr)
@@ -807,40 +808,70 @@ qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("% Urban cover") +ylab("Biomass")
+  geom_smooth(method="lm",color="grey70") + 
+  scale_x_continuous(
+    labels = function(x)
+      paste0(x, "%")) +
+  xlab("") +
+  ylab("Biomass (mg)") + 
+  labs(subtitle = "Urban cover") + 
+  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("% Farmland cover") +ylab("Biomass")
+  geom_smooth(method="lm",color="grey70") + 
+  scale_x_continuous(
+    labels = function(x)
+      paste0(x, "%")) +
+  xlab("") +
+  ylab("Biomass (mg)") + 
+  labs(subtitle = "Urban cover") + 
+  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qD <- ggplot(allInsects,aes(x=Open.uncultivated_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[3])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("% Grassland cover") +ylab("Biomass")
+  geom_smooth(method="lm",color="grey70") + 
+  scale_x_continuous(
+    labels = function(x)
+      paste0(x, "%")) +
+  xlab("") +
+  ylab("Biomass (mg)") + 
+  labs(subtitle = "Urban cover") + 
+  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[4])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("% Wetland cover") +ylab("Biomass")
+  geom_smooth(method="lm",color="grey70") + 
+  scale_x_continuous(
+    labels = function(x)
+      paste0(x, "%")) +
+  xlab("") +
+  ylab("Biomass (mg)") + 
+  labs(subtitle = "Urban cover") + 
+  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[5])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("% Forest cover") +ylab("Biomass")
+  geom_smooth(method="lm",color="grey70") + 
+  scale_x_continuous(
+    labels = function(x)
+      paste0(x, "%")) +
+  xlab("") +
+  ylab("Biomass (mg)") + 
+  labs(subtitle = "Urban cover") + 
+  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
-plot_grid(qU,qF,qD,qW,qFo,nrow=2,ncol=3)
+plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
-ggsave("plots/Landcover_percent.png",width=8,height=5)
+ggsave("plots/Landcover_percent.png",width=4,height=12)
 
 ###pie chart#####################################
 
@@ -909,7 +940,7 @@ ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
         axis.ticks = element_blank()) +
   theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Other")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
 
-ggsave("plots/piecharts_DE.png")
+ggsave("plots/piecharts_DE.png",width=12,height=6)
 
 ### Linear Mixed Effects Model: Land covers (Table 1) #################
 
@@ -928,8 +959,8 @@ lme1000 <- lmer(log(Biomass+1) ~
 summary(lme1000)
 vif(lme1000)
 r.squaredGLMM(lme1000)
-#           R2m       R2c
-#[1,] 0.3625144 0.8403325
+# R2m       R2c
+#[1,] 0.361604 0.8490719
 
 #with sqrt
 lme1000 <- lmer(log(Biomass+1) ~ 
@@ -990,7 +1021,15 @@ model.avg(dd, subset = delta < 2)
 
 #only urban remains in best set
 
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Urban_1000 +
+                  Time_band + 
+                  (1|RouteID) + (1|PilotID), data=allInsects)
+summary(lme1000)
+
 ### Figure 4: effect plots ##########################
+
+predEffects <- predictorEffects(lme1000)
 
 getEffects <- function(predEffects,var){
   temp <- predEffects[var]
@@ -1056,7 +1095,7 @@ effectplot <- test %>% mutate(
       ) + labs(
         x = "Land cover",
         y = "log Predicted biomass (mg)",
-        subtitle = "B - Germany",
+        subtitle = "B: Germany",
         colour = "Land cover type"
       ) + 
   scale_fill_manual(values = landuseCols)
@@ -1073,7 +1112,7 @@ test %>% mutate(
   )
 ) %>% ggplot(aes(propcover, fit, color = landcover)) + geom_point() + geom_errorbar(aes(ymin = fit - se, ymax = fit + se), width = 0.4) + theme_bw(base_size = 12) + scale_colour_manual(values = landuseCols) + labs(x = "Land cover") + scale_x_continuous(limits = c(0, 1), labels = function(x) paste0(x * 100, "%")) + facet_wrap(~landcover, scales = "free")
 
-save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
+save_plot("plots/DE_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
 ### Test of land cover diffs##############################
 
@@ -1101,7 +1140,7 @@ Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbanization_gradient +
-                  Forest_gradient +
+                  #Forest_gradient +
                   Time_band + 
                   Time_band:cnumberTime + 
                   cStops + 
@@ -1155,26 +1194,17 @@ exp(quantile(bb$t,c(0.025,0.975)))
 
 ### Test timeband interactions ################################
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  Time_band*sqrt(Agriculture_1000) + 
-                  sqrt(Forest_250) +
+                  Time_band*Agriculture_1000 + 
                   Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay + 
+                  Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  sqrt(Agriculture_1000) + 
-                  Time_band*sqrt(Forest_250) +
+                  Time_band*Urban_1000 + 
                   Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay + 
+                  Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
-lme1000 <- lmer(log(Biomass+1) ~ 
-                  sqrt(Agriculture_1000) + 
-                  sqrt(Forest_250) +
-                  Time_band*sqrt(Urban_1000)+
-                  Time_band + 
-                  Time_band:cnumberTime + cTL + cyDay + 
-                  (1|RouteID) + (1|PilotID), data=allInsects)
-summary(lme1000)
+

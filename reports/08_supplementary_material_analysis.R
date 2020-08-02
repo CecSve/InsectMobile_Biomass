@@ -866,6 +866,8 @@ qFo <- ggplot(allInsects,aes(x=sqrt(Forest_1000),y=(Biomass+1)))+
 plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 ggsave("plots/Landcover_percent.png",width=3,height=8)
 
+#save_plot("plots/DE_Landcover_percent.png", plot, base_width = 3, base_height = 8)
+
 ### DE plot buffers#################################################
 
 #farmland

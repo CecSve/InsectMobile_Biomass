@@ -805,7 +805,7 @@ qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
       paste0(x, "%")) +
   xlab("") +
   ylab("Biomass (mg)") + 
-  labs(subtitle = "Urban cover") + 
+  labs(subtitle = "Agriculture cover") + 
   theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qD <- ggplot(allInsects,aes(x=Open.uncultivated_1000,y=(Biomass+1)))+
@@ -818,7 +818,7 @@ qD <- ggplot(allInsects,aes(x=Open.uncultivated_1000,y=(Biomass+1)))+
       paste0(x, "%")) +
   xlab("") +
   ylab("Biomass (mg)") + 
-  labs(subtitle = "Urban cover") + 
+  labs(subtitle = "Grassland cover") + 
   theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
@@ -831,7 +831,7 @@ qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
       paste0(x, "%")) +
   xlab("") +
   ylab("Biomass (mg)") + 
-  labs(subtitle = "Urban cover") + 
+  labs(subtitle = "Wetland cover") + 
   theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
@@ -844,7 +844,7 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
       paste0(x, "%")) +
   xlab("") +
   ylab("Biomass (mg)") + 
-  labs(subtitle = "Urban cover") + 
+  labs(subtitle = "Forest cover") + 
   theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 plot_grid(qU,qF,qD,qW,qFo,ncol=1)
@@ -1186,3 +1186,6 @@ lme1000 <- lmer(log(Biomass+1) ~
 summary(lme1000)
 
 
+ggplot(allInsects,aes(x=as.numeric(Time_band), y=log(Biomass+1)))+
+  geom_jitter(aes(colour=Land_use))+
+  stat_smooth(aes(colour=Land_use),method="lm",se=FALSE)

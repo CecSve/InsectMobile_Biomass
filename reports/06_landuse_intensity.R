@@ -580,7 +580,7 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
     legend.text = element_text(size = 8),
     legend.position = "bottom"
   ) + scale_x_continuous(
-    limits = c(0, 0.1),
+    limits = c(0, 0.07),
     labels = function(x)
       paste0(x * 100, "%")) + geom_ribbon(
         aes(
@@ -599,6 +599,7 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
       ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1)) + theme(panel.background = element_rect(fill = "white"), plot.margin = margin(0, 0, 0, 0, "cm"), panel.border = element_rect(colour = "darkgrey"))
 
 #effectplot <- plot_grid(effectplot_urban, effectplot_farmland)
+effectplot_farmland
 effectplot_farmland_zoom
 
 effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xmin = 0.4, xmax = 0.8, 

@@ -345,11 +345,11 @@ sampling_time <- allInsects %>% mutate(
     "Wetland",
     "Forest"
   )
-) %>% ggplot(aes(numberTime, log(Biomass+1), colour = Time_band)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F)+ scale_colour_grey(start = 0.3, end = 0.4) + scale_fill_grey(start = 0.3, end = 0.4) + labs(x = "", colour = "Sampling time") +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-
+) %>% ggplot(aes(numberTime, log(Biomass+1), colour = Time_band)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F)+ scale_colour_grey(start = 0.3, end = 0.4) + scale_fill_grey(start = 0.3, end = 0.4) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "A: Denmark") + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),
+  legend.title = element_blank(),
+  legend.text = element_text(size = 8),
+  legend.position = "bottom"
+)
 save_plot("plots/DK_sampling_time.png", sampling_time, base_width = 10, base_height = 6)
 
 ### Test of land cover diffs##############################

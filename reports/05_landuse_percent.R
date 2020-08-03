@@ -336,43 +336,21 @@ test %>% mutate(
 save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
 ### Figure 5: time band ###############################
-# Visualization
-effectplot_time <- time %>% mutate(
-  Time_band = fct_relevel(
-    Time_band,
-    "midday",
-    "evening"
+sampling_time <- allInsects %>% mutate(
+  Land_use = fct_relevel(
+    Land_use,
+    "Urban",
+    "Agriculture",
+    "Open uncultivated land",
+    "Wetland",
+    "Forest"
   )
-) %>% ggplot(aes(x = cnumberTime, y = fit, fill = Time_band)) +
-  geom_line(aes(color = Time_band), size = 2) +
-  scale_color_manual(
-    values = c("lightgrey", "darkgrey"),
-    labels = c(
-      "Midday",
-      "Evening"
-    )
-  ) + theme_minimal_grid() + theme(
-    plot.subtitle = element_text(size = 20, face = "bold"),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 8),
-    legend.position = "bottom"
-  ) + geom_ribbon(
-        aes(
-          ymin = fit-se,
-          ymax = fit+se,
-          group = Time_band
-        ),
-        linetype = 2,
-        alpha = 0.2,
-        show.legend = F
-      ) + labs(
-        x = "Time within band",
-        y = "log Predicted biomass (mg)",
-        subtitle = "A: Denmark",
-        colour = "Land cover type"
-      ) + scale_fill_manual(values = c("lightgrey", "darkgrey"))
+) %>% ggplot(aes(numberTime, log(Biomass+1), colour = Time_band)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F)+ scale_colour_grey(start = 0.3, end = 0.4) + scale_fill_grey(start = 0.3, end = 0.4) + labs(x = "", colour = "Sampling time") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
-save_plot("plots/DK_effect_timeband.png", effectplot_time, base_width = 10, base_height = 6)
+save_plot("plots/DK_sampling_time.png", sampling_time, base_width = 10, base_height = 6)
 
 ### Test of land cover diffs##############################
 

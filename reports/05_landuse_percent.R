@@ -1232,3 +1232,44 @@ summary(lme1000)
 ggplot(allInsects,aes(x=as.numeric(Time_band), y=log(Biomass+1)))+
   geom_jitter(aes(colour=Land_use))+
   stat_smooth(aes(colour=Land_use),method="lm",se=FALSE)
+
+
+### Fig 5 DE #####################################################
+
+
+#add maxLand use to each route
+allInsects$maxLand_use <- as.factor(apply(allInsects,1,function(x)which.max(x[c("Agriculture_1000","Forest_1000", "Open.uncultivated_1000","Urban_1000","Wetland_1000")])))
+levels(allInsects$maxLand_use) <- c("Agriculture_1000","Forest_1000", "Open.uncultivated_1000","Urban_1000","Wetland_1000")
+
+maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
+
+sampling_time <- allInsects %>% filter(maxLand_use %in% maxs) %>% mutate(
+  maxLand_use = fct_relevel(
+    maxLand_use,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Forest_1000"
+  )
+  
+) %>% ggplot(aes(numberTime, log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+  "Urban",
+  "Farmland",
+  "Forest"
+)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + 
+  labs(x = "Sampling time", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "B: Germany") + 
+  theme_bw()+facet_wrap(~Time_band) +
+  theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "none")
+
+ggsave("plots/DE_sampling_time_maxcover.png", width = 10, height = 6)
+
+# I subset to just the variables wanted 
+allInsects.long <- allInsects %>% 
+  select(Biomass, Time_band, cnumberTime, Urban_1000, Agriculture_1000, Open.uncultivated_1000, Wetland_50, Forest_250) %>% pivot_longer(-c(Biomass, cnumberTime, Time_band), names_to = "landcover", values_to = "cover")
+
+head(allInsects.long)
+
+sampling_time <- allInsects.long  %>% ggplot(aes(cnumberTime, log(Biomass+1), colour = Time_band)) + geom_point() + scale_colour_manual(values = c("lightgrey", "darkgrey"), labels = c(
+  "Midday",
+  "Evening"
+)) + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F) + scale_fill_manual(values = c("lightgrey", "darkgrey"))  + labs(x = "Standardised time", y= "log(biomass +1) (mg)", colour = "Land cover", subtitle = "A: Denmark") + theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+

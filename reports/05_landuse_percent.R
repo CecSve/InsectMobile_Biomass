@@ -102,6 +102,33 @@ fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 save_plot("plots/Landcover_percent.png", fig3, base_width = 4, base_height = 12)
 #ggsave("plots/Landcover_percent.png",width=12,height=4)
 
+# alternative to figure 3
+allInsects.long <- allInsects %>% 
+  select(Biomass, Time_band, numberTime, Urban_1000, Agriculture_1000, Open.uncultivated.land_1000, Wetland_50, Forest_250) %>% pivot_longer(-c(Biomass, Time_band, numberTime), names_to = "landcover", values_to = "cover")
+
+head(allInsects.long)
+
+
+#colorset = c('Urban_1000'=landuseCols[1],'Agriculture_1000'=landuseCols[2],'Open.uncultivated.land_1000'=landuseCols[3],'Wetland_50'=landuseCols[4], 'Forest_250' =landuseCols[5])
+
+sampling_time <- allInsects.long %>% mutate(
+  landcover = fct_relevel(
+    landcover,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Open.uncultivated.land_1000",
+    "Wetland_50",
+    "Forest_250"
+  )
+) %>% ggplot(aes(cover, log(Biomass+1), colour = landcover)) + geom_point() + scale_colour_manual(values = landuseCols, labels = c(
+  "Urban cover (1000 m)",
+  "Farmland cover (1000 m)",
+  "Grassland cover (1000 m)",
+  "Wetland cover (50 m)",
+  "Forest cover (250 m)"
+)) + geom_smooth(method=lm, aes(fill = landcover), alpha = 0.1, size =1.5, show.legend = F) + scale_fill_manual(values = landuseCols)  + scale_x_continuous(limits = c(0,1) , labels = function(x)
+  paste0(x * 100, "%")) + labs(x = "Proportional cover", y= "log(biomass +1) (mg)", colour = "Land cover", subtitle = "A: Denmark") + theme(plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_text(), legend.text = element_text(size = 8))
+
 ###DK pie chart#####################################
 
 library(dplyr)
@@ -336,21 +363,37 @@ test %>% mutate(
 save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
 ### Figure 5: time band ###############################
-sampling_time <- allInsects %>% mutate(
-  Land_use = fct_relevel(
-    Land_use,
-    "Urban",
-    "Agriculture",
-    "Open uncultivated land",
-    "Wetland",
-    "Forest"
+maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
+
+sampling_time <- allInsects %>% filter(maxLand_use %in% maxs) %>% mutate(
+  maxLand_use = fct_relevel(
+    maxLand_use,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Forest_1000"
   )
-) %>% ggplot(aes(numberTime, log(Biomass+1), colour = Time_band)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F)+ scale_colour_grey(start = 0.3, end = 0.4) + scale_fill_grey(start = 0.3, end = 0.4) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "A: Denmark") + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),
-  legend.title = element_blank(),
-  legend.text = element_text(size = 8),
-  legend.position = "bottom"
-)
-save_plot("plots/DK_sampling_time.png", sampling_time, base_width = 10, base_height = 6)
+) %>% ggplot(aes(numberTime, log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+  "Urban",
+  "Farmland",
+  "Forest"
+)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "Sampling time: left = midday right: evening", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "A: Denmark") + theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+
+save_plot("plots/DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)
+
+# I subset to just the variables wanted 
+allInsects.long <- allInsects %>% 
+  select(Biomass, Time_band, cnumberTime, Urban_1000, Agriculture_1000, Open.uncultivated.land_1000, Wetland_50, Forest_250) %>% pivot_longer(-c(Biomass, cnumberTime, Time_band), names_to = "landcover", values_to = "cover")
+
+head(allInsects.long)
+
+
+#colorset = c('Urban_1000'=landuseCols[1],'Agriculture_1000'=landuseCols[2],'Open.uncultivated.land_1000'=landuseCols[3],'Wetland_50'=landuseCols[4], 'Forest_250' =landuseCols[5])
+
+sampling_time <- allInsects.long  %>% ggplot(aes(cnumberTime, log(Biomass+1), colour = Time_band)) + geom_point() + scale_colour_manual(values = c("lightgrey", "darkgrey"), labels = c(
+  "Midday",
+  "Evening"
+)) + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F) + scale_fill_manual(values = c("lightgrey", "darkgrey"))  + labs(x = "Standardised time", y= "log(biomass +1) (mg)", colour = "Land cover", subtitle = "A: Denmark") + theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+
 
 ### Test of land cover diffs##############################
 

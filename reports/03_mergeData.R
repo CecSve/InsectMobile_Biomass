@@ -213,6 +213,8 @@ allInsects <- column_to_rownames(allInsects, var = "id")
 #sort time data to standard each around the time band
 allInsects$numberTime <- as.numeric(hms(allInsects$StartTime))#Denmark
 
+#testing 
+rnorm(10)
 ###sort vars###############################################################################
 
 #centering

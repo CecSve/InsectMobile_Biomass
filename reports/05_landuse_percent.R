@@ -364,6 +364,8 @@ save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 10, base_hei
 
 ### Figure 5: time band ###############################
 maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
+facet_labs <- c("Midday: 12-15", "Evening: 17-20")
+names(facet_labs) <- c("midday", "evening")
 
 sampling_time <- allInsects %>% filter(maxLand_use %in% maxs) %>% mutate(
   maxLand_use = fct_relevel(
@@ -372,11 +374,11 @@ sampling_time <- allInsects %>% filter(maxLand_use %in% maxs) %>% mutate(
     "Agriculture_1000",
     "Forest_1000"
   )
-) %>% ggplot(aes(numberTime, log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+) %>% ggplot(aes(cnumberTime, log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
   "Urban",
   "Farmland",
   "Forest"
-)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "Sampling time: left = midday right: evening", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "A: Denmark") + theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs), switch = "x") + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "A: Denmark") + theme_minimal() + theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
 
 save_plot("plots/DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)
 

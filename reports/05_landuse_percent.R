@@ -384,7 +384,7 @@ midday_plot <- allInsects[allInsects$Time_band=="midday",] %>% filter(maxLand_us
   "Forest"
 )) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text.x = element_text(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
 
-midday_plot <- midday_plot + scale_x_continuous(breaks = c(-77.5, 10, 87.5), labels = c("12.00", "13.30", "15.00"))
+midday_plot <- midday_plot + scale_x_continuous(breaks = c(-77.5, 10, 87.5), labels = c("12.00", "13.30", "15.00")) + ylim(0,8)
 
 test <- allInsects[allInsects$Time_band=="evening",]
 min(test$cnumberTime)
@@ -403,7 +403,7 @@ evening_plot <- allInsects[allInsects$Time_band=="evening",] %>% filter(maxLand_
   "Forest"
 )) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text.x = element_text(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
 
-evening_plot <- evening_plot + scale_x_continuous(breaks = c(-74, 21, 95), labels = c("17.00", "18.30", "20.00"))
+evening_plot <- evening_plot + scale_x_continuous(breaks = c(-74, 21, 95), labels = c("17.00", "18.30", "20.00"))+ ylim(0,8)
 
 plot_row <- plot_grid(midday_plot, evening_plot)
 
@@ -428,7 +428,7 @@ sampling_time <- plot_grid(
   rel_heights = c(0.1, 1)
 )
 
-save_plot("plots/DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)
+save_plot("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/plots/DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)
 
 # I subset to just the variables wanted 
 allInsects.long <- allInsects %>% 

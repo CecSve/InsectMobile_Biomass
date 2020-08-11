@@ -165,6 +165,87 @@ denmark_cropped %>%
   geom_point(data = main.landuse.map, 
              aes(x=lat, y = long, colour = main.data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
 
+### DK proportional land cover map #########################
+allInsects %>% str()
+#order time band
+
+# extract Latitude and Longitude variables and put them into simple data frame called lat.long.df.
+lat.long.df <- data.frame(allInsects$utm_x, allInsects$utm_y) 
+str(lat.long.df)
+
+coordinates(lat.long.df) <-  ~allInsects.utm_x + allInsects.utm_y #Function coordinates() creates a spatial object
+str(lat.long.df) # at this point, this dataset doesn’t have CRS. Spatial data can’t exist without CRS(Coordinates Reference System). Spatial data requires, at least, coordinates and CRS.
+
+proj4string(lat.long.df) <- CRS("+init=epsg:25832")
+#this is +proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs 
+
+head(lat.long.df)
+
+# Now, dataset has coordinates and CRS. Next thing is to convert this to Longitude-Latitude data.
+dist.location <- spTransform(lat.long.df, CRS("+init=epsg:4326"))
+dist.location
+
+landuse.map <- 
+  data.frame(A = allInsects$Urban_1000,
+             B = allInsects$Agriculture_1000 ,
+             C = allInsects$Open.uncultivated.land_1000,
+             D = allInsects$Wetland_1000,
+             E = allInsects$Forest_1000,
+             lat = dist.location$allInsects.utm_x,
+             long = dist.location$allInsects.utm_y)
+
+library(scatterpie)
+
+# whole of Denmark with better resolution (one plot in the ocean is on the island of Taasinge which is not included in this resolution)
+n <- nrow(landuse.map)
+landuse.map$region <- factor(1:n)
+color_list = c('A'="#CC79A7", 'B'="#E69F00", C="#D55E00", D= "#56B4E9", E="#009E73")
+landuse.map$radius <- 0.05
+
+# Create pie chart annotations to avoid stretching of pie charts on coordinate system
+pie.list <- landuse.map %>% 
+  tidyr::gather(type, value, -long, -lat, -region, -radius) %>%
+  tidyr::nest(type, value) %>%
+  
+  # make a pie chart from each row, & convert to grob
+  mutate(pie.grob = purrr::map(data,
+                               function(d) ggplotGrob(ggplot(d, 
+                                                             aes(x = 1, y = value, fill = type)) +
+                                                        geom_col(color = "black", alpha = 0.8,
+                                                                 show.legend = FALSE)+ scale_fill_manual(values = color_list) + coord_polar(theta = "y") + theme_void()))) %>%
+  
+  # convert each grob to an annotation_custom layer. I've also adjusted the radius
+  # value to a reasonable size (based on my screen resolutions).
+  rowwise() %>%
+  mutate(radius = radius * 2) %>%
+  mutate(subgrob = list(annotation_custom(grob = pie.grob,
+                                          ymin = long - radius, ymax = long + radius,
+                                          xmin = lat - radius, xmax = lat + radius)))
+
+#p + geom_tile(data = landuse.map %>% tidyr::gather(type, value, -long, -lat, -radius, -region),aes(x = lat, y = long, fill = type), color = "black", width = 0.01, height = 0.01, inherit.aes = FALSE) + pie.list$subgrob 
+
+# plot the monster
+denmark %>%
+  ggplot() + 
+  geom_sf(data = denmark, 
+          fill="white", colour = "black") + 
+  coord_sf()+ geom_tile(data = landuse.map %>% tidyr::gather(type, value, -long, -lat, -radius, -region),
+                        aes(x = lat, y = long, fill = type), 
+                        color = "black", width = 0.01, height = 0.01, 
+                        inherit.aes = FALSE)+ scale_fill_manual(values = color_list, name = "Proportional land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest")) + pie.list$subgrob + theme_void() + scalebar(denmark, dist = 25, dist_unit = "km", transform = T, model = "WGS84", st.size = 3) + north(denmark, symbol = 4, scale = 0.07) + panel_border() + labs(subtitle = "A") + theme(plot.subtitle = element_text(face = "bold", size = 20), legend.position = "none") 
+
+ggsave("plots/Fig1A_correctlandcover.png")
+
+# another way of plotting - without the coordinates for Bornholm - not necessary
+denmark_cropped %>%
+  ggplot() + 
+  geom_sf(data = denmark_cropped,
+          fill="white", colour = "black") + 
+  coord_sf() + 
+  geom_point(data = main.landuse.map, 
+             aes(x=lat, y = long, colour = main.data$Land_use), alpha = 0.9, size=2, show.legend = T) + theme_void() + theme(legend.title = element_blank())
+
+
 ###Germany map#############################################
 
 #get world map using code above

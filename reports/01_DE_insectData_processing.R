@@ -327,4 +327,5 @@ df$PilotID <- as.numeric(as.factor(df$PilotID))
 df$Date <- as.Date(df$Date, format="%d.%m.%y")
 
 #save processed data file
-save(df,file="cleaned-data/DE_rough_landuse_biomass.RData")
+#save(df,file="cleaned-data/DE_rough_landuse_biomass.RData")
+write.table(df,file="cleaned-data/DE_rough_landuse_biomass.txt",sep="\t")

@@ -898,7 +898,7 @@ qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
       paste0(x, "%")) +
   xlab("") +
   ylab("Biomass (mg)") + 
-  labs(subtitle = "Agriculture cover") + 
+  labs(subtitle = "Farmland cover") + 
   theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
 qD <- ggplot(allInsects,aes(x=Open.uncultivated_1000,y=(Biomass+1)))+

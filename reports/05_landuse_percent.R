@@ -1293,19 +1293,20 @@ levels(allInsects$maxLand_use) <- c("Agriculture_1000","Forest_1000", "Open.uncu
 
 maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
 
-sampling_time <- allInsects %>% filter(maxLand_use %in% maxs) %>% mutate(
+sampling_time <- allInsects %>% dplyr::filter(maxLand_use %in% maxs) %>% mutate(
   maxLand_use = fct_relevel(
     maxLand_use,
     "Urban_1000",
     "Agriculture_1000",
     "Forest_1000"
   )
-  
-) %>% ggplot(aes(numberTime, log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
-  "Urban",
-  "Farmland",
-  "Forest"
-)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + 
+) 
+
+sampling_time %>% 
+  ggplot(aes(numberTime, log(Biomass+1), colour = maxLand_use)) + geom_point() + 
+  geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.3, size =1.5, show.legend = F)+ 
+  scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c("Urban","Farmland","Forest")) + 
+  scale_fill_manual(values = c("darkgrey", "darkgrey")) + 
   labs(x = "Sampling time", y= "log(biomass +1) (mg)", colour = "Sampling time", subtitle = "B: Germany") + 
   theme_bw()+facet_wrap(~Time_band) +
   theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "none")
@@ -1323,3 +1324,71 @@ sampling_time <- allInsects.long  %>% ggplot(aes(cnumberTime, log(Biomass+1), co
   "Evening"
 )) + geom_smooth(method=lm, aes(fill = Time_band), alpha = 0.1, size =1.5, show.legend = F) + scale_fill_manual(values = c("lightgrey", "darkgrey"))  + labs(x = "Standardised time", y= "log(biomass +1) (mg)", colour = "Land cover", subtitle = "A: Denmark") + theme(axis.text = element_blank(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
 
+subset(allInsects,StartTime=="19:08")
+#NEW PLOT
+maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
+facet_labs <- c("Midday", "Evening")
+names(facet_labs) <- c("midday", "evening")
+
+test <- allInsects[allInsects$Time_band=="midday",]
+min(test$cnumberTime)
+max(test$cnumberTime)
+
+midday_plot <- allInsects[allInsects$Time_band=="midday",] %>% filter(maxLand_use %in% maxs) %>% mutate(
+  maxLand_use = fct_relevel(
+    maxLand_use,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Forest_1000"
+  )
+) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+  "Urban",
+  "Farmland",
+  "Forest"
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text.x = element_text(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+
+midday_plot <- midday_plot + scale_x_continuous(breaks = c(-77.5, 10, 87.5), labels = c("12.00", "13.30", "15.00")) + ylim(0,8)
+
+test <- allInsects[allInsects$Time_band=="evening",]
+min(test$cnumberTime)
+max(test$cnumberTime)
+
+evening_plot <- allInsects[allInsects$Time_band=="evening",] %>% filter(maxLand_use %in% maxs) %>% mutate(
+  maxLand_use = fct_relevel(
+    maxLand_use,
+    "Urban_1000",
+    "Agriculture_1000",
+    "Forest_1000"
+  )
+) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+  "Urban",
+  "Farmland",
+  "Forest"
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text.x = element_text(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+
+evening_plot <- evening_plot + scale_x_continuous(breaks = c(-74, 21, 95), labels = c("17.00", "18.30", "20.00"))+ ylim(0,8)
+
+plot_row <- plot_grid(midday_plot, evening_plot)
+
+# now add the title
+title <- ggdraw() + 
+  draw_label(
+    "A: Denmark",
+    fontface = 'bold',
+    x = 0,
+    hjust = 0
+  ) +
+  theme(
+    # add margin on the left of the drawing canvas,
+    # so title is aligned with left edge of first plot
+    plot.margin = margin(0, 0, 0, 7)
+  )
+
+sampling_time <- plot_grid(
+  title, plot_row,
+  ncol = 1,
+  # rel_heights values control vertical title margins
+  rel_heights = c(0.1, 1)
+)
+
+save_plot("H:/Documents/Insektmobilen/Analysis/InsectMobile_Biomass/plots/DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)

@@ -1198,7 +1198,7 @@ Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbanization_gradient +
-                  #Forest_gradient +
+                  Forest_gradient +
                   Time_band + 
                   Time_band:cnumberTime + 
                   cStops + 
@@ -1208,6 +1208,17 @@ summary(lme1000)
 vif(lme1000)
 r.squaredGLMM(lme1000)
 
+#Fixed effects:
+#  Estimate Std. Error         df t value Pr(>|t|)    
+#(Intercept)                   4.754e+00  2.604e-01  2.657e+01  18.259  < 2e-16 ***
+#  Urbanization_gradient        -4.042e-01  1.881e-01  5.966e+01  -2.150  0.03566 *  
+#  Forest_gradient              -2.180e-01  1.672e-01  5.724e+01  -1.304  0.19753    
+#Time_bandevening              3.808e-01  1.152e-01  6.398e+01   3.305  0.00156 ** 
+#cStops                       -3.212e-01  1.905e-01  5.009e+01  -1.686  0.09807 .  
+#cyDay                        -6.489e-02  4.313e-02  5.681e+01  -1.504  0.13800    
+#Time_bandmidday:cnumberTime  -4.606e-05  1.805e-03  8.419e+01  -0.026  0.97970    
+#Time_bandevening:cnumberTime  5.106e-03  2.062e-03  8.362e+01   2.476  0.01531 *
+  
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbanization_gradient * Time_band +
@@ -1218,7 +1229,8 @@ lme1000 <- lmer(log(Biomass+1) ~
                   cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
-#no significant interactions
+#Urbanization_gradient:Time_bandevening  0.2234471  0.1122381 61.6377367   1.991  0.05094
+
 
 ### DE biomass predictions% ##############################
 

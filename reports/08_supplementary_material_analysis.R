@@ -35,10 +35,10 @@ getEffect <- function(model){
   data.frame(t(coefs),t(cis))
 }
 
-fitModels <- function(variable){
-  myformula()
-  
-}
+# fitModels <- function(variable){
+#   myformula()
+#   
+# }
 
 ### Denmark ####################
 

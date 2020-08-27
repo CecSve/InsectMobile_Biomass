@@ -294,6 +294,10 @@ library(psych)
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated,main="B: Germany")
 print(pca_rotated)
+#                       RC1  RC2
+#SS loadings           1.49 1.46
+#Proportion Var        0.30 0.29
+
 
 ggsave("plots/pca_with_rotation_1000_DE.png",width=8,height=12)
 

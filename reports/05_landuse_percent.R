@@ -1030,8 +1030,8 @@ lme1000 <- lmer(log(Biomass+1) ~
 summary(lme1000)
 vif(lme1000)
 r.squaredGLMM(lme1000)
-# R2m       R2c
-#[1,] 0.361604 0.8490719
+#R2m       R2c
+#[1,] 0.3593968 0.8313989
 
 #with sqrt
 lme1000 <- lmer(log(Biomass+1) ~ 
@@ -1048,14 +1048,15 @@ lme1000 <- lmer(log(Biomass+1) ~
 summary(lme1000)
 vif(lme1000)
 #now agriculture is most important... but urban comes out on top with AIC
+#r.squaredGLMM(lme1000)
+#R2m       R2c
+#[1,] 0.3582978 0.8328536
 
 #with model simplification
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  cUrban_1000 +
+                  Urban_1000 +
                   Time_band + 
                   Time_band:cnumberTime + 
-                  cStops + 
-                  cyDay + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 
@@ -1121,7 +1122,7 @@ forest <- getEffects(predEffects,var="Forest_250")
 test <- rbind(urb, farm, grass, wet, forest)
 
 # Visualization
-effectplot <- test %>% mutate(
+test_relevel <- test %>% mutate(
   landcover = fct_relevel(
     landcover,
     "Urban_1000",
@@ -1129,9 +1130,10 @@ effectplot <- test %>% mutate(
     "Open.uncultivated_1000",
     "Wetland_1000",
     "Forest_250"
-  )
-  
-) %>% ggplot(aes(x = propcover, y = fit, fill = landcover)) +
+  )) 
+
+effectplot <- test_relevel %>% 
+  ggplot(aes(x = propcover, y = fit, fill = landcover)) +
   geom_line(aes(color = landcover), size = 2) +
   scale_color_manual(
     values = landuseCols,
@@ -1141,7 +1143,8 @@ effectplot <- test %>% mutate(
       "Grassland cover (1000 m)",
       "Wetland cover (1000 m)",
       "Forest cover (250 m)")) + 
-    theme_minimal_grid() + theme(
+    theme_minimal_grid() + 
+  theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
@@ -1158,30 +1161,16 @@ effectplot <- test %>% mutate(
         aes(
           ymin = fit-se,
           ymax = fit+se,
-          group = landcover
-        ),
+          group = landcover),
         linetype = 2,
         alpha = 0.2,
-        show.legend = F
-      ) + labs(
+        show.legend = F) + 
+  labs(
         x = "Land cover",
         y = "log Predicted biomass (mg)",
         subtitle = "B: Germany",
-        colour = "Land cover type"
-      ) + 
+        colour = "Land cover type") + 
   scale_fill_manual(values = landuseCols)
-
-# Another vizualisation of proportional cover differences
-test %>% mutate(
-  landcover = fct_relevel(
-    landcover,
-    "Urban_1000",
-    "Agriculture_1000",
-    "Grassland_1000",
-    "Wetland_50",
-    "Forest_250"
-  )
-) %>% ggplot(aes(propcover, fit, color = landcover)) + geom_point() + geom_errorbar(aes(ymin = fit - se, ymax = fit + se), width = 0.4) + theme_bw(base_size = 12) + scale_colour_manual(values = landuseCols) + labs(x = "Land cover") + scale_x_continuous(limits = c(0, 1), labels = function(x) paste0(x * 100, "%")) + facet_wrap(~landcover, scales = "free")
 
 save_plot("plots/DE_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
 
@@ -1206,8 +1195,6 @@ Ztest(mySummary["Urban_1000","Estimate"],mySummary["Urban_1000","Std. Error"],
 ###PCA axes as variables##################################
 
 #run script in script 07 to get PCA axes variables
-
-
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbanization_gradient +
@@ -1264,6 +1251,7 @@ bb <- bootMer(lme1000,nsim=1000,FUN=predFun,seed=101)
 exp(quantile(bb$t,c(0.025,0.975)))
 
 ### Test timeband interactions ################################
+
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Time_band*Agriculture_1000 + 
                   Time_band + 
@@ -1285,6 +1273,17 @@ ggplot(allInsects,aes(x=as.numeric(Time_band), y=log(Biomass+1)))+
 
 
 ### Fig 5 DE #####################################################
+
+#identify maxLanduse at each route
+allInsects$maxLand_use <- apply(allInsects,1,function(x)which.max(x[c("Agriculture_1000","Forest_1000",
+                                                                      "Open.uncultivated_1000","Wetland_1000",
+                                                                      "Urban_1000")]))
+allInsects$maxLand_use[allInsects$maxLand_use==1]<- "Agriculture_1000"
+allInsects$maxLand_use[allInsects$maxLand_use==2]<- "Forest_1000"
+allInsects$maxLand_use[allInsects$maxLand_use==3]<- "Open.uncultivated_1000"
+allInsects$maxLand_use[allInsects$maxLand_use==4]<- "Wetland_1000"
+allInsects$maxLand_use[allInsects$maxLand_use==5]<- "Urban_1000"
+
 
 maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
 facet_labs <- c("Midday", "Evening")

@@ -206,7 +206,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data = allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
 
@@ -243,9 +243,10 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Wetland_50 +
                   Forest_250 +
                   Time_band + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data = allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
+r.squaredGLMM(lme1000)
 
 ### Figure 4: effect plots ##########################
 gls1.alleffects <- allEffects(lme1000)

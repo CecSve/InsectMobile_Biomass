@@ -75,7 +75,7 @@ plot_grid(g1,g2,g3,nrow=1)
 ### DK urban##############################################
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,c(11,13:15,17)]
+mydata <- mydata[,c(6, 11,13:15,17)]
 names(mydata) <- gsub("_1000","",names(mydata))
 mydata <- plyr::rename(mydata, c("byHegnMeterPerHa" = "Hedge"))
 mydata <- plyr::rename(mydata, c("urbGreenPropArea" = "Urban green cover"))
@@ -100,7 +100,7 @@ save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_widt
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
-biplot(pca_rotated)
+biplot(pca_rotated, main = "")
 print(pca_rotated)
 
 ggsave("plots/pca_with_rotation_1000_DK.png")
@@ -111,6 +111,7 @@ allInsects$Largecity_gradient <- pca_rotated$scores[,2]
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbangreen_gradient + 
+                  Urban_1000 +
                   Largecity_gradient +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
@@ -125,11 +126,19 @@ gls1.alleffects <- allEffects(lme1000)
 effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
 
 eall.lm1 <- predictorEffects(lme1000)
+test_effect <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
 plot(eall.lm1, lines=list(multiline=TRUE))
 #plot(predictorEffects(lmeurban1000, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
 
 ### ggplot effect plot ####
-temp <- effectdata$Urbangreen_gradient
+temp <- test_effect$Urban_1000
+temp$landuse <- "Urban_1000"
+urban <- temp %>% 
+  dplyr::rename(
+    propcover = Urban_1000
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+temp <- test_effect$Urbangreen_gradient
 temp$landuse <- "Urbangreen_gradient"
 urbgreen <- temp %>% 
   dplyr::rename(
@@ -137,21 +146,31 @@ urbgreen <- temp %>%
   )%>% select(landuse, propcover, fit, se, lower, upper)
 
 # Høj.bebyggelse_1000
-temp <- effectdata$Largecity_gradient
+temp <- test_effect$Largecity_gradient
 temp$landuse <- "Largecity_gradient"
 largecity <- temp %>% 
   dplyr::rename(
     propcover = Largecity_gradient
   )%>% select(landuse, propcover, fit, se, lower, upper)
 
-test <- rbind(urbgreen, largecity)
+test <- rbind(urban, urbgreen, largecity)
+library(data.table)
+test2 <- as.data.table(test)[landuse == "Urban_1000", propcover := propcover * 10] # propcover of urban is skewed by one decimal so we will multiple by 10 
 
-# Visualization
-effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
+# Visualization with rotated PCA 
+effectplot_urban <- test2 %>% mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Urban_1000",
+    "Urbangreen_gradient",
+    "Largecity_gradient"
+  )
+) %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
   geom_line(aes(color = landuse), size = 2) +
   scale_color_manual(
-    values = c("#A66287", "#663C53"),
+    values = c("#A66287", "#663C53", "#DB2563"),
     labels = c(
+      "Urban",
       "Urban green gradient",
       "Large city gradient"
     )
@@ -160,7 +179,7 @@ effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7"
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
     legend.position = "bottom"
-  )  + geom_ribbon(
+  ) + scale_x_continuous(limits = c(0, 7)) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,
@@ -213,6 +232,7 @@ library(lmerTest)
 mean(allInsects$Urban_1000)
 quantile(allInsects$Urban_1000, 0.1) # 0.02915
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
+                  Urban_1000 +     
                   urbGreenPropArea_1000 + 
                   byHegnMeterPerHa_1000 +
                   Bykerne_1000 +
@@ -224,21 +244,6 @@ lmeurban1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
 
 summary(lmeurban1000)
-
-# as reduced as it can be
-lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                       #sqrt(urbGreenPropArea_1000) + 
-                       #(byHegnMeterPerHa_1000) +
-                       Bykerne_1000 +
-                       #(Lav.bebyggelse_1000) +
-                       Høj.bebyggelse_1000 +
-                       #sqrt(Erhverv_1000) +
-                       Time_band + 
-                       Time_band:cnumberTime + cStops + cyDay + 
-                       (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
-summary(lmeurban1000)
-
-library(MuMIn)
 r.squaredGLMM(lmeurban1000)
 
 # effect
@@ -302,10 +307,10 @@ effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7"
 
 #save_plot("plots/DK_estimated_biomass_urbanlanduse.png", finalplot, base_width = 8, base_height = 6)
 
-# correlation plot 
-someInsects <- allInsects[,c(12,141, 62, 70, 74:77)]
+### correlation plot urban ###################
+someInsects <- allInsects[,c(12,22, 48, 62, 70, 74:77)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
+colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
 
 p <- cor(someInsects, use="pairwise.complete.obs")
 
@@ -321,7 +326,116 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE, title = "Correlation of urban land use variables", mar=c(0,0,1,0))
+         diag = FALSE, mar=c(0,0,1,0))
+
+### IN MS: urban analysis with combined columns ###################
+str(mydata)
+
+# we need more variables
+mydata <- allInsects[,c("Biomass", "cStops", "cyDay", "Time_band", "cnumberTime", "RouteID_JB", "PilotID", "maxLand_use", "maxareaProp", names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,c(1:9, 14,19:25)]
+names(mydata) <- gsub("_1000","",names(mydata))
+
+# merge the categories into groups based on varimax rotated PCA
+# first the large city - we don't use multistory buildings since they are correlated with hedges
+test_mydata <- mydata %>% mutate(largecity = Erhverv + Bykerne)
+
+# urban green - without hedge since it is highly correlated with multistory buildings
+test_mydata <- test_mydata %>% mutate(urbangreen = urbGreenPropArea + byHegnMeterPerHa + Lav.bebyggelse)
+str(test_mydata)
+
+test2_mydata <- test_mydata %>% mutate(urbangreen = ifelse(urbangreen > 0, urbangreen / 1000, urbangreen)) # divide by 1000 to get meter proportional cover
+#test2_mydata <- as.data.table(test_mydata)[maxLand_use == "Urban_1000", urbangreen := urbangreen / 100000000000] # propcover of urban is skewed by one decimal so we will divide by 10000 square km
+str(test2_mydata)
+
+#full model
+lmeurban1000 <- lmer(log(Biomass+1) ~ 
+                       Urban +     
+                       largecity +
+                       urbangreen +
+                       Time_band + 
+                       Time_band:cnumberTime + cyDay + cStops +
+                       (1|RouteID_JB) + (1|PilotID), data=subset(test2_mydata, maxLand_use = "Urban_1000")) # without stops
+
+summary(lmeurban1000)
+r.squaredGLMM(lmeurban1000)
+
+# effect
+gls1.alleffects <- allEffects(lmeurban1000)
+effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
+
+eall.lm1 <- predictorEffects(lmeurban1000)
+effectdata_test <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
+plot(eall.lm1, lines=list(multiline=TRUE))
+#plot(predictorEffects(lmeurban1000, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
+
+### ggplot effect plot ####
+temp <- effectdata$Urban
+temp$landuse <- "Urban"
+urban <- temp %>% 
+  dplyr::rename(
+    propcover = Urban
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+temp <- effectdata$largecity
+temp$landuse <- "largecity"
+largecity <- temp %>% 
+  dplyr::rename(
+    propcover = largecity
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+temp <- effectdata$urbangreen
+temp$landuse <- "urbangreen"
+green <- temp %>% 
+  dplyr::rename(
+    propcover = urbangreen
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+test <- rbind(urban, largecity, green)
+
+# Visualization
+effectplot_urban <- test %>% mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Urban",
+    "largecity",
+    "green"
+  )
+) %>%  ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
+  geom_line(aes(color = landuse), size = 2) +
+  scale_color_manual(
+    values = c("#A66287", "#663C53", "#DB2563"),
+    labels = c(
+      "Urban cover",
+      "Large cities",
+      "Urban green cover"
+    )
+  ) + theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom"
+  )  + scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) + geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = landuse
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "Urban land use cover",
+        y = "log Predicted biomass (mg)",
+        subtitle = "A",
+        colour = "Land use type"
+      ) + scale_fill_manual(values = "#CC79A7")
+
+save_plot("plots/DK_estimated_biomass_urbanlanduse.png", effectplot_urban, base_width = 8, base_height = 6)
 
 ### DK farmland##########################################
 

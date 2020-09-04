@@ -549,7 +549,7 @@ test <- subset(allInsects, maxLand_use = "Agriculture_1000")
 test <- test %>% drop_na(Intensiv_organic_1000)
 
 #full model (without weather)
-lme1000 <- lmer(log(Biomass+1) ~ Ekstensiv_organic_1000 + Ekstensiv_1000 + Semi.intensiv_1000 + Semi.intensiv_organic_1000 + Intensiv_1000 + Intensiv_organic_1000 + Time_band + Time_band:cnumberTime + cStops + cyDay + (1|RouteID_JB) + (1|PilotID), data= test)
+lme1000 <- lmer(log(Biomass+1) ~ Agriculture_1000 + Ekstensiv_organic_1000 + Ekstensiv_1000 + Semi.intensiv_1000 + Semi.intensiv_organic_1000 + Intensiv_1000 + Intensiv_organic_1000 + Time_band + Time_band:cnumberTime + cStops + cyDay + (1|RouteID_JB) + (1|PilotID), data= test)
 
 summary(lme1000)
 
@@ -563,12 +563,12 @@ eall.lm1 <- predictorEffects(lme1000)
 plot(eall.lm1, lines=list(multiline=TRUE))
 
 ### ggplot effect plot ####
-temp <- effectdata$hegnMeterPerHa_1000
-temp$landuse <- "hegnMeterPerHa_1000"
-hedge <- temp %>% 
+temp <- effectdata$Agriculture_1000
+temp$landuse <- "Agriculture_1000"
+Agriculture_1000 <- temp %>% 
   dplyr::rename(
-    propcover = hegnMeterPerHa_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = Agriculture_1000
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Ekstensiv_organic_1000
 temp <- effectdata$Ekstensiv_organic_1000
@@ -576,7 +576,7 @@ temp$landuse <- "Ekstensiv_organic_1000"
 ex_org <- temp %>% 
   dplyr::rename(
     propcover = Ekstensiv_organic_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Ekstensiv_1000
 temp <- effectdata$Ekstensiv_1000
@@ -584,7 +584,7 @@ temp$landuse <- "Ekstensiv_1000"
 ex <- temp %>% 
   dplyr::rename(
     propcover = Ekstensiv_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Semi.intensiv_1000
 temp <- effectdata$Semi.intensiv_1000
@@ -592,7 +592,7 @@ temp$landuse <- "Semi.intensiv_1000"
 semi <- temp %>% 
   dplyr::rename(
     propcover = Semi.intensiv_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Semi.intensiv_organic_1000
 temp <- effectdata$Semi.intensiv_organic_1000
@@ -600,7 +600,7 @@ temp$landuse <- "Semi.intensiv_organic_1000"
 semi_org <- temp %>% 
   dplyr::rename(
     propcover = Semi.intensiv_organic_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Intensiv_1000
 temp <- effectdata$Intensiv_1000
@@ -608,7 +608,7 @@ temp$landuse <- "Intensiv_1000"
 int <- temp %>% 
   dplyr::rename(
     propcover = Intensiv_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Intensiv_organic_1000
 temp <- effectdata$Intensiv_organic_1000
@@ -616,14 +616,15 @@ temp$landuse <- "Intensiv_organic_1000"
 int_org <- temp %>% 
   dplyr::rename(
     propcover = Intensiv_organic_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
-test <- rbind(ex, ex_org, semi, semi_org, int, int_org)
+test <- rbind(Agriculture_1000, ex, ex_org, semi, semi_org, int, int_org)
 
 # Visualization
 effectplot_farmland <- test %>% mutate(
   landuse = fct_relevel(
     landuse,
+    "Agriculture_1000",
     "Ekstensiv_1000",
     "Ekstensiv_organic_1000",
     "Semi.intensiv_1000",
@@ -634,8 +635,9 @@ effectplot_farmland <- test %>% mutate(
 )%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2) +
   scale_color_manual(
-    values = c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05"),
+    values = c("#30415C", "#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05"),
     labels = c(
+      "Farmland",
       "Extensive",
       "Organic extensive",
       "Semi-intensive",
@@ -643,7 +645,7 @@ effectplot_farmland <- test %>% mutate(
       "Intensive",
       "Organic intensive"
     )
-  ) + theme(
+  ) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
@@ -665,11 +667,12 @@ effectplot_farmland <- test %>% mutate(
         y = "log Predicted biomass (mg)",
         subtitle = "B",
         colour = "Land use type"
-      ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1))
+      ) + scale_fill_manual(values =  c("#30415C", "#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1))
 
 effectplot_farmland_zoom <- test %>% dplyr::mutate(
   landuse = fct_relevel(
     landuse,
+    "Agriculture_1000",
     "Ekstensiv_1000",
     "Ekstensiv_organic_1000",
     "Semi.intensiv_1000",
@@ -680,8 +683,9 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
 )%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2, show.legend = F) +
   scale_color_manual(
-    values = c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05"),
+    values = c("#30415C", "#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05"),
     labels = c(
+      "Farmland",
       "Extensive",
       "Organic extensive",
       "Semi-intensive",
@@ -694,7 +698,7 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
     legend.position = "bottom"
-  ) + scale_x_continuous(
+  ) + scale_y_continuous(limits = c(4, 6)) + scale_x_continuous(
     limits = c(0, 0.07),
     labels = function(x)
       paste0(x * 100, "%")) + geom_ribbon(
@@ -711,14 +715,13 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
         y = "",
         #subtitle = "B",
         colour = "Land use type"
-      ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1)) + theme(panel.background = element_rect(fill = "white"), plot.margin = margin(0, 0, 0, 0, "cm"), panel.border = element_rect(colour = "darkgrey"))
+      ) + scale_fill_manual(values =  c("#30415C", "#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1)) + theme(panel.background = element_rect(fill = "white"), plot.margin = margin(0, 0, 0, 0, "cm"), panel.border = element_rect(colour = "darkgrey"))
 
 #effectplot <- plot_grid(effectplot_urban, effectplot_farmland)
 effectplot_farmland
 effectplot_farmland_zoom
 
-effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xmin = 0.4, xmax = 0.8, 
-                       ymin = 5, ymax = 5.9)
+effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xmin = 0.5, xmax = 0.9, ymin = 7, ymax = 11)
 
 ggsave("plots/zoom_farmland_landuse.png")
 

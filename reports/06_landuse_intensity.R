@@ -11,6 +11,7 @@ library(ggfortify)
 library(lme4)
 library(lmerTest)
 library(effects)
+library(corrplot)
 
 #### Set colour scheme ################################################################
 
@@ -492,7 +493,7 @@ plot_grid(g1,g2,g3,g4,g5,g6)
 ### PCA ###
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,c(18:21,24:25)]
+mydata <- mydata[,c(2, 18:21,24:25)]
 names(mydata) <- gsub("_1000","",names(mydata))
 mydata <- mydata %>% drop_na(Ekstensiv)
 #mydata <- plyr::rename(mydata, c("hegnMeterPerHa" = "Hedgerows"))
@@ -522,18 +523,18 @@ library(psych)
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
-biplot(pca_rotated)
+biplot(pca_rotated, main = "")
 print(pca_rotated)
 
-ggsave("plots/pca_with_rotation_1000_DK.png")
+ggsave("plots/pca_with_rotation_farmland_1000_DK.png")
 
 #add PCA axes scores to the dataset
-fit_data$Farmingpractice_gradient <- pca_rotated$scores[,1]
-fit_data$Greeness_gradient <- pca_rotated$scores[,2]
+fit_data$FarmlandIntensive_gradient <- pca_rotated$scores[,1]
+fit_data$OrganicExtensive_gradient <- pca_rotated$scores[,2]
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  Farmingpractice_gradient + 
-                  Greeness_gradient +
+                  FarmlandIntensive_gradient + 
+                  OrganicExtensive_gradient +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(fit_data, maxLand_use = "Agriculture_1000"))
@@ -722,9 +723,11 @@ effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xm
 ggsave("plots/zoom_farmland_landuse.png")
 
 # correlation plot 
-someInsects <- allInsects[,c(12,141,90:94,96:97)]
+mydata <- allInsects[,c("Biomass", "cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+someInsects <- mydata[,c(1:3, 19:22,25:26)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Extensive", "Extensive_organic", "Intensive", "Intensive_organic", "Unspecified", "Semi-intensive", "Semi-intensive_organic")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Extensive", "Ekstensive organic", "Intensive", "Intensive organic", "Semi-intensive", "Semi-intensive organic")
 
 p <- cor(someInsects, use="pairwise.complete.obs")
 
@@ -740,4 +743,111 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE, title = "Correlation of farmland land use variables", mar=c(0,0,1,0))
+         diag = FALSE, title = "", mar=c(0,0,1,0))
+
+### IN MS: farmland analysis ###################################
+str(mydata)
+
+# we need more variables
+mydata <- allInsects[,c("Biomass", "cStops", "cyDay", "Time_band", "cnumberTime", "RouteID_JB", "PilotID", "maxLand_use", "maxareaProp", names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,c(1:9, 10, 26:29, 32:33)]
+names(mydata) <- gsub("_1000","",names(mydata))
+
+# merge the categories into groups based on varimax rotated PCA
+# first the large city - we don't use multistory buildings since they are correlated with hedges
+test_mydata <- mydata %>% mutate(FarmlandIntensive_gradient = Intensiv)
+
+# urban green - without hedge since it is highly correlated with multistory buildings
+test_mydata <- test_mydata %>% mutate(OrganicExtensive_gradient = Ekstensiv + Ekstensiv_organic + Intensiv_organic + Semi.intensiv + Semi.intensiv_organic)
+str(test_mydata)
+test_mydata <- test_mydata %>% drop_na(FarmlandIntensive_gradient)
+
+#test2_mydata <- as.data.table(test_mydata)[maxLand_use == "Urban_1000", urbangreen := urbangreen / 100000000000] # propcover of urban is skewed by one decimal so we will divide by 10000 square km
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Agriculture +
+                  FarmlandIntensive_gradient + 
+                  OrganicExtensive_gradient +
+                  Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=subset(test_mydata, maxLand_use = "Agriculture_1000"))
+summary(lme1000)
+
+library(MuMIn)
+r.squaredGLMM(lme1000)
+
+# effect
+gls1.alleffects <- allEffects(lme1000)
+effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
+
+eall.lm1 <- predictorEffects(lme1000)
+effectdata_test <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
+plot(eall.lm1, lines=list(multiline=TRUE))
+
+### ggplot effect plot ####
+temp <- effectdata$Agriculture
+temp$landuse <- "Agriculture"
+Agriculture <- temp %>% 
+  dplyr::rename(
+    propcover = Agriculture
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+temp <- effectdata$FarmlandIntensive_gradient
+temp$landuse <- "FarmlandIntensive_gradient"
+FarmlandIntensive_gradient <- temp %>% 
+  dplyr::rename(
+    propcover = FarmlandIntensive_gradient
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+temp <- effectdata$OrganicExtensive_gradient
+temp$landuse <- "OrganicExtensive_gradient"
+OrganicExtensive_gradient <- temp %>% 
+  dplyr::rename(
+    propcover = OrganicExtensive_gradient
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+test <- rbind(Agriculture, FarmlandIntensive_gradient, OrganicExtensive_gradient)
+
+# Visualization
+effectplot_farmland <- test %>% mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Agriculture",
+    "FarmlandIntensive_gradient",
+    "OrganicExtensive_gradient",
+  )
+)%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
+  geom_line(aes(color = landuse), size = 2) +
+  scale_color_manual(
+    values = c("#9BA8BD", "#6E81D1", "#89C254"),
+    labels = c(
+      "Farmland cover",
+      "Intensive cover",
+      "Organic/semi-intensive/extensive cover"
+    )
+  ) + theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom"
+  ) + scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) + geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = landuse
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "Agricultural land use cover",
+        y = "log Predicted biomass (mg)",
+        subtitle = "B",
+        colour = "Land use type"
+      ) + scale_fill_manual(values =  c("#9BA8BD","#6E81D1", "#89C254")) + guides(colour = guide_legend(nrow = 1))
+
+save_plot("plots/DK_effect_landuse_farmland.png", effectplot_farmland, base_width = 10, base_height = 6)

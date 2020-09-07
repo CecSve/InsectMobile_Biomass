@@ -333,7 +333,7 @@ effectplot <- test %>% mutate(
   ) + scale_x_continuous(
     limits = c(0, 1),
     labels = function(x)
-      paste0(x * 100, "%")) + geom_ribbon(
+      paste0(x * 100, "%")) + scale_y_continuous(limits = c(1.5, 7)) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,

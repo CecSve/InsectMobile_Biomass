@@ -200,7 +200,7 @@ save_plot("plots/Landcover_biomass_proportions.png", fig3_2, base_width = 12, ba
 #full and final model
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
-                  Urban_1000 +
+                  #Urban_1000 +
                   Open.uncultivated.land_1000+ # test if outlier drives the pattern
                   Wetland_50 +
                   Forest_250 +

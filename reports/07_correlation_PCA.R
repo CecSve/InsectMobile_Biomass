@@ -316,3 +316,74 @@ autoplot(fit, data = allInsects, colour = 'Land_use',
 theme_bw()
 
 ggsave("plots/pca_1000_DE.png")
+
+### DE Correlation plot for SOM##################
+
+# prepare plotting
+par(mfrow = c(2, 2))
+
+# correlation plot for 1000 m buffer
+someInsects <- allInsects[,c(5,24,28,32,36,40,65)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
+p <- cor(someInsects)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "AOE", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation at 1000 m", mar=c(0,0,1,0))
+
+# correlation plot for 500 m buffer
+someInsects <- allInsects[,c(5,23,27,31,35,39,65)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
+p <- cor(someInsects)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "AOE", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation at 500 m", mar=c(0,0,1,0))
+
+# correlation plot for 250 m buffer
+someInsects <- allInsects[,c(5,22,26,30,34,38,65)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
+p <- cor(someInsects)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "AOE", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation at 250 m", mar=c(0,0,1,0))
+
+# correlation plot for 50 m buffer
+someInsects <- allInsects[,c(5,21,25,29,33,37,65)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Farmland", "Forest","Grassland", "Urban", "Wetland","Stops")
+p <- cor(someInsects)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "AOE", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, title = "Correlation at 50 m", mar=c(0,0,1,0))
+
+

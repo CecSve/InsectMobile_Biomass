@@ -1059,6 +1059,9 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band:cnumberTime + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
+r.squaredGLMM(lme1000)
+#R2m       R2c
+#[1,] 0.3197659 0.8265884
 
 #as gls
 lme1000 <- lme(log(Biomass+1) ~ Agriculture_1000 + 
@@ -1098,6 +1101,9 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band + 
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
+#r.squaredGLMM(lme1000)
+R2m       R2c
+#[1,] 0.3028254 0.8204277
 
 ### Figure 4: effect plots ##########################
 
@@ -1153,8 +1159,7 @@ effectplot <- test_relevel %>%
     limits = c(0, 100),
     labels = function(x)
       paste0(x, "%"))  + 
-  #      scale_y_continuous(
-  #      limits = c(2.5, 7),
+  scale_y_continuous(limits = c(1.5, 7)) +
   #      labels = function(x)
   #        paste0(x * 1, "%")) + 
   geom_ribbon(

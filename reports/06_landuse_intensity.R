@@ -11,71 +11,39 @@ library(ggfortify)
 library(lme4)
 library(lmerTest)
 library(effects)
+library(corrplot)
+library(MuMIn)
 
 #### Set colour scheme ################################################################
 
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
-### DE urban##############################################
-
-g1 <- ggplot(subset(allInsects,Land_use=="Urban"),
-       aes(x=sqrt(urbangreen_1000),y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Urban green space cover") +ylab("Biomass")
-
-g2 <- ggplot(subset(allInsects,Land_use=="Urban"),
-             aes(x=sqrt(roads_1000),y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Road density") +ylab("Biomass")
-
-g3 <- ggplot(subset(allInsects,Land_use=="Urban"),
-  aes(x=sqrt(Urban_1000),y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Urban cover") +ylab("Biomass")
-
-plot_grid(g1,g2,g3,nrow=1)
-
-### DE farmland##########################################
-
-g1 <- ggplot(subset(allInsects,Land_use=="Farmland"),
-             aes(x=sqrt(hedges_1000),y=(Biomass+1)))+
-  geom_point(col=landuseCols[2])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Hedges") +ylab("Biomass")
-
-g2 <- ggplot(subset(allInsects,Land_use=="Farmland"),
-             aes(x=exAgr_1000,y=(Biomass+1)))+
-  geom_point(col=landuseCols[2])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Extensive farmland") +ylab("Biomass")
-
-g3 <- ggplot(subset(allInsects,Land_use=="Farmland"),
-             aes(x=intAgr_1000,y=(Biomass+1)))+
-  geom_point(col=landuseCols[2])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Farmland") +ylab("Biomass")
-
-plot_grid(g1,g2,g3,nrow=1)
-
 ### DK urban##############################################
+### correlation plot urban ###################
+someInsects <- allInsects[,c(12,22, 48, 62, 70, 74:77)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
+
+p <- cor(someInsects, use="pairwise.complete.obs")
+
+# add significance
+res1 <- cor.mtest(someInsects, conf.level = .95)
+res2 <- cor.mtest(someInsects, conf.level = .99)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, mar=c(0,0,1,0))
+
+### PCA urban ##################
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,c(11,13:15,17)]
+mydata <- mydata[,c(6, 11,13:15,17)]
 names(mydata) <- gsub("_1000","",names(mydata))
 mydata <- plyr::rename(mydata, c("byHegnMeterPerHa" = "Hedge"))
 mydata <- plyr::rename(mydata, c("urbGreenPropArea" = "Urban green cover"))
@@ -100,7 +68,7 @@ save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_widt
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
-biplot(pca_rotated)
+biplot(pca_rotated, main = "")
 print(pca_rotated)
 
 ggsave("plots/pca_with_rotation_1000_DK.png")
@@ -111,56 +79,156 @@ allInsects$Largecity_gradient <- pca_rotated$scores[,2]
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbangreen_gradient + 
+                  Urban_1000 +
                   Largecity_gradient +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
 summary(lme1000)
 
-library(MuMIn)
 r.squaredGLMM(lme1000)
 
+### IN MS: DK urban proportional land use #######################################
+# calculate the proportional cover of the land use intensity variables within the most land cover routes
+data <- subset(allInsects, maxLand_use = "Urban_1000")
+data$propHedge <- data$byHegnMeterPerHa_1000/data$Urban_1000
+data$propurbGreen <- data$urbGreenPropArea_1000/data$Urban_1000
+data$propinnerCity <- data$Bykerne_1000/data$Urban_1000
+data$propresidential <- data$Lav.bebyggelse_1000/data$Urban_1000
+data$propmultistory <- data$`Høj.bebyggelse_1000`/data$Urban_1000
+data$propcommercial <- data$Erhverv_1000/data$Urban_1000
+tail(data)
+
+data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
+
+### correlation plot proportional urban ###################
+someInsects <- data[,c(12,142, 48, 145:150)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Stops", "Urban", "propHedge", "propUrban green", "propInner city", "propResidential", "propMultistory", "propCommercial")
+
+p <- cor(someInsects, use="pairwise.complete.obs")
+
+# add significance
+res1 <- cor.mtest(someInsects, conf.level = .95)
+res2 <- cor.mtest(someInsects, conf.level = .99)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, mar=c(0,0,1,0))
+
+# model
+lmeurban1000 <- lmer(log(Biomass+1) ~ 
+                  Urban_1000*propHedge + 
+                  Urban_1000*propurbGreen +
+                  #Urban_1000*propinnerCity +
+                  Urban_1000*propresidential +
+                  #Urban_1000*propmultistory +
+                  Urban_1000*propcommercial +
+                  Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data = data)
+
+summary(lmeurban1000)
+r.squaredGLMM(lmeurban1000)
+
+# model for visualisation (without interactions to get the effect)
+lmeurban1000 <- lmer(log(Biomass+1) ~ 
+                       Urban_1000 +
+                       propHedge + 
+                       propurbGreen +
+                       #Urban_1000*propinnerCity +
+                       propresidential +
+                       #Urban_1000*propmultistory +
+                       propcommercial +
+                       Time_band + 
+                       Time_band:cnumberTime + cStops + cyDay + 
+                       (1|RouteID_JB) + (1|PilotID), data = data)
+
+summary(lmeurban1000)
+r.squaredGLMM(lmeurban1000)
+
 # effect
-gls1.alleffects <- allEffects(lme1000)
+gls1.alleffects <- allEffects(lmeurban1000)
 effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
 
-eall.lm1 <- predictorEffects(lme1000)
+eall.lm1 <- predictorEffects(lmeurban1000)
+#effectdata <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
 plot(eall.lm1, lines=list(multiline=TRUE))
 #plot(predictorEffects(lmeurban1000, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
 
 ### ggplot effect plot ####
-temp <- effectdata$Urbangreen_gradient
-temp$landuse <- "Urbangreen_gradient"
+# urbGreenPropArea_1000
+temp <- effectdata$Urban_1000
+temp$landuse <- "Urban"
+Urban <- temp %>% 
+  dplyr::rename(
+    propcover = Urban_1000
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+# propHedge
+temp <- effectdata$propHedge
+temp$landuse <- "Hedge"
+hedge <- temp %>% 
+  dplyr::rename(
+    propcover = propHedge
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+hedge$propcover <- hedge$propcover /1000
+
+# propresidential
+temp <- effectdata$propresidential
+temp$landuse <- "Residential"
+residential <- temp %>% 
+  dplyr::rename(
+    propcover = propresidential
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+# propcommercial
+temp <- effectdata$propcommercial
+temp$landuse <- "Commercial"
+commercial <- temp %>% 
+  dplyr::rename(
+    propcover = propcommercial
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+# urban
+temp <- effectdata$propurbGreen
+temp$landuse <- "Urban green"
 urbgreen <- temp %>% 
   dplyr::rename(
-    propcover = Urbangreen_gradient
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propurbGreen
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
-# Høj.bebyggelse_1000
-temp <- effectdata$Largecity_gradient
-temp$landuse <- "Largecity_gradient"
-largecity <- temp %>% 
-  dplyr::rename(
-    propcover = Largecity_gradient
-  )%>% select(landuse, propcover, fit, se, lower, upper)
-
-test <- rbind(urbgreen, largecity)
+test <- rbind(commercial, residential, hedge, urbgreen)
+str(test)
 
 # Visualization
-effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
+effectplot_urban <- test %>% dplyr::mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Commercial",
+    "Residential",
+    "Hedge",
+    "Urban green"
+  )
+)%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2) +
   scale_color_manual(
-    values = c("#A66287", "#663C53"),
-    labels = c(
-      "Urban green gradient",
-      "Large city gradient"
-    )
+    values = c("#F216FA", "#65117A", "#DF6EFB", "#CE22FA")
   ) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
     legend.position = "bottom"
-  )  + geom_ribbon(
+  ) + scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x*100, "%")) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,
@@ -169,76 +237,46 @@ effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7"
         linetype = 2,
         alpha = 0.2,
         show.legend = F
-      ) + labs(
-        x = "Urban land use gradient",
+      )  + labs(
+        x = "Land use intensity cover within urban land cover",
         y = "log Predicted biomass (mg)",
         subtitle = "A",
         colour = "Land use type"
-      ) + scale_fill_manual(values = "#CC79A7")
+      ) + scale_fill_manual(values =  c("#F216FA", "#65117A", "#DF6EFB", "#CE22FA")) + guides(colour = guide_legend(nrow = 1))
 
-save_plot("plots/DK_effect_landuse_urban.png", effectplot_urban, base_width = 10, base_height = 6)
+save_plot("plots/DK_estimated_biomass_urbanlanduse.png", effectplot_urban, base_width = 8, base_height = 6)
 
-#g1 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),aes(x=urbGreenPropArea_1000,y=(Biomass+1)))+geom_point(col=landuseCols[1])+scale_y_log10() +theme_bw() +geom_smooth(method="lm",color="grey70")+xlab("Urban green space cover") +ylab("Biomass")
+### urban analysis with combined columns ###################
+str(mydata)
 
-#g2 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),aes(x=byHegnMeterPerHa_1000,y=(Biomass+1)))+geom_point(col=landuseCols[1])+scale_y_log10() +theme_bw() +geom_smooth(method="lm",color="grey70")+xlab("Hedges m per ha") +ylab(" ")
+# we need more variables
+mydata <- allInsects[,c("Biomass", "cStops", "cyDay", "Time_band", "cnumberTime", "RouteID_JB", "PilotID", "maxLand_use", "maxareaProp", names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,c(1:9, 14,19:25)]
+names(mydata) <- gsub("_1000","",names(mydata))
 
-g3 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=Bykerne_1000,y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Inner city cover (large cities)") +ylab(" ")
+# merge the categories into groups based on varimax rotated PCA
+# first the large city - we don't use multistory buildings since they are correlated with hedges
+test_mydata <- mydata %>% mutate(largecity = Erhverv + Bykerne)
 
-#g4 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),aes(x=Lav.bebyggelse_1000,y=(Biomass+1)))+geom_point(col=landuseCols[1])+scale_y_log10() +theme_bw() +geom_smooth(method="lm",color="grey70")+xlab("Residential area cover") +ylab("Biomass")
+# urban green - without hedge since it is highly correlated with multistory buildings
+test_mydata <- test_mydata %>% mutate(urbangreen = urbGreenPropArea + byHegnMeterPerHa + Lav.bebyggelse)
+str(test_mydata)
 
-g5 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),
-             aes(x=Høj.bebyggelse_1000,y=(Biomass+1)))+
-  geom_point(col=landuseCols[1])+
-  scale_y_log10() +
-  theme_bw() +
-  geom_smooth(method="lm",color="grey70")+
-  xlab("Multistory buildings cover (large cities)") +ylab(" ")
-
-#g6 <- ggplot(subset(allInsects, maxLand_use = "Urban_1000"),aes(x=Erhverv_1000,y=(Biomass+1)))+geom_point(col=landuseCols[1])+scale_y_log10() +theme_bw() +geom_smooth(method="lm",color="grey70")+xlab("Commercial buildings cover") +ylab(" ")
-
-plot_grid(g3, g5)
-ggsave("plots/DK_landuseintensity_urban.png", width = 12, height = 6)
-
-### DK urban lmer #######################################
-library(lme4)
-library(lmerTest)
+test2_mydata <- test_mydata %>% mutate(urbangreen = ifelse(urbangreen > 0, urbangreen / 1000, urbangreen)) # divide by 1000 to get meter proportional cover
+#test2_mydata <- as.data.table(test_mydata)[maxLand_use == "Urban_1000", urbangreen := urbangreen / 100000000000] # propcover of urban is skewed by one decimal so we will divide by 10000 square km
+str(test2_mydata)
 
 #full model
-mean(allInsects$Urban_1000)
-quantile(allInsects$Urban_1000, 0.1) # 0.02915
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                  urbGreenPropArea_1000 + 
-                  byHegnMeterPerHa_1000 +
-                  Bykerne_1000 +
-                  Lav.bebyggelse_1000 +
-                  `Høj.bebyggelse_1000` +
-                  Erhverv_1000 +
-                  Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
-
-summary(lmeurban1000)
-
-# as reduced as it can be
-lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                       #sqrt(urbGreenPropArea_1000) + 
-                       #(byHegnMeterPerHa_1000) +
-                       Bykerne_1000 +
-                       #(Lav.bebyggelse_1000) +
-                       Høj.bebyggelse_1000 +
-                       #sqrt(Erhverv_1000) +
+                       Urban +     
+                       largecity +
+                       urbangreen +
                        Time_band + 
-                       Time_band:cnumberTime + cStops + cyDay + 
-                       (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
-summary(lmeurban1000)
+                       Time_band:cnumberTime + cyDay + cStops +
+                       (1|RouteID_JB) + (1|PilotID), data=subset(test2_mydata, maxLand_use = "Urban_1000")) # without stops
 
-library(MuMIn)
+summary(lmeurban1000)
 r.squaredGLMM(lmeurban1000)
 
 # effect
@@ -246,43 +284,58 @@ gls1.alleffects <- allEffects(lmeurban1000)
 effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
 
 eall.lm1 <- predictorEffects(lmeurban1000)
+effectdata_test <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
 plot(eall.lm1, lines=list(multiline=TRUE))
 #plot(predictorEffects(lmeurban1000, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
 
 ### ggplot effect plot ####
-temp <- effectdata$Bykerne_1000
-temp$landuse <- "Bykerne_1000"
-innercity <- temp %>% 
+temp <- effectdata$Urban
+temp$landuse <- "Urban"
+urban <- temp %>% 
   dplyr::rename(
-    propcover = Bykerne_1000
+    propcover = Urban
   )%>% select(landuse, propcover, fit, se, lower, upper)
 
-# Høj.bebyggelse_1000
-temp <- effectdata$Høj.bebyggelse_1000
-temp$landuse <- "Høj.bebyggelse_1000"
-multistory <- temp %>% 
+temp <- effectdata$largecity
+temp$landuse <- "largecity"
+largecity <- temp %>% 
   dplyr::rename(
-    propcover = Høj.bebyggelse_1000
+    propcover = largecity
   )%>% select(landuse, propcover, fit, se, lower, upper)
 
-test <- rbind(innercity, multistory)
+temp <- effectdata$urbangreen
+temp$landuse <- "urbangreen"
+green <- temp %>% 
+  dplyr::rename(
+    propcover = urbangreen
+  )%>% select(landuse, propcover, fit, se, lower, upper)
+
+test <- rbind(urban, largecity, green)
 
 # Visualization
-effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
+effectplot_urban <- test %>% mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Urban",
+    "largecity",
+    "green"
+  )
+) %>%  ggplot(aes(x = propcover, y = fit, fill = "#CC79A7")) +
   geom_line(aes(color = landuse), size = 2) +
   scale_color_manual(
-    values = c("#A66287", "#663C53"),
+    values = c("#A66287", "#663C53", "#DB2563"),
     labels = c(
-      "Inner city",
-      "Multistory buildings"
+      "Urban cover",
+      "Large cities",
+      "Urban green cover"
     )
   ) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
     legend.position = "bottom"
-  ) + scale_x_continuous(
-    limits = c(0, 0.20),
+  )  + scale_x_continuous(
+    limits = c(0, 1),
     labels = function(x)
       paste0(x * 100, "%")) + geom_ribbon(
         aes(
@@ -300,28 +353,7 @@ effectplot_urban <- test %>% ggplot(aes(x = propcover, y = fit, fill = "#CC79A7"
         colour = "Land use type"
       ) + scale_fill_manual(values = "#CC79A7")
 
-#save_plot("plots/DK_estimated_biomass_urbanlanduse.png", finalplot, base_width = 8, base_height = 6)
-
-# correlation plot 
-someInsects <- allInsects[,c(12,141, 62, 70, 74:77)]
-colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
-
-p <- cor(someInsects, use="pairwise.complete.obs")
-
-# add significance
-res1 <- cor.mtest(someInsects, conf.level = .95)
-res2 <- cor.mtest(someInsects, conf.level = .99)
-
-# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
-         type = "upper", order = "original", number.cex = .7,
-         addCoef.col = "black", # Add coefficient of correlation
-         tl.col = "black", tl.srt = 90, # Text label color and rotation
-         # Combine with significance
-         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
-         # hide correlation coefficient on the principal diagonal 
-         diag = FALSE, title = "Correlation of urban land use variables", mar=c(0,0,1,0))
+save_plot("plots/DK_estimated_biomass_urbanlanduse.png", effectplot_urban, base_width = 8, base_height = 6)
 
 ### DK farmland##########################################
 
@@ -378,7 +410,7 @@ plot_grid(g1,g2,g3,g4,g5,g6)
 ### PCA ###
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
 names(mydata)
-mydata <- mydata[,c(18:21,24:25)]
+mydata <- mydata[,c(2, 18:21,24:25)]
 names(mydata) <- gsub("_1000","",names(mydata))
 mydata <- mydata %>% drop_na(Ekstensiv)
 #mydata <- plyr::rename(mydata, c("hegnMeterPerHa" = "Hedgerows"))
@@ -408,18 +440,18 @@ library(psych)
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
-biplot(pca_rotated)
+biplot(pca_rotated, main = "")
 print(pca_rotated)
 
-ggsave("plots/pca_with_rotation_1000_DK.png")
+ggsave("plots/pca_with_rotation_farmland_1000_DK.png")
 
 #add PCA axes scores to the dataset
-fit_data$Farmingpractice_gradient <- pca_rotated$scores[,1]
-fit_data$Greeness_gradient <- pca_rotated$scores[,2]
+fit_data$FarmlandIntensive_gradient <- pca_rotated$scores[,1]
+fit_data$OrganicExtensive_gradient <- pca_rotated$scores[,2]
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  Farmingpractice_gradient + 
-                  Greeness_gradient +
+                  FarmlandIntensive_gradient + 
+                  OrganicExtensive_gradient +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(fit_data, maxLand_use = "Agriculture_1000"))
@@ -429,79 +461,136 @@ library(MuMIn)
 r.squaredGLMM(lme1000)
 
 
-### DK agriculture lmer ######################################
-test <- subset(allInsects, maxLand_use = "Agriculture_1000")
-test <- test %>% drop_na(Intensiv_organic_1000)
+### IN MS: DK agriculture proportional cover ######################################
+# calculate the proportional cover of the land use intensity variables within the most land cover routes
+data <- subset(allInsects, maxLand_use = "Agriculture_1000")
+data$propOrgExtensive <- data$Ekstensiv_organic_1000/data$Agriculture_1000
+data$propExtensive <- data$Ekstensiv_1000/data$Agriculture_1000
+data$propSemiIntensive <- data$Semi.intensiv_1000/data$Agriculture_1000
+data$propOrgSemiIntensive <- data$Semi.intensiv_organic_1000/data$Agriculture_1000
+data$propIntensive <- data$`Intensiv_1000`/data$Agriculture_1000
+data$propOrgIntensive <- data$Intensiv_organic_1000/data$Agriculture_1000
+tail(data)
 
-#full model (without weather)
-lme1000 <- lmer(log(Biomass+1) ~ Ekstensiv_organic_1000 + Ekstensiv_1000 + Semi.intensiv_1000 + Semi.intensiv_organic_1000 + Intensiv_1000 + Intensiv_organic_1000 + Time_band + Time_band:cnumberTime + cStops + cyDay + (1|RouteID_JB) + (1|PilotID), data= test)
+data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
 
-summary(lme1000)
+### correlation plot proportional agriculture ###################
+names(data)
+someInsects <- data[,c(12,142, 44, 145:150)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "propOrgExtensive", "propExtensive", "propSemiIntensive", "propOrgSemiIntensive", "propIntensive", "propOrgIntensive")
 
-r.squaredGLMM(lme1000)
+p <- cor(someInsects, use="pairwise.complete.obs")
+
+# add significance
+res1 <- cor.mtest(someInsects, conf.level = .95)
+res2 <- cor.mtest(someInsects, conf.level = .99)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color", col = landuseCols,
+         type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, mar=c(0,0,1,0))
+
+# model
+lmer1000 <- lmer(log(Biomass+1) ~ 
+                       Agriculture_1000*propOrgExtensive + 
+                   Agriculture_1000*propExtensive +
+                       Agriculture_1000*propSemiIntensive +
+                   Agriculture_1000*propOrgSemiIntensive +
+                   Agriculture_1000*propIntensive +
+                   Agriculture_1000*propOrgIntensive +
+                       Time_band + 
+                       Time_band:cnumberTime + cStops + cyDay + 
+                       (1|RouteID_JB) + (1|PilotID), data = data)
+
+summary(lmer1000)
+r.squaredGLMM(lmeurban1000)
+
+# model for visualisation (without interactions to get the effect)
+lmer1000 <- lmer(log(Biomass+1) ~ 
+                   Agriculture_1000 +
+                   propOrgExtensive + 
+                   propExtensive +
+                   propSemiIntensive +
+                   propOrgSemiIntensive +
+                   propIntensive +
+                   propOrgIntensive +
+                   Time_band + 
+                   Time_band:cnumberTime + cStops + cyDay + 
+                   (1|RouteID_JB) + (1|PilotID), data = data)
+
+summary(lmer1000)
+r.squaredGLMM(lmer1000)
 
 # effect
-gls1.alleffects <- allEffects(lme1000)
+gls1.alleffects <- allEffects(lmer1000)
 effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
 
-eall.lm1 <- predictorEffects(lme1000)
+eall.lm1 <- predictorEffects(lmer1000)
+#effectdata <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
 plot(eall.lm1, lines=list(multiline=TRUE))
+#plot(predictorEffects(lmeurban1000, ~ urbGreenPropArea_1000 + byHegnMeterPerHa_1000 + Bykerne_1000 + Lav.bebyggelse_1000 + Høj.bebyggelse_1000 + Erhverv_1000 + cnumberTime, residuals = T), partial.residuals=list(smooth=TRUE, span=0.50, lty = "dashed"))
 
 ### ggplot effect plot ####
-temp <- effectdata$hegnMeterPerHa_1000
-temp$landuse <- "hegnMeterPerHa_1000"
-hedge <- temp %>% 
+temp <- effectdata$Agriculture_1000
+temp$landuse <- "Agriculture_1000"
+Agriculture_1000 <- temp %>% 
   dplyr::rename(
-    propcover = hegnMeterPerHa_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = Agriculture_1000
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Ekstensiv_organic_1000
-temp <- effectdata$Ekstensiv_organic_1000
-temp$landuse <- "Ekstensiv_organic_1000"
+temp <- effectdata$propOrgExtensive
+temp$landuse <- "propOrgExtensive"
 ex_org <- temp %>% 
   dplyr::rename(
-    propcover = Ekstensiv_organic_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propOrgExtensive
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Ekstensiv_1000
-temp <- effectdata$Ekstensiv_1000
-temp$landuse <- "Ekstensiv_1000"
+temp <- effectdata$propExtensive
+temp$landuse <- "propExtensive"
 ex <- temp %>% 
   dplyr::rename(
-    propcover = Ekstensiv_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propExtensive
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Semi.intensiv_1000
-temp <- effectdata$Semi.intensiv_1000
-temp$landuse <- "Semi.intensiv_1000"
+temp <- effectdata$propSemiIntensive
+temp$landuse <- "propSemiIntensive"
 semi <- temp %>% 
   dplyr::rename(
-    propcover = Semi.intensiv_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propSemiIntensive
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Semi.intensiv_organic_1000
-temp <- effectdata$Semi.intensiv_organic_1000
-temp$landuse <- "Semi.intensiv_organic_1000"
+temp <- effectdata$propOrgSemiIntensive
+temp$landuse <- "propOrgSemiIntensive"
 semi_org <- temp %>% 
   dplyr::rename(
-    propcover = Semi.intensiv_organic_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propOrgSemiIntensive
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Intensiv_1000
-temp <- effectdata$Intensiv_1000
-temp$landuse <- "Intensiv_1000"
+temp <- effectdata$propIntensive
+temp$landuse <- "propIntensive"
 int <- temp %>% 
   dplyr::rename(
-    propcover = Intensiv_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propIntensive
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 # Intensiv_organic_1000
-temp <- effectdata$Intensiv_organic_1000
-temp$landuse <- "Intensiv_organic_1000"
+temp <- effectdata$propOrgIntensive
+temp$landuse <- "propOrgIntensive"
 int_org <- temp %>% 
   dplyr::rename(
-    propcover = Intensiv_organic_1000
-  )%>% select(landuse, propcover, fit, se, lower, upper)
+    propcover = propOrgIntensive
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
 
 test <- rbind(ex, ex_org, semi, semi_org, int, int_org)
 
@@ -509,12 +598,12 @@ test <- rbind(ex, ex_org, semi, semi_org, int, int_org)
 effectplot_farmland <- test %>% mutate(
   landuse = fct_relevel(
     landuse,
-    "Ekstensiv_1000",
-    "Ekstensiv_organic_1000",
-    "Semi.intensiv_1000",
-    "Semi.intensiv_organic_1000",
-    "Intensiv_1000",
-    "Intensiv_organic_1000"
+    "propExtensive",
+    "propOrgExtensive",
+    "propSemiIntensive",
+    "propOrgSemiIntensive",
+    "propIntensive",
+    "propOrgIntensive"
   )
 )%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2) +
@@ -528,7 +617,7 @@ effectplot_farmland <- test %>% mutate(
       "Intensive",
       "Organic intensive"
     )
-  ) + theme(
+  ) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
@@ -546,21 +635,23 @@ effectplot_farmland <- test %>% mutate(
         alpha = 0.2,
         show.legend = F
       ) + labs(
-        x = "Farmland land use cover",
+        x = "Land use intensity cover within farmland cover",
         y = "log Predicted biomass (mg)",
         subtitle = "B",
         colour = "Land use type"
       ) + scale_fill_manual(values =  c("#9BA8BD", "#AABB97", "#6E81D1", "#89C254", "#315DC7", "#1D3D05")) + guides(colour = guide_legend(nrow = 1))
 
+effectplot_farmland
+
 effectplot_farmland_zoom <- test %>% dplyr::mutate(
   landuse = fct_relevel(
     landuse,
-    "Ekstensiv_1000",
-    "Ekstensiv_organic_1000",
-    "Semi.intensiv_1000",
-    "Semi.intensiv_organic_1000",
-    "Intensiv_1000",
-    "Intensiv_organic_1000"
+    "propExtensive",
+    "propOrgExtensive",
+    "propSemiIntensive",
+    "propOrgSemiIntensive",
+    "propIntensive",
+    "propOrgIntensive"
   )
 )%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2, show.legend = F) +
@@ -578,9 +669,11 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
+    axis.text.x = element_text(size = 8),
+    axis.text.y = element_text(size = 8),
     legend.position = "bottom"
-  ) + scale_x_continuous(
-    limits = c(0, 0.07),
+  ) + scale_y_continuous(limits = c(4.4, 5.25)) + scale_x_continuous(
+    limits = c(0, 0.10),
     labels = function(x)
       paste0(x * 100, "%")) + geom_ribbon(
         aes(
@@ -602,15 +695,16 @@ effectplot_farmland_zoom <- test %>% dplyr::mutate(
 effectplot_farmland
 effectplot_farmland_zoom
 
-effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xmin = 0.4, xmax = 0.8, 
-                       ymin = 5, ymax = 5.9)
+effectplot_farmland + annotation_custom(ggplotGrob(effectplot_farmland_zoom), xmin = -0.02, xmax = 0.4, ymin = 6, ymax = 9)
 
 ggsave("plots/zoom_farmland_landuse.png")
 
 # correlation plot 
-someInsects <- allInsects[,c(12,141,90:94,96:97)]
+mydata <- allInsects[,c("Biomass", "cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+someInsects <- mydata[,c(1:3, 19:22,25:26)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Extensive", "Extensive_organic", "Intensive", "Intensive_organic", "Unspecified", "Semi-intensive", "Semi-intensive_organic")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Extensive", "Ekstensive organic", "Intensive", "Intensive organic", "Semi-intensive", "Semi-intensive organic")
 
 p <- cor(someInsects, use="pairwise.complete.obs")
 
@@ -626,4 +720,111 @@ corrplot(p, method = "color", col = landuseCols,
          # Combine with significance
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
-         diag = FALSE, title = "Correlation of farmland land use variables", mar=c(0,0,1,0))
+         diag = FALSE, title = "", mar=c(0,0,1,0))
+
+### farmland analysis ###################################
+str(mydata)
+
+# we need more variables
+mydata <- allInsects[,c("Biomass", "cStops", "cyDay", "Time_band", "cnumberTime", "RouteID_JB", "PilotID", "maxLand_use", "maxareaProp", names(allInsects)[grepl("_1000",names(allInsects))])]
+names(mydata)
+mydata <- mydata[,c(1:9, 10, 26:29, 32:33)]
+names(mydata) <- gsub("_1000","",names(mydata))
+
+# merge the categories into groups based on varimax rotated PCA
+# first the large city - we don't use multistory buildings since they are correlated with hedges
+test_mydata <- mydata %>% mutate(FarmlandIntensive_gradient = Intensiv)
+
+# urban green - without hedge since it is highly correlated with multistory buildings
+test_mydata <- test_mydata %>% mutate(OrganicExtensive_gradient = Ekstensiv + Ekstensiv_organic + Intensiv_organic + Semi.intensiv + Semi.intensiv_organic)
+str(test_mydata)
+test_mydata <- test_mydata %>% drop_na(FarmlandIntensive_gradient)
+
+#test2_mydata <- as.data.table(test_mydata)[maxLand_use == "Urban_1000", urbangreen := urbangreen / 100000000000] # propcover of urban is skewed by one decimal so we will divide by 10000 square km
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Agriculture +
+                  FarmlandIntensive_gradient + 
+                  OrganicExtensive_gradient +
+                  Time_band + 
+                  Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=subset(test_mydata, maxLand_use = "Agriculture_1000"))
+summary(lme1000)
+
+library(MuMIn)
+r.squaredGLMM(lme1000)
+
+# effect
+gls1.alleffects <- allEffects(lme1000)
+effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
+
+eall.lm1 <- predictorEffects(lme1000)
+effectdata_test <- as.data.frame(eall.lm1, row.names=NULL, optional=TRUE)
+plot(eall.lm1, lines=list(multiline=TRUE))
+
+### ggplot effect plot ####
+temp <- effectdata$Agriculture
+temp$landuse <- "Agriculture"
+Agriculture <- temp %>% 
+  dplyr::rename(
+    propcover = Agriculture
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+temp <- effectdata$FarmlandIntensive_gradient
+temp$landuse <- "FarmlandIntensive_gradient"
+FarmlandIntensive_gradient <- temp %>% 
+  dplyr::rename(
+    propcover = FarmlandIntensive_gradient
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+temp <- effectdata$OrganicExtensive_gradient
+temp$landuse <- "OrganicExtensive_gradient"
+OrganicExtensive_gradient <- temp %>% 
+  dplyr::rename(
+    propcover = OrganicExtensive_gradient
+  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
+
+test <- rbind(Agriculture, FarmlandIntensive_gradient, OrganicExtensive_gradient)
+
+# Visualization
+effectplot_farmland <- test %>% mutate(
+  landuse = fct_relevel(
+    landuse,
+    "Agriculture",
+    "FarmlandIntensive_gradient",
+    "OrganicExtensive_gradient",
+  )
+)%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
+  geom_line(aes(color = landuse), size = 2) +
+  scale_color_manual(
+    values = c("#9BA8BD", "#6E81D1", "#89C254"),
+    labels = c(
+      "Farmland cover",
+      "Intensive cover",
+      "Organic/semi-intensive/extensive cover"
+    )
+  ) + theme_minimal_grid() + theme(
+    plot.subtitle = element_text(size = 20, face = "bold"),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.position = "bottom"
+  ) + scale_x_continuous(
+    limits = c(0, 1),
+    labels = function(x)
+      paste0(x * 100, "%")) + geom_ribbon(
+        aes(
+          ymin = fit-se,
+          ymax = fit+se,
+          group = landuse
+        ),
+        linetype = 2,
+        alpha = 0.2,
+        show.legend = F
+      ) + labs(
+        x = "Agricultural land use cover",
+        y = "log Predicted biomass (mg)",
+        subtitle = "B",
+        colour = "Land use type"
+      ) + scale_fill_manual(values =  c("#9BA8BD","#6E81D1", "#89C254")) + guides(colour = guide_legend(nrow = 1))
+
+save_plot("plots/DK_effect_landuse_farmland.png", effectplot_farmland, base_width = 10, base_height = 6)

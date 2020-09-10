@@ -99,7 +99,7 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
 
 fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
-save_plot("plots/Landcover_percent.png", fig3, base_width = 4, base_height = 12)
+save_plot("plots/DK_Landcover_percent.tiff", fig3, base_width = 4, base_height = 12, dpi = 1200)
 #ggsave("plots/Landcover_percent.png",width=12,height=4)
 
 # alternative to figure 3
@@ -206,7 +206,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data = allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
 
@@ -243,9 +243,10 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Wetland_50 +
                   Forest_250 +
                   Time_band + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data = allInsects)
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
+r.squaredGLMM(lme1000)
 
 ### Figure 4: effect plots ##########################
 gls1.alleffects <- allEffects(lme1000)
@@ -332,7 +333,7 @@ effectplot <- test %>% mutate(
   ) + scale_x_continuous(
     limits = c(0, 1),
     labels = function(x)
-      paste0(x * 100, "%")) + geom_ribbon(
+      paste0(x * 100, "%")) + scale_y_continuous(limits = c(1.5, 7)) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,

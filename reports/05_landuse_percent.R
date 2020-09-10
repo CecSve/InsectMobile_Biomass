@@ -99,7 +99,7 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
 
 fig3 <- plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
-save_plot("plots/Landcover_percent.png", fig3, base_width = 4, base_height = 12)
+save_plot("plots/DK_Landcover_percent.tiff", fig3, base_width = 4, base_height = 12, dpi = 1200)
 #ggsave("plots/Landcover_percent.png",width=12,height=4)
 
 # alternative to figure 3

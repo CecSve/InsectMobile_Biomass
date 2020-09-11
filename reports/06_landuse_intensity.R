@@ -91,12 +91,12 @@ r.squaredGLMM(lme1000)
 ### IN MS: DK urban proportional land use #######################################
 # calculate the proportional cover of the land use intensity variables within the most land cover routes
 data <- subset(allInsects, maxLand_use = "Urban_1000")
-data$propHedge <- data$byHegnMeterPerHa_1000/data$Urban_1000
-data$propurbGreen <- data$urbGreenPropArea_1000/data$Urban_1000
-data$propinnerCity <- data$Bykerne_1000/data$Urban_1000
-data$propresidential <- data$Lav.bebyggelse_1000/data$Urban_1000
-data$propmultistory <- data$`Høj.bebyggelse_1000`/data$Urban_1000
-data$propcommercial <- data$Erhverv_1000/data$Urban_1000
+data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
+data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
+data$propinnerCity <- (data$Bykerne_1000/data$Urban_1000)*100
+data$propresidential <- (data$Lav.bebyggelse_1000/data$Urban_1000)*100
+data$propmultistory <- (data$`Høj.bebyggelse_1000`/data$Urban_1000)*100
+data$propcommercial <- (data$Erhverv_1000/data$Urban_1000)*100
 tail(data)
 
 data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
@@ -124,10 +124,10 @@ corrplot(p, method = "color", col = landuseCols,
 
 # model
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                  Urban_1000*propHedge + 
-                  Urban_1000*propurbGreen +
+                  #Urban_1000*propHedge + 
+                  #Urban_1000*propurbGreen +
                   #Urban_1000*propinnerCity +
-                  Urban_1000*propresidential +
+                  #Urban_1000*propresidential +
                   #Urban_1000*propmultistory +
                   Urban_1000*propcommercial +
                   Time_band + 
@@ -135,7 +135,9 @@ lmeurban1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID_JB) + (1|PilotID), data = data)
 
 summary(lmeurban1000)
-r.squaredGLMM(lmeurban1000)
+#r.squaredGLMM(lmeurban1000)
+
+vif(lmeurban1000)
 
 # model for visualisation (without interactions to get the effect)
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
@@ -178,7 +180,7 @@ hedge <- temp %>%
   dplyr::rename(
     propcover = propHedge
   )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
-hedge$propcover <- hedge$propcover /1000
+hedge$propcover <- hedge$propcover /10
 
 # propresidential
 temp <- effectdata$propresidential
@@ -219,16 +221,16 @@ effectplot_urban <- test %>% dplyr::mutate(
 )%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
   geom_line(aes(color = landuse), size = 2) +
   scale_color_manual(
-    values = c("#F216FA", "#65117A", "#DF6EFB", "#CE22FA")
+    values = c("#FA0081", "#FB9BD6", "#7A275A", "#C74093")
   ) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
     legend.text = element_text(size = 8),
     legend.position = "bottom"
   ) + scale_x_continuous(
-    limits = c(0, 1),
+    limits = c(0, 100),
     labels = function(x)
-      paste0(x*100, "%")) + geom_ribbon(
+      paste0(x, "%")) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,
@@ -242,7 +244,7 @@ effectplot_urban <- test %>% dplyr::mutate(
         y = "log Predicted biomass (mg)",
         subtitle = "A",
         colour = "Land use type"
-      ) + scale_fill_manual(values =  c("#F216FA", "#65117A", "#DF6EFB", "#CE22FA")) + guides(colour = guide_legend(nrow = 1))
+      ) + scale_fill_manual(values =  c("#FA0081", "#FB9BD6", "#7A275A", "#C74093")) + guides(colour = guide_legend(nrow = 1))
 
 save_plot("plots/DK_estimated_biomass_urbanlanduse.png", effectplot_urban, base_width = 8, base_height = 6)
 
@@ -464,12 +466,12 @@ r.squaredGLMM(lme1000)
 ### IN MS: DK agriculture proportional cover ######################################
 # calculate the proportional cover of the land use intensity variables within the most land cover routes
 data <- subset(allInsects, maxLand_use = "Agriculture_1000")
-data$propOrgExtensive <- data$Ekstensiv_organic_1000/data$Agriculture_1000
-data$propExtensive <- data$Ekstensiv_1000/data$Agriculture_1000
-data$propSemiIntensive <- data$Semi.intensiv_1000/data$Agriculture_1000
-data$propOrgSemiIntensive <- data$Semi.intensiv_organic_1000/data$Agriculture_1000
-data$propIntensive <- data$`Intensiv_1000`/data$Agriculture_1000
-data$propOrgIntensive <- data$Intensiv_organic_1000/data$Agriculture_1000
+data$propOrgExtensive <- (data$Ekstensiv_organic_1000/data$Agriculture_1000)*100
+data$propExtensive <- (data$Ekstensiv_1000/data$Agriculture_1000)*100
+data$propSemiIntensive <- (data$Semi.intensiv_1000/data$Agriculture_1000)*100
+data$propOrgSemiIntensive <- (data$Semi.intensiv_organic_1000/data$Agriculture_1000)*100
+data$propIntensive <- (data$`Intensiv_1000`/data$Agriculture_1000)*100
+data$propOrgIntensive <- (data$Intensiv_organic_1000/data$Agriculture_1000)*100
 tail(data)
 
 data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
@@ -498,18 +500,20 @@ corrplot(p, method = "color", col = landuseCols,
 
 # model
 lmer1000 <- lmer(log(Biomass+1) ~ 
-                       Agriculture_1000*propOrgExtensive + 
-                   Agriculture_1000*propExtensive +
-                       Agriculture_1000*propSemiIntensive +
-                   Agriculture_1000*propOrgSemiIntensive +
-                   Agriculture_1000*propIntensive +
+                       #Agriculture_1000*propOrgExtensive + 
+                   #Agriculture_1000*propExtensive +
+                       #Agriculture_1000*propSemiIntensive +
+                   #Agriculture_1000*propOrgSemiIntensive +
+                   #Agriculture_1000*propIntensive +
                    Agriculture_1000*propOrgIntensive +
                        Time_band + 
                        Time_band:cnumberTime + cStops + cyDay + 
                        (1|RouteID_JB) + (1|PilotID), data = data)
 
 summary(lmer1000)
-r.squaredGLMM(lmeurban1000)
+#r.squaredGLMM(lmeurban1000)
+
+vif(lmer1000)
 
 # model for visualisation (without interactions to get the effect)
 lmer1000 <- lmer(log(Biomass+1) ~ 

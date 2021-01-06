@@ -20,7 +20,8 @@ landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgre
 
 ### DK urban##############################################
 ### correlation plot urban ###################
-someInsects <- allInsects[,c(12,22, 48, 62, 70, 74:77)]
+data <- allInsects %>% filter(maxLand_use == "Urban_1000")
+someInsects <- data[,c(12,22, 48, 62, 70, 74:77)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
 
@@ -41,21 +42,14 @@ corrplot(p, method = "color", col = landuseCols,
          diag = FALSE, mar=c(0,0,1,0))
 
 ### PCA urban ##################
-mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
-names(mydata)
-mydata <- mydata[,c(6, 11,13:15,17)]
-names(mydata) <- gsub("_1000","",names(mydata))
-mydata <- plyr::rename(mydata, c("byHegnMeterPerHa" = "Hedge"))
-mydata <- plyr::rename(mydata, c("urbGreenPropArea" = "Urban green cover"))
-mydata <- plyr::rename(mydata, c("Bykerne" = "Inner city cover"))
-mydata <- plyr::rename(mydata, c("Erhverv" = "Commercial cover"))
-mydata <- plyr::rename(mydata, c("Lav.bebyggelse" = "Residential cover"))
+names(someInsects)
+mydata <- someInsects[,c(3:9)]
 
 fit <- princomp(mydata, cor=TRUE)
 
 #with ggplot
 autoplot(fit)
-dk_autoplot <- autoplot(fit, data = allInsects, 
+dk_autoplot <- autoplot(fit, data = mydata, 
                         loadings = TRUE, 
                         loadings.colour = 'black',
                         loadings.label = TRUE, 
@@ -63,7 +57,7 @@ dk_autoplot <- autoplot(fit, data = allInsects,
   scale_colour_manual(values = landuseCols[1:6])+
   theme_bw() + labs(colour = "Land cover")
 
-save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_width = 12)
+cowplot::save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 4, base_width = 6)
 
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
@@ -71,26 +65,27 @@ pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRU
 biplot(pca_rotated, main = "")
 print(pca_rotated)
 
-ggsave("plots/pca_with_rotation_1000_DK.png")
+ggsave("plots/pca_with_rotation_1000_DK.png", width = 6, height = 4)
 
 #add PCA axes scores to the dataset
-allInsects$Urbangreen_gradient <- pca_rotated$scores[,1]
-allInsects$Largecity_gradient <- pca_rotated$scores[,2]
+data$Urbangreen_gradient <- pca_rotated$scores[,1]
+data$Largecity_gradient <- pca_rotated$scores[,2]
 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbangreen_gradient + 
-                  Urban_1000 +
+                  #Urban_1000 +
                   Largecity_gradient +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, maxLand_use = "Urban_1000"))
+                  (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-
+tab_model(lme1000, pred.labels = c("Intercept", "Urban green gradient", "Large city gradient", "Time band: evening vs midday", "Time within midday (change in response per minute within time band)
+", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"))
 r.squaredGLMM(lme1000)
 
 ### IN MS: DK urban proportional land use #######################################
 # calculate the proportional cover of the land use intensity variables within the most land cover routes
-data <- subset(allInsects, maxLand_use = "Urban_1000")
+data <- allInsects %>% filter(maxLand_use == "Urban_1000")
 data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
 data$propinnerCity <- (data$Bykerne_1000/data$Urban_1000)*100
@@ -102,7 +97,7 @@ tail(data)
 data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
 
 ### correlation plot proportional urban ###################
-someInsects <- data[,c(12,142, 48, 145:150)]
+someInsects <- data[,c(12,142, 48, 148:153)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Stops", "Urban", "propHedge", "propUrban green", "propInner city", "propResidential", "propMultistory", "propCommercial")
 
@@ -122,40 +117,131 @@ corrplot(p, method = "color", col = landuseCols,
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, mar=c(0,0,1,0))
 
-# model
+#model selection
+fm1 <- lmer(log(Biomass+1) ~ 
+              Urban_1000*propHedge + 
+              Urban_1000*propurbGreen +
+              Urban_1000*propinnerCity +
+              Urban_1000*propresidential +
+              Urban_1000*propmultistory +
+              Urban_1000*propcommercial +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+fm2 <- lmer(log(Biomass+1) ~ 
+              #Urban_1000*propHedge + 
+              Urban_1000*propurbGreen +
+              Urban_1000*propinnerCity +
+              Urban_1000*propresidential +
+              Urban_1000*propmultistory +
+              Urban_1000*propcommercial +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+fm3 <- lmer(log(Biomass+1) ~ 
+              #Urban_1000*propHedge + 
+              #Urban_1000*propurbGreen +
+              Urban_1000*propinnerCity +
+              Urban_1000*propresidential +
+              Urban_1000*propmultistory +
+              Urban_1000*propcommercial +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+fm4 <- lmer(log(Biomass+1) ~ 
+              #Urban_1000*propHedge + 
+              #Urban_1000*propurbGreen +
+              #Urban_1000*propinnerCity +
+              Urban_1000*propresidential +
+              Urban_1000*propmultistory +
+              Urban_1000*propcommercial +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+fm5 <- lmer(log(Biomass+1) ~ 
+              #Urban_1000*propHedge + 
+              #Urban_1000*propurbGreen +
+              #Urban_1000*propinnerCity +
+              #Urban_1000*propresidential +
+              Urban_1000*propmultistory +
+              Urban_1000*propcommercial +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+
+fm6 <- lmer(log(Biomass+1) ~ 
+              #Urban_1000*propHedge + 
+              #Urban_1000*propurbGreen +
+              #Urban_1000*propinnerCity +
+              #Urban_1000*propresidential +
+              #Urban_1000*propmultistory +
+              Urban_1000*propcommercial +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+
+
+anova(fm1, fm2, fm3, fm4, fm5, fm6) # fm1 (the most complex model) has lowest AIC and P
+
+# urban model
 lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                  #Urban_1000*propHedge + 
-                  #Urban_1000*propurbGreen +
-                  #Urban_1000*propinnerCity +
-                  #Urban_1000*propresidential +
-                  #Urban_1000*propmultistory +
-                  Urban_1000*propcommercial +
-                  Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data = data)
-
-summary(lmeurban1000)
-#r.squaredGLMM(lmeurban1000)
-
-vif(lmeurban1000)
-
-# model for visualisation (without interactions to get the effect)
-lmeurban1000 <- lmer(log(Biomass+1) ~ 
-                       Urban_1000 +
-                       propHedge + 
-                       propurbGreen +
+                       Urban_1000*propHedge + 
+                       #Urban_1000*propurbGreen +
                        #Urban_1000*propinnerCity +
-                       propresidential +
+                       #Urban_1000*propresidential +
                        #Urban_1000*propmultistory +
-                       propcommercial +
+                       #Urban_1000*propcommercial +
                        Time_band + 
                        Time_band:cnumberTime + cStops + cyDay + 
                        (1|RouteID_JB) + (1|PilotID), data = data)
 
 summary(lmeurban1000)
-r.squaredGLMM(lmeurban1000)
 
-# effect
+tab_model(
+  lmeurban1000,
+  pred.labels = c(
+    "Intercept",
+    "Urban cover (1000 m)",
+    "urban modifier within urban cover",
+    "Urban green space within urban cover",
+    "Inner city within urban areas (only large cities)",
+    "Residential areas within urban cover",
+    "Multistory buildings within urban cover (only large cities)",
+    "Time band: evening vs midday",
+    "Potential stops",
+    "Day of year",
+    "Urban:hedge",
+    "Urban:urban green space",
+    "Urban:inner city",
+    "Urban:residential",
+    "Urban:multistory buildings",
+    "Time within midday (change in response per minute within time band)",
+    "Time within evening (change in response per minute within time band)"
+  ),
+  digits = 3
+)
+
+r.squaredGLMM(lmeurban1000)
+vif(lmeurban1000)
+
+# effect - each variable on its own for visualisation
+lmeurban1000 <- lmer(log(Biomass+1) ~ 
+                       Urban_1000 +
+                       #propHedge + 
+                       #propurbGreen +
+                       #propinnerCity +
+                       #propresidential +
+                       #propmultistory +
+                       #propcommercial +
+                       Time_band + 
+                       Time_band:cnumberTime + 
+                       cStops + cyDay + 
+                       (1|RouteID_JB) + 
+                       (1|PilotID), data = data)
+
+summary(lmeurban1000)
+AICc(lmeurban1000)
+
 gls1.alleffects <- allEffects(lmeurban1000)
 effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
 

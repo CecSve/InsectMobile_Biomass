@@ -199,6 +199,11 @@ save_plot("plots/Landcover_biomass_proportions.png", fig3_2, base_width = 12, ba
 ### Linear Mixed Effects Model: Land covers (Table 1) #################
 # used cStops instead of cTL for DK data
 
+### add average speed ###########
+allInsects$avg_speed <- (allInsects$Distance_driven/1000)/(allInsects$Time_driven/60) # 1000 to get km and 60 to get hours instead of minutes
+table(allInsects$avg_speed)
+mean(allInsects$avg_speed)
+
 #full and final model
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
@@ -208,11 +213,13 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Forest_250 +
                   Time_band + 
                   Time_driven +
+                  avg_speed +
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
-tab_model(lme1000, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Sampling duration", "Time band: midday vs evening", "Time within midday (change in response per minute within time band)
+AICc(lme1000)
+tab_model(lme1000, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday (change in response per minute within time band)
 ", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"))
 r.squaredGLMM(lme1000)
 #           R2m       R2c
@@ -223,6 +230,17 @@ r.squaredGLMM(lme1000)
 
 #check variance inflation factor
 vif(lme1000)
+
+### multcomp landcovers: simple model ##########################
+# pairwise comparison to farmland
+pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
+summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass
+confint(pair.ht)
+
+# pairwise comparison to urban
+pair.ht <- glht(lme1000, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_50 - Urban_1000 = 0", "Open.uncultivated.land_1000 - Urban_1000 = 0"))
+summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
+confint(pair.ht)
 
 ### AIC check ##############################################
 options(na.action = "na.fail")
@@ -236,7 +254,7 @@ plot(dd, labAsExpr = TRUE)
 # Model average models with delta AICc < 4
 #model.avg(dd, subset = delta < 2)
 
-# best model with AIC 901.4
+# best model with lowest AIC 
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
                   Urban_1000 +
@@ -247,10 +265,11 @@ lme1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(lme1000)
+AICc(lme1000)
 tab_model(lme1000, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: midday vs evening", "Day of year"))
 r.squaredGLMM(lme1000)
 
-### multcomp landcovers ##########################
+### multcomp landcovers: best fit model ##########################
 # pairwise comparison to farmland
 pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
 summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass

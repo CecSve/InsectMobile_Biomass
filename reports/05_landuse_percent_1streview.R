@@ -1132,16 +1132,24 @@ confint(pair.ht)
 library(complmrob)
 
 #The variables on the right-hand-side of the 
-#formula are transformed with the isometric log-ratio transformation 
+#formula are transformed with the isometric log-ratio transformation
 #(isomLR) and a robust linear regression model is fit to those transformed variables.
+
 #need to add small values to zeros in the covariate data
-complm1 <- complmrob(log10(Biomass+1) ~ Agriculture_1000 + Urban_1000 + Open.uncultivated_1000 + Wetland_1000 + Forest_250, data = allInsects)
+myvars <-allInsects[,c("Agriculture_1000","Urban_1000","Open.uncultivated_1000","Wetland_1000","Forest_250")]
+myvars<- data.frame(apply(myvars,c(1,2),function(x)ifelse(x==0,0.01,x)))
+names(myvars) <- c("cAgriculture_1000","cUrban_1000","cOpen.uncultivated_1000","cWetland_1000","cForest_250")
+
+allInsects <- cbind(allInsects,myvars)
+
+complm1 <- complmrob(log10(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated_1000 + cWetland_1000 + cForest_250, data = allInsects)
 summary(complm1)
 
-tmpPred <- isomLR(as.matrix(allInsects[,c("Agriculture_1000","Urban_1000", "Open.uncultivated_1000","Wetland_1000","Forest_250")]),1)
+tmpPred <- data.frame(isomLR(as.matrix(allInsects[,c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_1000","cForest_250")])))
+tmpPred$Biomass <- allInsects$Biomass
 
-crimes2 <- data.frame(lifeExp=crimes$lifeExp,tmpPred)
-mUSArr <- robustbase::lmrob(lifeExp ~ Murder + Rape, data = crimes2)
+lmrob1 <- robustbase::lmrob(log(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated_1000 + cWetland_1000, data = tmpPred)
+summary(lmrob1)
 
 ### AIC check ##############################################
 

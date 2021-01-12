@@ -1110,6 +1110,43 @@ summary(lme1000)
 vif(lme1000)
 r.squaredGLMM(lme1000)
 
+### multicomp ##############################################
+
+# pairwise comparison to farmland
+pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_1000 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated_1000 - Agriculture_1000 = 0"))
+summary(pair.ht) 
+confint(pair.ht)
+#different between urban and agriculture
+
+# pairwise comparison to urban
+pair.ht <- glht(lme1000, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_1000 - Urban_1000 = 0", "Open.uncultivated_1000 - Urban_1000 = 0"))
+summary(pair.ht) 
+confint(pair.ht)
+
+#difference between forest and urban 
+#grassland and urban
+#not wetland vs urban
+
+### ilr trans #############################################
+
+library(complmrob)
+
+#The variables on the right-hand-side of the 
+#formula are transformed with the isometric log-ratio transformation 
+#(isomLR) and a robust linear regression model is fit to those transformed variables.
+
+crimes <- data.frame(lifeExp = state.x77[, "Life Exp"],
+                     USArrests[ , c("Murder", "Assault", "Rape")])
+head(crimes)
+
+mUSArr <- complmrob(lifeExp ~ ., data = crimes)
+summary(mUSArr)
+
+
+tmpPred <- isomLR(as.matrix(X),3)
+crimes2 <- data.frame(lifeExp=crimes$lifeExp,tmpPred)
+mUSArr <- robustbase::lmrob(lifeExp ~ Murder + Rape, data = crimes2)
+
 ### AIC check ##############################################
 
 library(MuMIn)

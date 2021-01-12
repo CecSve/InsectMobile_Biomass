@@ -1134,16 +1134,12 @@ library(complmrob)
 #The variables on the right-hand-side of the 
 #formula are transformed with the isometric log-ratio transformation 
 #(isomLR) and a robust linear regression model is fit to those transformed variables.
+#need to add small values to zeros in the covariate data
+complm1 <- complmrob(log10(Biomass+1) ~ Agriculture_1000 + Urban_1000 + Open.uncultivated_1000 + Wetland_1000 + Forest_250, data = allInsects)
+summary(complm1)
 
-crimes <- data.frame(lifeExp = state.x77[, "Life Exp"],
-                     USArrests[ , c("Murder", "Assault", "Rape")])
-head(crimes)
+tmpPred <- isomLR(as.matrix(allInsects[,c("Agriculture_1000","Urban_1000", "Open.uncultivated_1000","Wetland_1000","Forest_250")]),1)
 
-mUSArr <- complmrob(lifeExp ~ ., data = crimes)
-summary(mUSArr)
-
-
-tmpPred <- isomLR(as.matrix(X),3)
 crimes2 <- data.frame(lifeExp=crimes$lifeExp,tmpPred)
 mUSArr <- robustbase::lmrob(lifeExp ~ Murder + Rape, data = crimes2)
 

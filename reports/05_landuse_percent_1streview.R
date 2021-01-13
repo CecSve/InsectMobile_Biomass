@@ -1153,27 +1153,47 @@ confint(pair.ht)
 
 ### ilr trans #############################################
 
+#Approach 1 using the complmrob package
 library(complmrob)
-
 #The variables on the right-hand-side of the 
-#formula are transformed with the isometric log-ratio transformation
-#(isomLR) and a robust linear regression model is fit to those transformed variables.
+#formula are transformed with the isometric log-ratio transformation (isomLR) and a robust linear regression model is fit to those transformed variables.
 
-#need to add small values to zeros in the covariate data
+#The log-ratio methodology studies this relative relations using the quotient between parts, to be more precise, using the logarithm between ratios of parts.
+
+#need to add small values to zeros in the covariate data to get the function to work
 myvars <-allInsects[,c("Agriculture_1000","Urban_1000","Open.uncultivated_1000","Wetland_1000","Forest_250")]
-myvars<- data.frame(apply(myvars,c(1,2),function(x)ifelse(x==0,0.01,x)))
+myvars<- data.frame(apply(myvars,c(1,2),
+                          function(x)ifelse(x==0,0.01,x)))
 names(myvars) <- c("cAgriculture_1000","cUrban_1000","cOpen.uncultivated_1000","cWetland_1000","cForest_250")
-
 allInsects <- cbind(allInsects,myvars)
 
+#original function from complmrob package (no random effects)
 complm1 <- complmrob(log10(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated_1000 + cWetland_1000 + cForest_250, data = allInsects)
 summary(complm1)
 
-tmpPred <- data.frame(isomLR(as.matrix(allInsects[,c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_1000","cForest_250")])))
-tmpPred$Biomass <- allInsects$Biomass
+#fit model as random effects model - setting urban as first composition - other land uses relative to this
+landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_1000","cForest_250")
+tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),2))
+tmpNames <- paste(names(tmpPred),collapse="+")
+tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops","cyDay","RouteID","PilotID")]
+tmp <- cbind(tmpPred,tmpCovariates)
 
-lmrob1 <- robustbase::lmrob(log(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated_1000 + cWetland_1000, data = tmpPred)
-summary(lmrob1)
+lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID) + (1|PilotID) +",tmpNames)), data=allInsects)
+summary(lme1000)
+vif(lme1000)
+
+#fit model as random effects model - setting agriculture as first composition - other land uses relative to this
+tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),1))
+tmpNames <- paste(names(tmpPred),collapse="+")
+tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops","cyDay","RouteID","PilotID")]
+tmp <- cbind(tmpPred,tmpCovariates)
+
+lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + Time_band:cnumberTime + cStops + cyDay + 
+                  (1|RouteID) + (1|PilotID) +",tmpNames)), data=allInsects)
+summary(lme1000)
+vif(lme1000)
+#loop though each land use setting it as the first component
 
 ### AIC check ##############################################
 

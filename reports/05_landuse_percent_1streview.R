@@ -1115,13 +1115,37 @@ r.squaredGLMM(lme1000)
 # pairwise comparison to farmland
 pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_1000 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated_1000 - Agriculture_1000 = 0"))
 summary(pair.ht) 
+# Linear Hypotheses:
+#                                                 Estimate Std. Error z value Pr(>|z|)   
+# Forest_250 - Agriculture_1000 == 0             -0.009224   0.005802  -1.590  0.37217   
+# Wetland_1000 - Agriculture_1000 == 0           -0.018571   0.040108  -0.463  0.98300   
+# Urban_1000 - Agriculture_1000 == 0             -0.051955   0.016813  -3.090  0.00793 **
+# Open.uncultivated_1000 - Agriculture_1000 == 0 -0.005800   0.010713  -0.541  0.96987   
+
 confint(pair.ht)
 #different between urban and agriculture
+# Linear Hypotheses:
+#                                                   Estimate  lwr       upr      
+# Forest_250 - Agriculture_1000 == 0             -0.009224 -0.023657  0.005210
+# Wetland_1000 - Agriculture_1000 == 0           -0.018571 -0.118347  0.081205
+# Urban_1000 - Agriculture_1000 == 0             -0.051955 -0.093779 -0.010131
+# Open.uncultivated_1000 - Agriculture_1000 == 0 -0.005800 -0.032450  0.020850
 
 # pairwise comparison to urban
 pair.ht <- glht(lme1000, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_1000 - Urban_1000 = 0", "Open.uncultivated_1000 - Urban_1000 = 0"))
 summary(pair.ht) 
+# Linear Hypotheses:
+#                                           Estimate Std. Error z value Pr(>|z|)  
+# Forest_250 - Urban_1000 == 0              0.04273    0.01642   2.602   0.0242 *
+# Wetland_1000 - Urban_1000 == 0            0.03338    0.04425   0.754   0.7706  
+# Open.uncultivated_1000 - Urban_1000 == 0  0.04616    0.01801   2.563   0.0272 *
+  
 confint(pair.ht)
+# Linear Hypotheses:
+#                                           Estimate  lwr       upr      
+# Forest_250 - Urban_1000 == 0              0.042731  0.004501  0.080961
+# Wetland_1000 - Urban_1000 == 0            0.033384 -0.069615  0.136383
+# Open.uncultivated_1000 - Urban_1000 == 0  0.046155  0.004242  0.088068
 
 #difference between forest and urban 
 #grassland and urban
@@ -1293,7 +1317,6 @@ r.squaredGLMM(lme1000)
 #Time_bandmidday:cnumberTime  -4.606e-05  1.805e-03  8.419e+01  -0.026  0.97970    
 #Time_bandevening:cnumberTime  5.106e-03  2.062e-03  8.362e+01   2.476  0.01531 *
   
-
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Urbanization_gradient * Time_band +
                   Forest_gradient * Time_band +

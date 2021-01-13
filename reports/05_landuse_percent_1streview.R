@@ -1195,6 +1195,16 @@ summary(lme1000)
 vif(lme1000)
 #loop though each land use setting it as the first component
 
+#approach 2 robCompositions 
+library(robCompositions)
+y <- log(allInsects$Biomass+1)
+preds <- cbind(allInsects[,landUses])
+lmCoDaX(y, preds, method="classical")
+lmCoDaX(y, preds, method="robust")
+
+
+#approach 3 compositions
+
 ### AIC check ##############################################
 
 library(MuMIn)

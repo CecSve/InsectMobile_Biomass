@@ -1202,9 +1202,6 @@ preds <- cbind(allInsects[,landUses])
 lmCoDaX(y, preds, method="classical")
 lmCoDaX(y, preds, method="robust")
 
-
-#approach 3 compositions
-
 ### AIC check ##############################################
 
 library(MuMIn)

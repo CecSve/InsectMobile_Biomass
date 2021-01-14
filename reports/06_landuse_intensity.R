@@ -14,13 +14,16 @@ library(effects)
 library(corrplot)
 library(MuMIn)
 
-#### Set colour scheme ################################################################
+#### Set colour scheme ##############################################################
 
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
-
 ### DK urban##############################################
 ### correlation plot urban ###################
+
+#which subset?
 data <- allInsects %>% filter(maxLand_use == "Urban_1000")
+data <- allInsects %>% filter(Urban_1000 > 0.05)
+  
 someInsects <- data[,c(12,22, 48, 62, 70, 74:77)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedge", "Urban green", "Inner city", "Commercial", "Multistory", "Residential")
@@ -46,6 +49,7 @@ names(someInsects)
 mydata <- someInsects[,c(3:9)]
 
 fit <- princomp(mydata, cor=TRUE)
+biplot(fit)
 
 #with ggplot
 autoplot(fit)
@@ -85,8 +89,13 @@ r.squaredGLMM(lme1000)
 
 ### IN MS: DK urban proportional land use #######################################
 # calculate the proportional cover of the land use intensity variables within the most land cover routes
-data <- allInsects %>% filter(maxLand_use == "Urban_1000")
-data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
+
+#choose subset
+data <- allInsects %>% filter(maxLand_use == "Urban_1000")#34 rows
+data <- allInsects %>% filter(Urban_1000 > 0.05)#223 rows
+
+#make data proportional
+data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)*100
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
 data$propinnerCity <- (data$Bykerne_1000/data$Urban_1000)*100
 data$propresidential <- (data$Lav.bebyggelse_1000/data$Urban_1000)*100
@@ -96,8 +105,10 @@ tail(data)
 
 data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
 
+
 ### correlation plot proportional urban ###################
-someInsects <- data[,c(12,142, 48, 148:153)]
+someInsects <- data[,c("Biomass", "cStops", "Urban_1000", "propHedge", "propurbGreen", "propinnerCity", "propresidential", "propmultistory", "propcommercial")]
+
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Stops", "Urban", "propHedge", "propUrban green", "propInner city", "propResidential", "propMultistory", "propCommercial")
 
@@ -117,7 +128,51 @@ corrplot(p, method = "color", col = landuseCols,
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, mar=c(0,0,1,0))
 
-#model selection
+#pca
+fit <- princomp(someInsects[,4:9], cor=TRUE)
+biplot(fit)
+pca_rotated <- psych::principal(someInsects[,4:9], 
+                                rotate="varimax", nfactors=2, scores=TRUE)
+biplot(pca_rotated, main = "")
+#two axes -one is residential to central
+#other is amount of green
+
+#model selection with these pca axes
+data$Central_gradient <- pca_rotated$scores[,1]
+data$Greening_gradient <- pca_rotated$scores[,2]
+
+### plotting #############################################
+
+#plot gradient (split into factor just for plotting purposes)
+
+#central gradient
+data$Central_gradient_factor <- cut(data$Central_gradient,5)
+ggplot(data,aes(x=Urban_1000,y=Biomass,
+                group=Central_gradient_factor))+
+  geom_smooth(method=lm,aes(colour=Central_gradient_factor))+
+  scale_colour_viridis_d()
+
+#greening gradient
+data$Greening_gradient_factor <- cut(data$Greening_gradient,5)
+ggplot(data,aes(x=Urban_1000,y=Biomass,
+                group=Greening_gradient_factor))+
+  geom_smooth(method=lm,aes(colour=Greening_gradient_factor))+
+  scale_colour_viridis_d()
+
+### models ##############################################
+
+#with pca axes
+fm1 <- lmer(log(Biomass+1) ~ +
+              Urban_1000 +
+              Central_gradient +
+              Greening_gradient +
+              Time_band + 
+              Time_band:cnumberTime + cStops + cyDay + 
+              (1|RouteID_JB) + (1|PilotID), data = data)
+summary(fm1)
+car::vif(fm1)
+
+#model selection with main variables
 fm1 <- lmer(log(Biomass+1) ~ 
               Urban_1000*propHedge + 
               Urban_1000*propurbGreen +

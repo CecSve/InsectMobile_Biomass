@@ -1158,12 +1158,12 @@ library(complmrob)
 #The variables on the right-hand-side of the 
 #formula are transformed with the isometric log-ratio transformation (isomLR) and a robust linear regression model is fit to those transformed variables.
 
-#The log-ratio methodology studies this relative relations using the quotient between parts, to be more precise, using the logarithm between ratios of parts.
+#The log-ratio methodology studies this relative relations using the quotient between parts, to be more precise, using the logarithm between ratios of parts
 
 #need to add small values to zeros in the covariate data to get the function to work
 myvars <-allInsects[,c("Agriculture_1000","Urban_1000","Open.uncultivated_1000","Wetland_1000","Forest_250")]
 myvars<- data.frame(apply(myvars,c(1,2),
-                          function(x)ifelse(x==0,0.01,x)))
+                          function(x)ifelse(x==0,0.001,x)))
 names(myvars) <- c("cAgriculture_1000","cUrban_1000","cOpen.uncultivated_1000","cWetland_1000","cForest_250")
 allInsects <- cbind(allInsects,myvars)
 
@@ -1181,26 +1181,38 @@ tmp <- cbind(tmpPred,tmpCovariates)
 lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID) + (1|PilotID) +",tmpNames)), data=allInsects)
 summary(lme1000)
-vif(lme1000)
+car::vif(lme1000)
 
-#fit model as random effects model - setting agriculture as first composition - other land uses relative to this
-tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),1))
-tmpNames <- paste(names(tmpPred),collapse="+")
-tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops","cyDay","RouteID","PilotID")]
-tmp <- cbind(tmpPred,tmpCovariates)
+#write function to do the same for all land uses
+landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_1000","cForest_250")
 
-lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID) + (1|PilotID) +",tmpNames)), data=allInsects)
-summary(lme1000)
-vif(lme1000)
-#loop though each land use setting it as the first component
+fitISOLRmodel <- function(component=1){
+  #get isoLR for specified component
+  tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),
+                             component))
+  #paste into a model formula
+  tmpNames <- paste(names(tmpPred),collapse="+")
+  #get other variables that we will need
+  tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops",
+  "cyDay","RouteID","PilotID")]
+  tmp <- cbind(tmpPred,tmpCovariates)
+  #fit model
+  require(lme4)
+  require(lmerTest)
+  lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + 
+                                   Time_band:cnumberTime + cStops + cyDay +
+                                   (1|RouteID) + (1|PilotID) +",
+                                 tmpNames)), data=allInsects)
+  #extract data for land use variable that we are interesed in
+  temp <- data.frame(summary(lme1000)$coefficients[row.names(summary(lme1000)$coefficients)==landUses[component],])
+  temp$LandUse <- landUses[component]
+  return(temp)
 
-#approach 2 robCompositions 
-library(robCompositions)
-y <- log(allInsects$Biomass+1)
-preds <- cbind(allInsects[,landUses])
-lmCoDaX(y, preds, method="classical")
-lmCoDaX(y, preds, method="robust")
+}
+
+#fit function to each land use
+1:5 %>%
+  map_df(~fitISOLRmodel(.))
 
 ### AIC check ##############################################
 

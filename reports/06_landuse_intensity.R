@@ -149,14 +149,14 @@ data$Greening_gradient <- pca_rotated$scores[,2]
 data$Central_gradient_factor <- cut(data$Central_gradient,5)
 ggplot(data,aes(x=Urban_1000,y=Biomass,
                 group=Central_gradient_factor))+
-  geom_smooth(method=lm,aes(colour=Central_gradient_factor))+
+  geom_smooth(method=lm,aes(colour=Central_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 #greening gradient
 data$Greening_gradient_factor <- cut(data$Greening_gradient,5)
 ggplot(data,aes(x=Urban_1000,y=Biomass,
                 group=Greening_gradient_factor))+
-  geom_smooth(method=lm,aes(colour=Greening_gradient_factor))+
+  geom_smooth(method=lm,aes(colour=Greening_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 ### models ##############################################

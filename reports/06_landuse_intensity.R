@@ -95,7 +95,7 @@ data <- allInsects %>% filter(maxLand_use == "Urban_1000")#34 rows
 data <- allInsects %>% filter(Urban_1000 > 0.05)#223 rows
 
 #make data proportional
-data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)*100
+data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
 data$propinnerCity <- (data$Bykerne_1000/data$Urban_1000)*100
 data$propresidential <- (data$Lav.bebyggelse_1000/data$Urban_1000)*100

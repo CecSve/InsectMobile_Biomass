@@ -129,9 +129,9 @@ corrplot(p, method = "color", col = landuseCols,
          diag = FALSE, mar=c(0,0,1,0))
 
 #pca
-fit <- princomp(someInsects[,4:9], cor=TRUE)
+fit <- princomp(someInsects[,5:9], cor=TRUE)
 biplot(fit)
-pca_rotated <- psych::principal(someInsects[,4:9], 
+pca_rotated <- psych::principal(someInsects[,5:9], 
                                 rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
 #two axes -one is residential to central
@@ -146,18 +146,27 @@ data$Greening_gradient <- pca_rotated$scores[,2]
 #plot gradient (split into factor just for plotting purposes)
 
 #central gradient
-data$Central_gradient_factor <- cut(data$Central_gradient,5)
-ggplot(data,aes(x=Urban_1000,y=Biomass,
+data$Central_gradient_factor <- cut(data$Central_gradient,10)
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
                 group=Central_gradient_factor))+
   geom_smooth(method=lm,aes(colour=Central_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 #greening gradient
-data$Greening_gradient_factor <- cut(data$Greening_gradient,5)
-ggplot(data,aes(x=Urban_1000,y=Biomass,
+data$Greening_gradient_factor <- cut(data$Greening_gradient,10)
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
                 group=Greening_gradient_factor))+
   geom_smooth(method=lm,aes(colour=Greening_gradient_factor),se=F)+
   scale_colour_viridis_d()
+
+#urban gradient
+data$urban_gradient_factor <- cut(data$Urban_1000,5)
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
+                group=urban_gradient_factor))+
+  geom_smooth(method="lm",aes(colour=urban_gradient_factor),se=F)
+
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1)))+
+  geom_smooth(method="loess")
 
 ### models ##############################################
 

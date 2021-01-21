@@ -1,7 +1,7 @@
 # Landscape-level drivers of flying insect biomass
 This repository (R project) contains all scripts necessary to run the ecological/statistical analyses from the study "Landscape-level drivers of flying insect biomass" (Svenningsen et al.).
 
-The data were collected in June 2018 as part of the citizen science project InsectMobilen ("Insektmobilen") at the Natural History Museum of Denmark and at iDiv in Germany during June-July 2018.
+The data were collected in June 2018 as part of the citizen science project InsectMobile ("Insektmobilen") at the Natural History Museum of Denmark and at iDiv in Germany during June-July 2018.
 
 ## Description of the sub directories for data processing ##
 

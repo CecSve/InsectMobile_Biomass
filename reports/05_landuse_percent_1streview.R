@@ -25,6 +25,9 @@ landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest")
 #landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified") # if including unspecified/other category
 
 #### General check-ups ################################################################
+# change land covers to be 0-100 instead of 0-1
+allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
+
 ### Land cover check ###################################################
 
 #check land covers within a buffer of the same size
@@ -205,7 +208,7 @@ table(allInsects$avg_speed)
 mean(allInsects$avg_speed)
 
 #full and final model
-lme1000 <- lmer(log(Biomass+1) ~ 
+full_model <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
                   Urban_1000 +
                   Open.uncultivated.land_1000+ # test if outlier drives the pattern
@@ -215,13 +218,13 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_driven +
                   avg_speed +
                   Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 20))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
-summary(lme1000)
-AICc(lme1000)
-tab_model(lme1000, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday (change in response per minute within time band)
-", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"))
-r.squaredGLMM(lme1000)
+summary(full_model)
+AICc(full_model)
+tab_model(full_model, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday (change in response per minute within time band)
+", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"), digits = 3)
+r.squaredGLMM(full_model)
 #           R2m       R2c
 #[1,] 0.3625144 0.8403325
 
@@ -229,22 +232,89 @@ r.squaredGLMM(lme1000)
 #for the table in the paper
 
 #check variance inflation factor
-vif(lme1000)
+vif(full_model)
 
 ### multcomp landcovers: simple model ##########################
 # pairwise comparison to farmland
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
+pair.ht <- glht(full_model, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
 summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass
 confint(pair.ht)
 
 # pairwise comparison to urban
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_50 - Urban_1000 = 0", "Open.uncultivated.land_1000 - Urban_1000 = 0"))
+pair.ht <- glht(full_model, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_50 - Urban_1000 = 0", "Open.uncultivated.land_1000 - Urban_1000 = 0"))
 summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
 confint(pair.ht)
 
+### ilr trans #############################################
+
+#Approach 1 using the complmrob package
+library(complmrob)
+#The variables on the right-hand-side of the formula are transformed with the isometric log-ratio transformation (isomLR) and a robust linear regression model is fit to those transformed variables.
+
+#The log-ratio methodology studies this relative relations using the quotient between parts, to be more precise, using the logarithm between ratios of parts
+
+#need to add small values to zeros in the covariate data to get the function to work
+myvars <-allInsects[,c("Agriculture_1000","Urban_1000","Open.uncultivated.land_1000","Wetland_50","Forest_250")]
+myvars<- data.frame(apply(myvars,c(1,2),
+                          function(x)ifelse(x==0,0.001,x)))
+names(myvars) <- c("cAgriculture_1000","cUrban_1000","cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
+allInsects <- cbind(allInsects,myvars)
+
+#original function from complmrob package (no random effects)
+complm1 <- complmrob(log10(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated.land_1000 + cWetland_50 + cForest_250, data=subset(allInsects, Open.uncultivated.land_1000 < 20))
+summary(complm1)
+
+tab_model(complm1)
+
+#fit model as random effects model - setting urban as first composition - other land uses relative to this
+landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
+tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),2))
+tmpNames <- paste(names(tmpPred),collapse="+")
+tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops","cyDay","RouteID_JB","PilotID")]
+tmp <- cbind(tmpPred,tmpCovariates)
+str(tmp)
+
+lme1000 <-
+  lmer(as.formula(paste("log(Biomass+1) ~ Time_band + Time_band:cnumberTime + cStops + cyDay + (1|RouteID_JB) + (1|PilotID) +", tmpNames)), data = subset(allInsects, Open.uncultivated.land_1000 < 20))
+
+summary(lme1000)
+car::vif(lme1000)
+
+#write function to do the same for all land uses
+landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
+
+fitISOLRmodel <- function(component=1){
+  #get isoLR for specified component
+  tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),
+                               component))
+  #paste into a model formula
+  tmpNames <- paste(names(tmpPred),collapse="+")
+  #get other variables that we will need
+  tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops",
+                                 "cyDay","RouteID_JB","PilotID")]
+  tmp <- cbind(tmpPred,tmpCovariates)
+  #fit model
+  require(lme4)
+  require(lmerTest)
+  lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + 
+                                   Time_band:cnumberTime + cStops + cyDay +
+                                   (1|RouteID_JB) + (1|PilotID) +",
+                                   tmpNames)), data = subset(allInsects, Open.uncultivated.land_1000 < 20))
+  #extract data for land use variable that we are interesed in
+  temp <- data.frame(summary(lme1000)$coefficients[row.names(summary(lme1000)$coefficients)==landUses[component],])
+  temp$LandUse <- landUses[component]
+  return(temp)
+  
+}
+
+#fit function to each land use
+1:5 %>%
+  map_df(~fitISOLRmodel(.))
+
+
 ### AIC check ##############################################
 options(na.action = "na.fail")
-dd <- dredge(lme1000)
+dd <- dredge(full_model)
 subset(dd, delta < 2)
 
 # Visualize the model selection table:
@@ -255,28 +325,31 @@ plot(dd, labAsExpr = TRUE)
 #model.avg(dd, subset = delta < 2)
 
 # best model with lowest AIC 
-lme1000 <- lmer(log(Biomass+1) ~ 
+best_model <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
                   Urban_1000 +
                   Open.uncultivated.land_1000 + # test if grassland outlier modifies results
                   Wetland_50 +
                   Forest_250 +
                   Time_band + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 0.2))
+                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 20))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
-summary(lme1000)
-AICc(lme1000)
+summary(best_model)
+AICc(best_model)
 tab_model(lme1000, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: midday vs evening", "Day of year"))
 r.squaredGLMM(lme1000)
 
+# summary for both the full and the best fit model
+tab_model(full_model, best_model, digits = 3, dv.labels = c("Full model", "Best fit model"), pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday", "Time within evening", "Potential stops", "Day of year"))
+
 ### multcomp landcovers: best fit model ##########################
 # pairwise comparison to farmland
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
+pair.ht <- glht(best_model, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
 summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass
 confint(pair.ht)
 
 # pairwise comparison to urban
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_50 - Urban_1000 = 0", "Open.uncultivated.land_1000 - Urban_1000 = 0"))
+pair.ht <- glht(best_model, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_50 - Urban_1000 = 0", "Open.uncultivated.land_1000 - Urban_1000 = 0"))
 summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
 confint(pair.ht)
 

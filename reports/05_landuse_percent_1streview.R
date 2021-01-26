@@ -1284,7 +1284,13 @@ fitISOLRmodel <- function(component=1){
 
 #fit function to each land use
 1:5 %>%
-  map_df(~fitISOLRmodel(.))
+  purrr::map_df(~fitISOLRmodel(.))
+#                             Estimate  Std..Error       df    t.value    Pr...t..
+#cAgriculture_1000        0.007445503 0.005590892 57.13133  1.3317200 0.188241143
+#cUrban_1000             -0.047679661 0.015818573 57.43560 -3.0141568 0.003831099
+#cOpen.uncultivated_1000 -0.002310477 0.010498392 59.91710 -0.2200792 0.826557638
+#cWetland_1000           -0.015208667 0.040177716 55.48551 -0.3785349 0.706477826
+#cForest_250              0.013697219 0.011585161 46.42869  1.1823072 0.243103590
 
 ### ilr comparison ##################################################
 

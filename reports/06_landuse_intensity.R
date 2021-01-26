@@ -13,16 +13,21 @@ library(lmerTest)
 library(effects)
 library(corrplot)
 library(MuMIn)
+library(sjPlot)
 
 #### Set colour scheme ##############################################################
 
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
+
 ### DK urban##############################################
 ### correlation plot urban ###################
 
+# change land covers to be 0-100 instead of 0-1
+allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
+
 #which subset?
 data <- allInsects %>% filter(maxLand_use == "Urban_1000")
-data <- allInsects %>% filter(Urban_1000 > 0.05)
+data <- allInsects %>% filter(Urban_1000 > 5)
   
 someInsects <- data[,c(12,22, 48, 62, 70, 74:77)]
 colnames(someInsects)
@@ -83,7 +88,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-tab_model(lme1000, pred.labels = c("Intercept", "Urban green gradient", "Large city gradient", "Time band: evening vs midday", "Time within midday (change in response per minute within time band)
+tab_model(lme1000, dv.labels = "log(Biomass +1) from routes with >5% urban cover", pred.labels = c("Intercept", "Urban green gradient", "Large city gradient", "Time band: evening vs midday", "Time within midday (change in response per minute within time band)
 ", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"))
 r.squaredGLMM(lme1000)
 
@@ -92,7 +97,7 @@ r.squaredGLMM(lme1000)
 
 #choose subset
 data <- allInsects %>% filter(maxLand_use == "Urban_1000")#34 rows
-data <- allInsects %>% filter(Urban_1000 > 0.05)#223 rows
+data <- allInsects %>% filter(Urban_1000 > 5)#223 rows -  notice whether lanc use is 0-1 or 0-100 (we need -100)
 
 #make data proportional
 data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
@@ -119,6 +124,8 @@ res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+png(height=600, width=600, file="plots/distances.jpeg", type = "cairo", quality = 100)
+
 corrplot(p, method = "color", col = landuseCols,
          type = "upper", order = "original", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
@@ -127,6 +134,8 @@ corrplot(p, method = "color", col = landuseCols,
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, mar=c(0,0,1,0))
+
+dev.off()
 
 #pca
 fit <- princomp(someInsects[,5:9], cor=TRUE)

@@ -1,4 +1,4 @@
-#run 03mergeData script and some 04 to get standardised time etc
+#run 03mergeData script 
 
 ### Load required libraries ###########################
 library(cowplot)

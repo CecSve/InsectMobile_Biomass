@@ -1293,7 +1293,41 @@ library(robCompositions)
 
 #transformation function
 ?pivotCoord
+transVars <- pivotCoord(myvars)
+head(transVars)
 
+lmCoDaX(log(allInsects$Biomass+1), myvars, method="classical")
+lmCoDaX(log(allInsects$Biomass+1), myvars, method="robust")
+
+#modify function above
+fitISOLRmodel <- function(component=1){
+  #get isoLR for specified component
+  tmpPred <- data.frame(pivotCoord(myvars,pivotvar=component))
+  names(tmpPred)[1] <- landUses[component]
+  #paste into a model formula
+  tmpNames <- paste(names(tmpPred),collapse="+")
+  #get other variables that we will need
+  tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops",
+                                 "cyDay","RouteID","PilotID","Biomass")]
+  tmp <- cbind(tmpPred,tmpCovariates)
+  #fit model
+  require(lme4)
+  require(lmerTest)
+  lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + 
+                                   Time_band:cnumberTime + cStops + cyDay +
+                                   (1|RouteID) + (1|PilotID) +",
+                                   tmpNames)), data=tmp)
+  
+  #extract data for land use variable that we are interesed in
+  temp <- data.frame(summary(lme1000)$coefficients)
+  temp <- temp[row.names(temp)==landUses[component],]
+  temp$LandUse <- landUses[component]
+  return(temp)
+}
+
+#fit function to each land use
+1:5 %>%
+  map_df(~fitISOLRmodel(.))
 
 ### AIC check ##############################################
 

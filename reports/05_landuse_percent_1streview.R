@@ -311,7 +311,6 @@ fitISOLRmodel <- function(component=1){
 1:5 %>%
   map_df(~fitISOLRmodel(.))
 
-
 ### AIC check ##############################################
 options(na.action = "na.fail")
 dd <- dredge(full_model)
@@ -1286,6 +1285,15 @@ fitISOLRmodel <- function(component=1){
 #fit function to each land use
 1:5 %>%
   map_df(~fitISOLRmodel(.))
+
+### lir2 ##################################################
+
+library(robCompositions)
+?lmCoDaX
+
+#transformation function
+?pivotCoord
+
 
 ### AIC check ##############################################
 

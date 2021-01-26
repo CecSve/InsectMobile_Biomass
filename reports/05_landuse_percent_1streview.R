@@ -1240,7 +1240,7 @@ names(myvars) <- c("cAgriculture_1000","cUrban_1000","cOpen.uncultivated_1000","
 allInsects <- cbind(allInsects,myvars)
 
 #original function from complmrob package (no random effects)
-complm1 <- complmrob(log10(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated_1000 + cWetland_1000 + cForest_250, data = allInsects)
+complm1 <- complmrob(log(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated_1000 + cWetland_1000 + cForest_250, data = allInsects)
 summary(complm1)
 
 #fit model as random effects model - setting urban as first composition - other land uses relative to this
@@ -1276,8 +1276,8 @@ fitISOLRmodel <- function(component=1){
                                    (1|RouteID) + (1|PilotID) +",
                                  tmpNames)), data=allInsects)
   #extract data for land use variable that we are interesed in
-  temp <- data.frame(summary(lme1000)$coefficients[row.names(summary(lme1000)$coefficients)==landUses[component],])
-  temp$LandUse <- landUses[component]
+  temp <- data.frame(summary(lme1000)$coefficients)
+  temp <- temp[row.names(temp)==landUses[component],]
   return(temp)
 
 }
@@ -1293,7 +1293,7 @@ library(robCompositions)
 
 #transformation function
 ?pivotCoord
-transVars <- pivotCoord(myvars)
+transVars <- pivotCoord(myvars,2)
 head(transVars)
 
 lmCoDaX(log(allInsects$Biomass+1), myvars, method="classical")
@@ -1331,6 +1331,26 @@ fitISOLRmodel <- function(component=1){
 
 ### clr ###################################################
 
+library(compositions)
+
+tmpPred <- data.frame(clr(myvars))#apply clr
+tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops",
+                               "cyDay","RouteID","PilotID","Biomass")]
+tmp <- cbind(tmpPred,tmpCovariates)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  cAgriculture_1000 + 
+                  cUrban_1000 +
+                  cOpen.uncultivated_1000+
+                  cWetland_1000 +
+                  cForest_250 +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID) + (1|PilotID), data=tmp)
+summary(lme1000)
+#fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
 
 ### AIC check ##############################################
 

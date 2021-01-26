@@ -1286,7 +1286,7 @@ fitISOLRmodel <- function(component=1){
 1:5 %>%
   map_df(~fitISOLRmodel(.))
 
-### lir2 ##################################################
+### ilr comparison ##################################################
 
 library(robCompositions)
 ?lmCoDaX
@@ -1298,6 +1298,14 @@ head(transVars)
 
 lmCoDaX(log(allInsects$Biomass+1), myvars, method="classical")
 lmCoDaX(log(allInsects$Biomass+1), myvars, method="robust")
+
+#compare isomLE with pivotCoord
+landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_1000","cForest_250")
+tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),1))
+tmpPred_pc <- pivotCoord(allInsects[,landUses],1)
+qplot(tmpPred$cAgriculture_1000,tmpPred_pc$`cAgriculture_1000_cU-cO-cW-cF`)
+qplot(tmpPred$cUrban_1000,tmpPred_pc$`cUrban_1000_cO-cW-cF`)
+#they are the same...
 
 ### AIC check ##############################################
 

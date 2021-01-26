@@ -1329,6 +1329,9 @@ fitISOLRmodel <- function(component=1){
 1:5 %>%
   map_df(~fitISOLRmodel(.))
 
+### clr ###################################################
+
+
 ### AIC check ##############################################
 
 library(MuMIn)

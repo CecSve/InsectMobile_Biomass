@@ -30,9 +30,9 @@ allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
 
 # first examine general correlations
 
-someInsects <- allInsects[,c(12,22, 48, 62, 70)] # select green gradients
+someInsects <- allInsects[,c(12,22, 48, 62, 70, 77)] # select green gradients
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedges", "Urban green")
+colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedges", "Urban green", "Residential")
 
 p <- cor(someInsects, use="pairwise.complete.obs")
 
@@ -50,7 +50,7 @@ corrplot(p, method = "color", col = landuseCols,
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, mar=c(0,0,1,0))
 
-# greenness is highly positively correlated with urban cover
+# greenness variables are highly positively correlated with urban cover
 
 ### PCA urban ##################
 names(someInsects)
@@ -80,11 +80,13 @@ data <- allInsects
 #make data proportional
 data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
+#data$propResidential <- (data$Lav.bebyggelse_1000/data$Urban_1000)*100
 tail(data)
 
 # merge greenness
 data$propGreen <- data$propHedge + data$propurbGreen 
-
+mean(data$propGreen)
+max(data$propGreen)
 data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
 
 ### correlation plot proportional urban ###################
@@ -117,14 +119,13 @@ dev.off()
 # now, after we have calculated the proportional green cover within urban, there is not a strong correlation between urban and greenness variable
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  propGreen + 
-                  Urban_1000 +
+                  Urban_1000 + propGreen +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-tab_model(lme1000, digits = 3, pred.labels = c("Intercept", "Prop. green cover", "General urban cover", "Time band: evening vs midday", "Time within midday (change in response per minute within time band)
-", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"))
+tab_model(lme1000, digits = 3, show.intercept = F, pred.labels = c("General urban cover", "Prop. green cover", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday (change in response per minute within time band)
+", "Time within evening (change in response per minute within time band)"))
 r.squaredGLMM(lme1000)
 car::vif(lme1000)
 
@@ -156,7 +157,7 @@ prop_data <- rbind(propGreen, Urban)
 str(prop_data)
 
 # Visualization
-prop_data %>% dplyr::mutate(
+landuse_urban <- prop_data %>% dplyr::mutate(
   landuse = fct_relevel(
     landuse,
     "Urban",
@@ -190,13 +191,26 @@ prop_data %>% dplyr::mutate(
         colour = "Land use type"
       ) + scale_fill_manual(values =  c("#FA0081", "#FB9BD6")) + guides(colour = guide_legend(nrow = 1))
 
+#save_plot("plots/DK_estimated_biomass_urbanlanduse.png", effectplot_urban, base_width = 8, base_height = 6)
+
 ### PCA propUrban ##############
 fit <- princomp(someInsects[,3:4], cor=TRUE)
+#with ggplot
 biplot(fit)
+autoplot(fit)
+autoplot(fit, data = mydata, 
+         loadings = TRUE, 
+         loadings.colour = 'black',
+         loadings.label = TRUE, 
+         loadings.label.size = 5) + 
+  scale_colour_manual(values = landuseCols[1:6])+
+  theme_bw() + labs(colour = "Land cover")
+
 pca_rotated <- psych::principal(someInsects[,3:4], 
                                 rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
 #two axes: RC1 = both, RC2 = Urban vs proportional green
+print(pca_rotated)
 
 #model selection with these pca axes
 data$General_gradient <- pca_rotated$scores[,1]
@@ -246,74 +260,10 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-tab_model(lme1000, pred.labels = c("Intercept", "Urban green gradient", "General urban gradient", "Time band: evening vs midday", "Time within midday (change in response per minute within time band)
+tab_model(lme1000, show.intercept = F, pred.labels = c("Urban green gradient", "General urban gradient", "Time band: evening vs midday", "Time within midday (change in response per minute within time band)
 ", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"))
 r.squaredGLMM(lme1000)
 car::vif(lme1000)
-
-gls1.alleffects <- allEffects(lme1000)
-effectdata <- as.data.frame(gls1.alleffects, row.names=NULL, optional=TRUE)
-
-eall.lm1 <- predictorEffects(lme1000)
-plot(eall.lm1, lines=list(multiline=TRUE))
-
-### ggplot effect plot ####
-# Urbangreen_gradient
-temp <- effectdata$Urbangreen_gradient
-temp$landuse <- "propGreen"
-propGreen <- temp %>% 
-  dplyr::rename(
-    propcover = Urbangreen_gradient
-  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
-
-# General_gradient
-temp <- effectdata$General_gradient
-temp$landuse <- "generalUrban"
-generalUrban <- temp %>% 
-  dplyr::rename(
-    propcover = General_gradient
-  )%>% dplyr::select(landuse, propcover, fit, se, lower, upper)
-
-
-pca_data <- rbind(propGreen, generalUrban)
-str(pca_data)
-
-# Visualization
-effectplot_urban <- pca_data %>% dplyr::mutate(
-  landuse = fct_relevel(
-    landuse,
-    "generalUrban",
-    "propGreen"
-  )
-)%>% ggplot(aes(x = propcover, y = fit, fill = landuse)) +
-  geom_line(aes(color = landuse), size = 2) +
-  scale_color_manual(
-    values = c("#FA0081", "#FB9BD6")
-  ) + theme_minimal_grid() + theme(
-    plot.subtitle = element_text(size = 20, face = "bold"),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 8),
-    legend.position = "bottom"
-  ) + scale_x_continuous(
-    limits = c(-0.8, 5),
-    labels = function(x)
-      paste0(x, "%")) + geom_ribbon(
-        aes(
-          ymin = fit-se,
-          ymax = fit+se,
-          group = landuse
-        ),
-        linetype = 2,
-        alpha = 0.2,
-        show.legend = F
-      )  + labs(
-        x = "Land use intensity PCA gradient",
-        y = "log Predicted biomass (mg)",
-        subtitle = "A",
-        colour = "Land use type"
-      ) + scale_fill_manual(values =  c("#FA0081", "#FB9BD6")) + guides(colour = guide_legend(nrow = 1))
-
-save_plot("plots/DK_estimated_biomass_urbanlanduse.png", effectplot_urban, base_width = 8, base_height = 6)
 
 ### DK farmland ##########################################
 

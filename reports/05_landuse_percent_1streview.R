@@ -222,14 +222,8 @@ full_model <- lmer(log(Biomass+1) ~
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(full_model)
 AICc(full_model)
-tab_model(full_model, pred.labels = c("Intercept", "Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday (change in response per minute within time band)
-", "Time within evening (change in response per minute within time band)", "Potential stops", "Day of year"), digits = 3)
+tab_model(full_model, show.intercept = F, pred.labels = c("Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday", "Time within evening", "Potential stops", "Day of year"), digits = 3)
 r.squaredGLMM(full_model)
-#           R2m       R2c
-#[1,] 0.3625144 0.8403325
-
-#add in other land uses to this final model to get their effect
-#for the table in the paper
 
 #check variance inflation factor
 vif(full_model)
@@ -249,6 +243,7 @@ confint(pair.ht)
 
 #Approach 1 using the complmrob package
 library(complmrob)
+
 #The variables on the right-hand-side of the formula are transformed with the isometric log-ratio transformation (isomLR) and a robust linear regression model is fit to those transformed variables.
 
 #The log-ratio methodology studies this relative relations using the quotient between parts, to be more precise, using the logarithm between ratios of parts
@@ -264,10 +259,11 @@ allInsects <- cbind(allInsects,myvars)
 complm1 <- complmrob(log10(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated.land_1000 + cWetland_50 + cForest_250, data=subset(allInsects, Open.uncultivated.land_1000 < 20))
 summary(complm1)
 
-tab_model(complm1)
+tab_model(complm1, show.intercept = F)
 
 #fit model as random effects model - setting urban as first composition - other land uses relative to this
 landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
+
 tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),2))
 tmpNames <- paste(names(tmpPred),collapse="+")
 tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops","cyDay","RouteID_JB","PilotID")]
@@ -279,9 +275,10 @@ lme1000 <-
 
 summary(lme1000)
 car::vif(lme1000)
+tab_model(lme1000, show.intercept = F)
 
 #write function to do the same for all land uses
-landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
+landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_50","cForest_250")
 
 fitISOLRmodel <- function(component=1){
   #get isoLR for specified component
@@ -291,25 +288,32 @@ fitISOLRmodel <- function(component=1){
   tmpNames <- paste(names(tmpPred),collapse="+")
   #get other variables that we will need
   tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops",
-                                 "cyDay","RouteID_JB","PilotID")]
+                                 "cyDay","RouteID","PilotID")]
   tmp <- cbind(tmpPred,tmpCovariates)
   #fit model
   require(lme4)
   require(lmerTest)
   lme1000 <- lmer(as.formula(paste("log(Biomass+1) ~ Time_band + 
                                    Time_band:cnumberTime + cStops + cyDay +
-                                   (1|RouteID_JB) + (1|PilotID) +",
-                                   tmpNames)), data = subset(allInsects, Open.uncultivated.land_1000 < 20))
+                                   (1|RouteID) + (1|PilotID) +",
+                                   tmpNames)), data=allInsects)
   #extract data for land use variable that we are interesed in
-  temp <- data.frame(summary(lme1000)$coefficients[row.names(summary(lme1000)$coefficients)==landUses[component],])
-  temp$LandUse <- landUses[component]
+  temp <- data.frame(summary(lme1000)$coefficients)
+  temp <- temp[row.names(temp)==landUses[component],]
   return(temp)
   
 }
 
 #fit function to each land use
-1:5 %>%
-  map_df(~fitISOLRmodel(.))
+1:5 %>%purrr::map_df(~fitISOLRmodel(.))
+#Estimate  Std..Error       df    t.value     Pr...t..
+#1  0.002236360 0.003391190 175.7068  0.6594617 0.5104627098
+#2 -0.024724382 0.006943607 205.1899 -3.5607406 0.0004596117
+#3  0.014641398 0.014121324 213.0707  1.0368290 0.3009908109
+#4  0.036502476 0.027870023 157.3093  1.3097397 0.1921934363
+#5  0.009113615 0.005403362 155.3046  1.6866563 0.0936771550
+
+# follows the same order as landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_50","cForest_250")
 
 ### AIC check ##############################################
 options(na.action = "na.fail")

@@ -215,27 +215,32 @@ full_model <- lmer(log(Biomass+1) ~
                   Wetland_50 +
                   Forest_250 +
                   Time_band + 
-                  Time_driven +
-                  avg_speed +
+                  #Time_driven +
+                  #avg_speed +
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 20))
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(full_model)
 AICc(full_model)
-tab_model(full_model, show.intercept = F, pred.labels = c("Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Sampling duration", "Average speed", "Time within midday", "Time within evening", "Potential stops", "Day of year"), digits = 3)
-r.squaredGLMM(full_model)
+tab_model(full_model, show.intercept = F, pred.labels = c("Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"), digits = 3)
+#r.squaredGLMM(full_model)
 
 #check variance inflation factor
 vif(full_model)
 
 ### multcomp landcovers: simple model ##########################
 # pairwise comparison to farmland
-pair.ht <- glht(full_model, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_50 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated.land_1000 - Agriculture_1000 = 0"))
+pair.ht <- glht(full_model, linfct = c("Agriculture_1000 - Forest_250 = 0", "- Agriculture_1000 - Wetland_50  = 0", "Agriculture_1000 - Urban_1000 = 0", "Agriculture_1000 - Open.uncultivated.land_1000 = 0"))
 summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass
 confint(pair.ht)
 
 # pairwise comparison to urban
-pair.ht <- glht(full_model, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_50 - Urban_1000 = 0", "Open.uncultivated.land_1000 - Urban_1000 = 0"))
+pair.ht <- glht(full_model, linfct = c("Urban_1000 - Forest_250 = 0", "Urban_1000 - Wetland_50 = 0", "Urban_1000 - Open.uncultivated.land_1000 = 0"))
+summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
+confint(pair.ht)
+
+# pairwise comparison to grassland
+pair.ht <- glht(full_model, linfct = c("Open.uncultivated.land_1000 - Wetland_50 = 0", "Open.uncultivated.land_1000 - Forest_250 = 0"))
 summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
 confint(pair.ht)
 

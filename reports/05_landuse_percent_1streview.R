@@ -1143,17 +1143,25 @@ lme1000 <- lmer(log(Biomass+1) ~
                   (1|RouteID) + (1|PilotID), data=allInsects)
 summary(lme1000)
 vif(lme1000)
+tab_model(lme1000)
 r.squaredGLMM(lme1000)
 #R2m       R2c
 #[1,] 0.3593968 0.8313989
+confint(lme1000)
 
 #with sqrt
+allInsects$sqrt_Agriculture_1000 <- sqrt(allInsects$Agriculture_1000)
+allInsects$sqrt_Urban_1000 <- sqrt(allInsects$Urban_1000)
+allInsects$sqrt_Open.uncultivated_1000 <- sqrt(allInsects$Open.uncultivated_1000)
+allInsects$sqrt_Wetland_1000 <- sqrt(allInsects$Wetland_1000)
+allInsects$sqrt_Forest_250 <- sqrt(allInsects$Forest_250)
+
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  sqrt(Agriculture_1000) + 
-                  sqrt(Urban_1000) +
-                  sqrt(Open.uncultivated_1000) +
-                  sqrt(Wetland_1000) +
-                  sqrt(Forest_250) +
+                  sqrt_Agriculture_1000 + 
+                  sqrt_Urban_1000 +
+                  sqrt_Open.uncultivated_1000 +
+                  sqrt_Wetland_1000 +
+                  sqrt_Forest_250 +
                   Time_band + 
                   Time_band:cnumberTime + 
                   cStops + 
@@ -1162,7 +1170,7 @@ lme1000 <- lmer(log(Biomass+1) ~
 summary(lme1000)
 vif(lme1000)
 #now agriculture is most important... but urban comes out on top with AIC
-#r.squaredGLMM(lme1000)
+r.squaredGLMM(lme1000)
 #R2m       R2c
 #[1,] 0.3582978 0.8328536
 
@@ -1194,44 +1202,39 @@ r.squaredGLMM(lme1000)
 ### multicomp ##############################################
 
 # pairwise comparison to farmland
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_1000 - Agriculture_1000 = 0", "Urban_1000 - Agriculture_1000 = 0", "Open.uncultivated_1000 - Agriculture_1000 = 0"))
+pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_1000 - Agriculture_1000 = 0", "Open.uncultivated_1000 - Agriculture_1000 = 0"))
 summary(pair.ht) 
-# Linear Hypotheses:
-#                                                 Estimate Std. Error z value Pr(>|z|)   
-# Forest_250 - Agriculture_1000 == 0             -0.009224   0.005802  -1.590  0.37217   
-# Wetland_1000 - Agriculture_1000 == 0           -0.018571   0.040108  -0.463  0.98300   
-# Urban_1000 - Agriculture_1000 == 0             -0.051955   0.016813  -3.090  0.00793 **
-# Open.uncultivated_1000 - Agriculture_1000 == 0 -0.005800   0.010713  -0.541  0.96987   
 
 confint(pair.ht)
-#different between urban and agriculture
-# Linear Hypotheses:
-#                                                   Estimate  lwr       upr      
-# Forest_250 - Agriculture_1000 == 0             -0.009224 -0.023657  0.005210
-# Wetland_1000 - Agriculture_1000 == 0           -0.018571 -0.118347  0.081205
-# Urban_1000 - Agriculture_1000 == 0             -0.051955 -0.093779 -0.010131
-# Open.uncultivated_1000 - Agriculture_1000 == 0 -0.005800 -0.032450  0.020850
 
 # pairwise comparison to urban
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Urban_1000 = 0", "Wetland_1000 - Urban_1000 = 0", "Open.uncultivated_1000 - Urban_1000 = 0"))
+pair.ht <- glht(lme1000, linfct = c(
+"Forest_250 - Urban_1000 = 0",
+"Wetland_1000 - Urban_1000 = 0", 
+"Open.uncultivated_1000 - Urban_1000 = 0",
+"Agriculture_1000  - Urban_1000  = 0"))
+
 summary(pair.ht) 
-# Linear Hypotheses:
-#                                           Estimate Std. Error z value Pr(>|z|)  
-# Forest_250 - Urban_1000 == 0              0.04273    0.01642   2.602   0.0242 *
-# Wetland_1000 - Urban_1000 == 0            0.03338    0.04425   0.754   0.7706  
-# Open.uncultivated_1000 - Urban_1000 == 0  0.04616    0.01801   2.563   0.0272 *
   
 confint(pair.ht)
-# Linear Hypotheses:
-#                                           Estimate  lwr       upr      
-# Forest_250 - Urban_1000 == 0              0.042731  0.004501  0.080961
-# Wetland_1000 - Urban_1000 == 0            0.033384 -0.069615  0.136383
-# Open.uncultivated_1000 - Urban_1000 == 0  0.046155  0.004242  0.088068
 
-#difference between forest and urban 
-#grassland and urban
-#not wetland vs urban
+#compared to grassland
+pair.ht <- glht(lme1000, linfct = c(
+  "Wetland_1000 - Open.uncultivated_1000 = 0",
+  "Forest_250 - Open.uncultivated_1000  = 0"))
 
+summary(pair.ht) 
+
+confint(pair.ht)
+
+
+#squareroot
+pair.ht <- glht(lme1000, linfct = c("sqrt_Forest_250 - sqrt_Agriculture_1000 = 0", "sqrt_Wetland_1000 - sqrt_Agriculture_1000 = 0", "sqrt_Open.uncultivated_1000 - sqrt_Agriculture_1000 = 0"))
+confint(pair.ht)
+pair.ht <- glht(lme1000, linfct = c("sqrt_Forest_250 - sqrt_Urban_1000 = 0","sqrt_Wetland_1000 - sqrt_Urban_1000 = 0", "sqrt_Open.uncultivated_1000 - sqrt_Urban_1000 = 0","sqrt_Agriculture_1000  - sqrt_Urban_1000  = 0"))
+confint(pair.ht)
+pair.ht <- glht(lme1000, linfct = c("sqrt_Wetland_1000 - sqrt_Open.uncultivated_1000 = 0","sqrt_Forest_250 - sqrt_Open.uncultivated_1000  = 0"))
+confint(pair.ht)
 ### ilr trans #############################################
 
 #Approach 1 using the complmrob package
@@ -1607,3 +1610,41 @@ sampling_time <- plot_grid(
 )
 
 save_plot("plots/DE_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)
+
+
+#### urban exclude ######################################################
+
+summary(allInsects$Urban_1000)
+#include only sites with less than 5% urban
+
+allInsects_lowUrban <- subset(allInsects, Urban_1000 <5)
+                        
+nrow(allInsects_lowUrban)
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Agriculture_1000 + 
+                  Open.uncultivated_1000+
+                  Wetland_1000 +
+                  Forest_250 +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID) + (1|PilotID), data=allInsects_lowUrban)
+
+# pairwise comparison to farmland
+pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_1000 - Agriculture_1000 = 0", "Open.uncultivated_1000 - Agriculture_1000 = 0"))
+
+summary(pair.ht) 
+
+confint(pair.ht)
+
+pair.ht <- glht(lme1000, linfct = c(
+  "Wetland_1000 - Open.uncultivated_1000 = 0",
+  "Forest_250 - Open.uncultivated_1000  = 0"))
+
+summary(pair.ht) 
+
+confint(pair.ht)
+
+

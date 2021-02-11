@@ -30,9 +30,9 @@ allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
 
 # first examine general correlations
 
-someInsects <- allInsects[,c(12,22, 48, 62, 70, 74)] # select green gradients
+someInsects <- allInsects[,c(12,22, 48, 62, 70, 74:75)] 
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedges", "Urban green")
+colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedges", "Urban green", "Inner city", "Commercial")
 
 p <- cor(someInsects, use="pairwise.complete.obs")
 
@@ -40,6 +40,7 @@ p <- cor(someInsects, use="pairwise.complete.obs")
 res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
+png(height=600, width=600, file="plots/corr_urban_landuse.jpeg", type = "cairo-png", res = 100)
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
 corrplot(p, method = "color", col = landuseCols,
          type = "upper", order = "original", number.cex = .7,
@@ -50,11 +51,11 @@ corrplot(p, method = "color", col = landuseCols,
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, mar=c(0,0,1,0))
 
-# greenness variables are highly positively correlated with urban cover
+dev.off()
 
 ### PCA urban ##################
 names(someInsects)
-mydata <- someInsects[,c(3:6)]
+mydata <- someInsects[,c(3:7)]
 
 fit <- princomp(mydata, cor=TRUE)
 biplot(fit)
@@ -71,6 +72,8 @@ autoplot(fit, data = mydata,
 
 # the main axis explains most of the variation - the general urban cover effect.
 
+#cowplot::save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_width = 12)
+
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
 print(pca_rotated)
@@ -82,16 +85,19 @@ data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
 data$propLargecity <- (data$Bykerne_1000/data$Urban_1000)*100
 data$propCommercial <- (data$Erhverv_1000/data$Urban_1000)*100
-data$propMultistory <- (data$Høj.bebyggelse_1000/data$Urban_1000)*100
+#data$propMultistory <- (data$Høj.bebyggelse_1000/data$Urban_1000)*100
 tail(data)
 
 # merge greenness
 data$propGreen <- data$propHedge + data$propurbGreen 
-data$propMajorcity <- data$propLargecity + data$propCommercial + data$propMultistory
+data$propMajorcity <- data$propLargecity + data$propCommercial #+ data$propMultistory
 mean(data$propGreen)
 max(data$propGreen)
+median(data$propGreen)
+
 mean(data$propMajorcity)
 max(data$propMajorcity)
+median(data$propMajorcity)
 
 data <- data %>% mutate_if(is.numeric, function(x) ifelse(is.infinite(x), 0, x))
 
@@ -109,7 +115,7 @@ res2 <- cor.mtest(someInsects, conf.level = .99)
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
 
-png(height=600, width=600, file="plots/distances.jpeg", type = "cairo-png", res = 100)
+png(height=600, width=600, file="plots/corr_propurban_landuse.jpeg", type = "cairo-png", res = 100)
 
 corrplot(p, method = "color", col = landuseCols,
          type = "upper", order = "original", number.cex = .7,
@@ -130,9 +136,13 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-tab_model(lme1000, digits = 3, show.intercept = F, pred.labels = c("Urban cover", "Prop. green cover", "Prop. large city cover", "Time band: evening vs midday", "Potential stops", "Day of year", "Urban cover:Prop. green cover", "Urban cover:Large city cover", "Time within midday", "Time within evening"))
-r.squaredGLMM(lme1000)
+tab_model(lme1000, digits = 3, show.intercept = F, pred.labels = c("Urban cover", "Prop. green cover", "Prop. large city cover", "Evening vs midday", "Potential stops", "Day of year", "Urban cover:Prop. green cover", "Urban cover:Large city cover", "Time within midday", "Time within evening"))
 car::vif(lme1000)
+
+# pairwise comparison between interaction terms
+pair.ht <- glht(lme1000, linfct = c("Urban_1000 - Urban_1000:propLargecity = 0", "Urban_1000 - Urban_1000:propGreen = 0", "Urban_1000 - propLargecity = 0", "Urban_1000 - propGreen = 0"))
+summary(pair.ht) # trend toward higher biomass in organic farmland
+confint(pair.ht)
 
 # to visualise we need to remove the interaction term
 lme1000 <- lmer(log(Biomass+1) ~ 
@@ -217,7 +227,7 @@ fit <- princomp(someInsects[,3:5], cor=TRUE)
 #with ggplot
 biplot(fit)
 autoplot(fit)
-autoplot(fit, data = mydata, 
+dk_autoplot <- autoplot(fit, data = mydata, 
          loadings = TRUE, 
          loadings.colour = 'black',
          loadings.label = TRUE, 
@@ -225,14 +235,15 @@ autoplot(fit, data = mydata,
   scale_colour_manual(values = landuseCols[1:6])+
   theme_bw() + labs(colour = "Land cover")
 
+cowplot::save_plot("plots/pca_proplanduse_urban.png", dk_autoplot, base_height = 10, base_width = 12)
+
 pca_rotated <- psych::principal(someInsects[,3:5], 
                                 rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
-#two axes: RC1 = both, RC2 = Urban vs proportional green
 print(pca_rotated)
 
 #model selection with these pca axes
-data$General_gradient <- pca_rotated$scores[,1]
+data$Urbanization_gradient <- pca_rotated$scores[,1]
 data$Greening_gradient <- pca_rotated$scores[,2]
 
 ### plotting #############################################
@@ -240,7 +251,7 @@ data$Greening_gradient <- pca_rotated$scores[,2]
 #plot gradient (split into factor just for plotting purposes)
 
 #general gradient
-data$General_gradient_factor <- cut(data$General_gradient,3)
+data$General_gradient_factor <- cut(data$Urbanization_gradient,3)
 ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
                 group=General_gradient_factor))+
   geom_smooth(method=lm,aes(colour=General_gradient_factor),se=F)+
@@ -270,14 +281,20 @@ ggplot(data,aes(x=Urban_1000,y=log(Biomass+1)))+
 #add PCA axes scores to the dataset
 lme1000 <- lmer(log(Biomass+1) ~ 
                   Greening_gradient + 
-                  General_gradient +
+                  Urbanization_gradient +
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-tab_model(lme1000, show.intercept = F, pred.labels = c("Urban green gradient", "General urban gradient", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"))
+tab_model(lme1000, show.intercept = F, pred.labels = c("Urban green gradient", "Urbanization gradient", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"))
 #r.squaredGLMM(lme1000)
 car::vif(lme1000)
+
+# pairwise comparison 
+pair.ht <- glht(lme1000, linfct = c("Greening_gradient - Urbanization_gradient = 0"))
+summary(pair.ht) 
+confint(pair.ht)
+
 
 ### DK farmland ##########################################
 
@@ -360,7 +377,6 @@ dk_autoplot <- autoplot(fit, data = fit_data,
 
 save_plot("plots/pca_landuse_farmland.png", dk_autoplot, base_height = 8, base_width = 12)
 
-library(psych)
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
@@ -435,7 +451,7 @@ dev.off()
 
 # the combined farming practices
 names(data)
-someInsects <- data[,c(12,142, 44, 151:152)]
+someInsects <- data[,c(12,142, 44, 152:153)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "propOrganic", "propConventional")
 
@@ -472,7 +488,7 @@ tab_model(lmer1000, show.intercept = F, digits = 4, pred.labels = c("Farmland100
 car::vif(lmer1000)
 
 # pairwise comparison between interaction terms
-pair.ht <- glht(lmer1000, linfct = c("Agriculture_1000:propOrganic_farmland - Agriculture_1000:propConventional_farmland = 0"))
+pair.ht <- glht(lmer1000, linfct = c("Agriculture_1000:propOrganic_farmland - Agriculture_1000:propConventional_farmland = 0", "Agriculture_1000 - propOrganic_farmland = 0"," Agriculture_1000 - propConventional_farmland = 0"," propConventional_farmland - propOrganic_farmland = 0"))
 summary(pair.ht) # trend toward higher biomass in organic farmland
 confint(pair.ht)
 
@@ -536,9 +552,9 @@ effectplot_farmland <- test %>% mutate(
   scale_color_manual(
     values = c("#9BA8BD", "#6E81D1", "#AABB97"),
     labels = c(
-      "Farmland cover",
-      "Conventional",
-      "Organic"
+      "Farmland",
+      "propConventional",
+      "propOrganic"
     )
   ) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
@@ -558,7 +574,7 @@ effectplot_farmland <- test %>% mutate(
         alpha = 0.2,
         show.legend = F
       ) + labs(
-        x = "Land use intensity cover within farmland cover",
+        x = "Land use intensity cover",
         y = "log Predicted biomass (mg)",
         subtitle = "B",
         colour = "Land use type"
@@ -566,12 +582,14 @@ effectplot_farmland <- test %>% mutate(
 
 #cowplot::save_plot("plots/farmland_landuse_prop_farming_practice.jpeg", effectplot_farmland)
 
-cowplot::plot_grid(landuse_urban, effectplot_farmland, ncol = 1)
+landuse_plots <- cowplot::plot_grid(landuse_urban, effectplot_farmland, ncol = 1)
+
+cowplot::save_plot("plots/propLanduse_plot.jpeg", landuse_plots, base_height = 8, base_width = 10)
 
 ### PCA propFarmland ####
 mydata <- data
 names(mydata)
-mydata <- mydata[,c(44,151:152)]
+mydata <- mydata[,c(44,152:153)]
 names(mydata)
 colnames(mydata) <- c("Farmland", "Organic", "Conventional")
 

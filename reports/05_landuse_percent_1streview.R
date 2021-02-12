@@ -1688,4 +1688,20 @@ summary(pair.ht)
 
 confint(pair.ht)
 
-
+#simple regression models
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Agriculture_1000 +
+                  (1|RouteID) + (1|PilotID), data=allInsects_lowUrban)
+summary(lme1000)
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Wetland_1000 +
+                  (1|RouteID) + (1|PilotID), data=allInsects_lowUrban)
+summary(lme1000)
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Open.uncultivated_1000 +
+                  (1|RouteID) + (1|PilotID), data=allInsects_lowUrban)
+summary(lme1000)
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Forest_250 +
+                  (1|RouteID) + (1|PilotID), data=allInsects_lowUrban)
+summary(lme1000)

@@ -209,8 +209,8 @@ mean(allInsects$avg_speed)
 
 #full and final model
 full_model <- lmer(log(Biomass+1) ~ 
-                  Agriculture_1000 + 
                   Urban_1000 +
+                  Agriculture_1000 + 
                   Open.uncultivated.land_1000+ # test if outlier drives the pattern
                   Wetland_50 +
                   Forest_250 +
@@ -222,7 +222,7 @@ full_model <- lmer(log(Biomass+1) ~
 # data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
 summary(full_model)
 AICc(full_model)
-tab_model(full_model, show.intercept = F, pred.labels = c("Farmland (1000 m)", "Urban (1000 m)", "Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"), digits = 3)
+tab_model(full_model, show.intercept = F, pred.labels = c("Urban (1000 m)", "Farmland (1000 m)","Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"), digits = 3)
 #r.squaredGLMM(full_model)
 
 #check variance inflation factor
@@ -230,18 +230,59 @@ vif(full_model)
 
 ### multcomp landcovers: simple model ##########################
 # pairwise comparison to farmland
-pair.ht <- glht(full_model, linfct = c("Agriculture_1000 - Forest_250 = 0", "- Agriculture_1000 - Wetland_50  = 0", "Agriculture_1000 - Urban_1000 = 0", "Agriculture_1000 - Open.uncultivated.land_1000 = 0"))
-summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass
+# pairwise comparison to urban
+pair.ht <- glht(full_model, linfct = c("Urban_1000 - Agriculture_1000 = 0", "Urban_1000 - Forest_250 = 0", "Urban_1000 - Wetland_50 = 0", "Urban_1000 - Open.uncultivated.land_1000 = 0"))
+summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
 confint(pair.ht)
 
-# pairwise comparison to urban
-pair.ht <- glht(full_model, linfct = c("Urban_1000 - Forest_250 = 0", "Urban_1000 - Wetland_50 = 0", "Urban_1000 - Open.uncultivated.land_1000 = 0"))
-summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
+pair.ht <- glht(full_model, linfct = c("Agriculture_1000 - Forest_250 = 0", "- Agriculture_1000 - Wetland_50  = 0", "Agriculture_1000 - Open.uncultivated.land_1000 = 0"))
+summary(pair.ht) # semi-natural covers have higher biomass than farmland, but it is only significant for grassland, urban has significantly lower biomass
 confint(pair.ht)
 
 # pairwise comparison to grassland
 pair.ht <- glht(full_model, linfct = c("Open.uncultivated.land_1000 - Wetland_50 = 0", "Open.uncultivated.land_1000 - Forest_250 = 0"))
 summary(pair.ht) # all semi-natural areas have significantly more biomass than urban (and farmland as well, see above)
+confint(pair.ht)
+
+
+### urban exclude ######################################################
+
+summary(allInsects$Urban_1000)
+#include only sites with less than 5% urban
+
+allInsects_lowUrban <- subset(allInsects, Urban_1000 <5)
+summary(allInsects_lowUrban$Urban_1000)
+
+nrow(allInsects_lowUrban)
+length(unique(allInsects_lowUrban$SampleID))
+length(unique(allInsects_lowUrban$RouteID_JB))
+
+lme1000 <- lmer(log(Biomass+1) ~ 
+                  Agriculture_1000 + 
+                  Open.uncultivated.land_1000+
+                  Wetland_50 +
+                  Forest_250 +
+                  Time_band + 
+                  Time_band:cnumberTime + 
+                  cStops + 
+                  cyDay + 
+                  (1|RouteID_JB) + (1|PilotID), data=allInsects_lowUrban)
+
+summary(lme1000)
+tab_model(lme1000, digits = 3, collapse.ci = T, show.intercept = F, pred.labels = c("Farmland", "Grassland", "Wetland", "Forest", "Evening vs. midday", "Potential stops", "Day of year", "Time during midday", "Time during evening"))
+car::vif(lme1000)
+
+# pairwise comparison to farmland
+pair.ht <- glht(lme1000, linfct = c("Agriculture_1000 - Forest_250 = 0", "Agriculture_1000 - Wetland_50 = 0", "Agriculture_1000 - Open.uncultivated.land_1000 = 0"))
+summary(pair.ht) 
+confint(pair.ht)
+
+# pairwise comparison to grassland
+pair.ht <- glht(lme1000, linfct = c(
+  "Open.uncultivated.land_1000 - Wetland_50 = 0",
+  "Open.uncultivated.land_1000 - Forest_250  = 0"))
+
+summary(pair.ht) 
 confint(pair.ht)
 
 ### ilr trans #############################################
@@ -261,15 +302,15 @@ names(myvars) <- c("cAgriculture_1000","cUrban_1000","cOpen.uncultivated.land_10
 allInsects <- cbind(allInsects,myvars)
 
 #original function from complmrob package (no random effects)
-complm1 <- complmrob(log10(Biomass+1) ~ cAgriculture_1000 + cUrban_1000 + cOpen.uncultivated.land_1000 + cWetland_50 + cForest_250, data=subset(allInsects, Open.uncultivated.land_1000 < 20))
+complm1 <- complmrob(log10(Biomass+1) ~ cUrban_1000 + cAgriculture_1000 + cOpen.uncultivated.land_1000 + cWetland_50 + cForest_250, data=subset(allInsects, Open.uncultivated.land_1000 < 20))
 summary(complm1)
 
-tab_model(complm1, show.intercept = F)
+tab_model(complm1, show.intercept = F, collapse.ci = T, pred.labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest"))
 
 #fit model as random effects model - setting urban as first composition - other land uses relative to this
-landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
+landUses <- c("cUrban_1000","cAgriculture_1000","cOpen.uncultivated.land_1000","cWetland_50","cForest_250")
 
-tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),2))
+tmpPred <- data.frame(isomLR(as.matrix(allInsects[,landUses]),1))
 tmpNames <- paste(names(tmpPred),collapse="+")
 tmpCovariates <- allInsects[,c("Time_band","cnumberTime","cStops","cyDay","RouteID_JB","PilotID")]
 tmp <- cbind(tmpPred,tmpCovariates)
@@ -280,7 +321,7 @@ lme1000 <-
 
 summary(lme1000)
 car::vif(lme1000)
-tab_model(lme1000, show.intercept = F)
+tab_model(lme1000, show.intercept = F, collapse.ci = T, pred.labels = c("Evening vs midday", "Potential stops", "Day of year", "Urban", "Farmland", "Grassland", "Wetland", "Time during midday", "Time during evening"))
 
 #write function to do the same for all land uses
 landUses <- c("cAgriculture_1000","cUrban_1000", "cOpen.uncultivated_1000","cWetland_50","cForest_250")

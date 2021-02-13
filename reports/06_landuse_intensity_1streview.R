@@ -450,7 +450,7 @@ dev.off()
 
 # the combined farming practices
 names(data)
-someInsects <- data[,c(12,142, 44, 152:153)]
+someInsects <- data[,c(12,142, 44, 151:152)]
 colnames(someInsects)
 colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "propOrganic", "propConventional")
 
@@ -487,7 +487,7 @@ tab_model(lmer1000, show.intercept = F, digits = 4, pred.labels = c("Farmland100
 car::vif(lmer1000)
 
 # pairwise comparison between interaction terms
-pair.ht <- glht(lmer1000, linfct = c("Agriculture_1000:propOrganic_farmland - Agriculture_1000:propConventional_farmland = 0", "Agriculture_1000 - propOrganic_farmland = 0"," Agriculture_1000 - propConventional_farmland = 0"," propConventional_farmland - propOrganic_farmland = 0"))
+pair.ht <- glht(lmer1000, linfct = c("Agriculture_1000:propOrganic_farmland - Agriculture_1000:propConventional_farmland = 0"))
 summary(pair.ht) # trend toward higher biomass in organic farmland
 confint(pair.ht)
 

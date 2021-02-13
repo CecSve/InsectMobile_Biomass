@@ -29,10 +29,10 @@ allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
 # since we find a strong negative effect of urban cover in the main land cover analysis, we wish to explore whether green space might remedy some of this negative effect. To test this, we need to extract the urban green land use variables, hedges and urban green areas, and calculate their porportional cover within urban land cover. 
 
 # first examine general correlations
-
-someInsects <- allInsects[,c(12,22, 48, 62, 70, 74:75)] 
+names(allInsects)
+someInsects <- allInsects[,c(12,22, 48, 62, 70, 74:77)] 
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedges", "Urban green", "Inner city", "Commercial")
+colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Hedges", "Urban green", "Inner city", "Commercial", "Residential", "Multistory")
 
 p <- cor(someInsects, use="pairwise.complete.obs")
 
@@ -55,7 +55,7 @@ dev.off()
 
 ### PCA urban ##################
 names(someInsects)
-mydata <- someInsects[,c(3:7)]
+mydata <- someInsects[,c(3:9)]
 
 fit <- princomp(mydata, cor=TRUE)
 biplot(fit)
@@ -81,7 +81,7 @@ print(pca_rotated)
 data <- allInsects
 
 #make data proportional
-data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
+#data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
 data$propLargecity <- (data$Bykerne_1000/data$Urban_1000)*100
 data$propCommercial <- (data$Erhverv_1000/data$Urban_1000)*100
@@ -89,7 +89,7 @@ data$propCommercial <- (data$Erhverv_1000/data$Urban_1000)*100
 tail(data)
 
 # merge greenness
-data$propGreen <- data$propHedge + data$propurbGreen 
+data$propGreen <- data$propurbGreen 
 data$propMajorcity <- data$propLargecity + data$propCommercial #+ data$propMultistory
 mean(data$propGreen)
 max(data$propGreen)
@@ -136,7 +136,7 @@ lme1000 <- lmer(log(Biomass+1) ~
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=data)
 summary(lme1000)
-tab_model(lme1000, digits = 3, show.intercept = F, pred.labels = c("Urban cover", "Prop. green cover", "Prop. large city cover", "Evening vs midday", "Potential stops", "Day of year", "Urban cover:Prop. green cover", "Urban cover:Large city cover", "Time within midday", "Time within evening"))
+tab_model(lme1000, digits = 3, show.intercept = F, collapse.ci = T, pred.labels = c("Urban cover", "Prop. green cover", "Prop. large city cover", "Evening vs midday", "Potential stops", "Day of year", "Urban cover:Prop. green cover", "Urban cover:Large city cover", "Time within midday", "Time within evening"))
 car::vif(lme1000)
 
 # pairwise comparison between interaction terms
@@ -223,7 +223,21 @@ landuse_urban <- prop_data %>% dplyr::mutate(
 #save_plot("plots/DK_urbanlanduse_cover_greenness.png", landuse_urban, base_width = 8, base_height = 6)
 
 ### PCA propUrban ##############
-fit <- princomp(someInsects[,3:5], cor=TRUE)
+names(allInsects)
+data <- allInsects
+someInsects <- allInsects[,c(12,22, 48, 70, 74:77)] 
+colnames(someInsects)
+#colnames(someInsects) <- c("Biomass", "Stops", "Urban", "Urban green", "Inner city", "Commercial", "Residential", "Multistory")
+
+#make data proportional
+someInsects$propurbGreen <- (someInsects$urbGreenPropArea_1000/someInsects$Urban_1000)*100
+someInsects$propInnercity <- (someInsects$Bykerne_1000/someInsects$Urban_1000)*100
+someInsects$propCommercial <- (someInsects$Erhverv_1000/someInsects$Urban_1000)*100
+someInsects$propResidential <- (someInsects$Lav.bebyggelse_1000/someInsects$Urban_1000)*100
+someInsects$propMultistory <- (someInsects$Høj.bebyggelse_1000/someInsects$Urban_1000)*100
+names(someInsects)
+
+fit <- princomp(someInsects[,c(3, 9:13)], cor=TRUE)
 #with ggplot
 biplot(fit)
 autoplot(fit)
@@ -237,7 +251,7 @@ dk_autoplot <- autoplot(fit, data = mydata,
 
 cowplot::save_plot("plots/pca_proplanduse_urban.png", dk_autoplot, base_height = 10, base_width = 12)
 
-pca_rotated <- psych::principal(someInsects[,3:5], 
+pca_rotated <- psych::principal(someInsects[,c(3, 9:13)], 
                                 rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
 print(pca_rotated)
@@ -252,30 +266,30 @@ data$Greening_gradient <- pca_rotated$scores[,2]
 
 #general gradient
 data$General_gradient_factor <- cut(data$Urbanization_gradient,3)
-ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
+ggplot(data,aes(x=Urban,y=log(Biomass+1),
                 group=General_gradient_factor))+
   geom_smooth(method=lm,aes(colour=General_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 #greening gradient
 data$Greening_gradient_factor <- cut(data$Greening_gradient,3)
-ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
+ggplot(data,aes(x=Urban,y=log(Biomass+1),
                 group=Greening_gradient_factor))+
   geom_smooth(method=lm,aes(colour=Greening_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 #both gradients
-ggplot(data,aes(x=Urban_1000,y=log(Biomass+1)))+
+ggplot(data,aes(x=Urban,y=log(Biomass+1)))+
   geom_smooth(method=lm,se=F)+
   facet_grid(Greening_gradient_factor~General_gradient_factor)
 
 #urban gradient alone
-data$urban_gradient_factor <- cut(data$Urban_1000,5)
-ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
+data$urban_gradient_factor <- cut(data$Urban,5)
+ggplot(data,aes(x=Urban,y=log(Biomass+1),
                 group=urban_gradient_factor))+
   geom_smooth(method="lm",aes(colour=urban_gradient_factor),se=F)
 
-ggplot(data,aes(x=Urban_1000,y=log(Biomass+1)))+
+ggplot(data,aes(x=Urban,y=log(Biomass+1)))+
   geom_smooth(method="loess")
 
 #add PCA axes scores to the dataset
@@ -375,28 +389,13 @@ dk_autoplot <- autoplot(fit, data = fit_data,
   scale_colour_manual(values = landuseCols[1:6])+
   theme_bw() + labs(colour = "Land cover")
 
-save_plot("plots/pca_landuse_farmland.png", dk_autoplot, base_height = 8, base_width = 12)
+cowplot::save_plot("plots/pca_landuse_farmland.png", dk_autoplot, base_height = 8, base_width = 12)
 
 #packageurl <- "https://cran.r-project.org/src/contrib/Archive/mnormt/mnormt_1.5-7.tar.gz"
 #install.packages(packageurl, repos=NULL, type="source")
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
 print(pca_rotated)
-
-ggsave("plots/pca_with_rotation_farmland_1000_DK.png")
-
-#add PCA axes scores to the dataset
-fit_data$FarmlandIntensive_gradient <- pca_rotated$scores[,1]
-fit_data$OrganicExtensive_gradient <- pca_rotated$scores[,2]
-
-lme1000 <- lmer(log(Biomass+1) ~ 
-                  FarmlandIntensive_gradient + 
-                  OrganicExtensive_gradient +
-                  Time_band + 
-                  Time_band:cnumberTime + cStops + cyDay + 
-                  (1|RouteID_JB) + (1|PilotID), data= fit_data)
-summary(lme1000)
-tab_model(lme1000, show.intercept = F)
 
 ### DK farmland proportional cover ######################################
 # calculate the proportional cover of the land use intensity variables within the most land cover routes
@@ -589,9 +588,9 @@ cowplot::save_plot("plots/propLanduse_plot.jpeg", landuse_plots, base_height = 8
 ### PCA propFarmland ####
 mydata <- data
 names(mydata)
-mydata <- mydata[,c(44,152:153)]
+mydata <- mydata[,c(44,145:150)]
 names(mydata)
-colnames(mydata) <- c("Farmland", "Organic", "Conventional")
+colnames(mydata) <- c("Farmland", "propOrgExtensive", "propExtensive", "propSemiIntensive", "propOrgSemiIntensive", "propIntensive", "propOrgIntensive")
 
 fit <- princomp(mydata, cor=TRUE)
 fit_data <- data %>% drop_na(Ekstensiv_1000)
@@ -615,17 +614,16 @@ print(pca_rotated)
 #ggsave("plots/pca_with_rotation_propfarmland_1000_DK.png", width = 12, height = 10)
 
 #add PCA axes scores to the dataset
-fit_data$Conventional_gradient <- pca_rotated$scores[,1]
-fit_data$Organic_gradient <- pca_rotated$scores[,2]
+fit_data$Organic_gradient <- pca_rotated$scores[,1]
+fit_data$Conventional_gradient <- pca_rotated$scores[,2]
 
 lme1000 <- lmer(log(Biomass+1) ~ 
-                  Conventional_gradient + 
-                  Organic_gradient +
+                  Organic_gradient + Conventional_gradient + 
                   Time_band + 
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data= fit_data)
 summary(lme1000)
-tab_model(lme1000, show.intercept = F, digits = 3, pred.labels = c("Farming gradient", "Farmland gradient", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within time band"))
+tab_model(lme1000, show.intercept = F, digits = 3, pred.labels = c("Organic gradient", "Conventional gradient", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within time band"))
 car::vif(lme1000)
 
 # pairwise comparison to farmland

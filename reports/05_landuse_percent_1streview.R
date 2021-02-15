@@ -1243,17 +1243,17 @@ r.squaredGLMM(lme1000)
 ### multicomp ##############################################
 
 # pairwise comparison to farmland
-pair.ht <- glht(lme1000, linfct = c("Forest_250 - Agriculture_1000 = 0", "Wetland_1000 - Agriculture_1000 = 0", "Open.uncultivated_1000 - Agriculture_1000 = 0"))
+pair.ht <- glht(lme1000, linfct = c(" Agriculture_1000 - Forest_250 = 0", "Agriculture_1000 - Wetland_1000 = 0", "Agriculture_1000 - Open.uncultivated_1000 = 0"))
 summary(pair.ht) 
 
 confint(pair.ht)
 
 # pairwise comparison to urban
 pair.ht <- glht(lme1000, linfct = c(
-"Forest_250 - Urban_1000 = 0",
-"Wetland_1000 - Urban_1000 = 0", 
-"Open.uncultivated_1000 - Urban_1000 = 0",
-"Agriculture_1000  - Urban_1000  = 0"))
+"Urban_1000 - Forest_250  = 0",
+"Urban_1000 - Wetland_1000 = 0", 
+"Urban_1000 - Open.uncultivated_1000 = 0",
+"Urban_1000 - Agriculture_1000 = 0"))
 
 summary(pair.ht) 
   
@@ -1261,8 +1261,8 @@ confint(pair.ht)
 
 #compared to grassland
 pair.ht <- glht(lme1000, linfct = c(
-  "Wetland_1000 - Open.uncultivated_1000 = 0",
-  "Forest_250 - Open.uncultivated_1000  = 0"))
+  "Open.uncultivated_1000 - Wetland_1000 = 0",
+  "Open.uncultivated_1000 - Forest_250  = 0"))
 
 summary(pair.ht) 
 

@@ -228,6 +228,37 @@ tab_model(full_model, show.intercept = F, pred.labels = c("Urban (1000 m)", "Far
 #check variance inflation factor
 vif(full_model)
 
+### predominant land cover: mean biomass ################
+# Create new column that picks out samples that are at the extreme in representing a single land cover type (>60% or >80% of a single land cover type) at the buffer zone with the largest effect size
+
+allInsects_totsample <- allInsects
+
+allInsects_totsample$hab50 = 'Mix' # samples that do not have more than 60% of one specific land type
+allInsects_totsample$hab50[allInsects_totsample$Agriculture_500>=50]<-'Agriculture50'
+allInsects_totsample$hab50[allInsects_totsample$Forest_1000>=50]<-'Forest50'
+allInsects_totsample$hab50[allInsects_totsample$Urban_1000>=50]<-'Urban50'
+table(allInsects_totsample$hab50) # notice the variation in sample size
+
+allInsects_totsample %>% 
+  dplyr::select(hab50, Biomass) %>% 
+  dplyr::filter(hab50 == "Agriculture50") %>% 
+  dplyr::summarise(mean = mean(Biomass)) # 252.488
+
+allInsects_totsample %>% 
+  dplyr::select(hab50, Biomass) %>% 
+  dplyr::filter(hab50 == "Forest50") %>% 
+  dplyr::summarise(mean = mean(Biomass)) # 187.375
+
+allInsects_totsample %>% 
+  dplyr::select(hab50, Biomass) %>% 
+  dplyr::filter(hab50 == "Urban50") %>% 
+  dplyr::summarise(mean = mean(Biomass)) # 35.8125
+
+allInsects_totsample %>% 
+  dplyr::select(hab50, Biomass) %>% 
+  dplyr::filter(hab50 == "Mix") %>% 
+  dplyr::summarise(mean = mean(Biomass)) # 186.8526
+
 ### multcomp landcovers: simple model ##########################
 # pairwise comparison to farmland
 # pairwise comparison to urban
@@ -284,6 +315,21 @@ pair.ht <- glht(lme1000, linfct = c(
 
 summary(pair.ht) 
 confint(pair.ht)
+
+### sqrt land covers #############################################
+#full and final model
+sqrt_model <- lmer(log(Biomass+1) ~ 
+                     sqrt(Urban_1000) +
+                     sqrt(Agriculture_1000) + 
+                     sqrt(Open.uncultivated.land_1000) + 
+                     sqrt(Wetland_50) +
+                     sqrt(Forest_250) +
+                     Time_band + 
+                     Time_band:cnumberTime + cStops + cyDay + 
+                     (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 20))
+# data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
+summary(sqrt_model)
+car::vif(sqrt_model)
 
 ### ilr trans #############################################
 

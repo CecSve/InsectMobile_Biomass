@@ -25,8 +25,6 @@ landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest")
 #landuseOrder <- c("Urban","Farmland","Grassland","Wetland","Forest", "Unspecified") # if including unspecified/other category
 
 #### General check-ups ################################################################
-# change land covers to be 0-100 instead of 0-1
-allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
 
 ### Land cover check ###################################################
 
@@ -54,6 +52,8 @@ cor(allInsects[,c("cStops","cTL",names(allInsects)[grepl("_50",names(allInsects)
 #correlations between stops and urban cover...
 
 ### Denmark ##############################################
+# change land covers to be 0-100 instead of 0-1
+allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
 
 ### Figure 3: the data ##########################
 qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
@@ -219,10 +219,10 @@ full_model <- lmer(log(Biomass+1) ~
                   #avg_speed +
                   Time_band:cnumberTime + cStops + cyDay + 
                   (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_1000 < 20))
-# data=subset(allInsects, Open.uncultivated.land_1000 < 0.2)
+
 summary(full_model)
 AICc(full_model)
-tab_model(full_model, show.intercept = F, pred.labels = c("Urban (1000 m)", "Farmland (1000 m)","Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"), digits = 3)
+tab_model(full_model, collapse.ci = T, show.intercept = F, pred.labels = c("Urban (1000 m)", "Farmland (1000 m)","Grassland (1000 m)", "Wetland (50 m)", "Forest (250 m)", "Time band: evening vs midday", "Potential stops", "Day of year", "Time within midday", "Time within evening"), digits = 3)
 #r.squaredGLMM(full_model)
 
 #check variance inflation factor

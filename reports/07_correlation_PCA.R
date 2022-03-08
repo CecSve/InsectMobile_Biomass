@@ -2,35 +2,31 @@
 
 ### Load required libraries ###########################
 
-library(ggbiplot)
+#library(ggbiplot)
 library(corrplot)
 library(Hmisc)
 library(ggfortify) # to plot PCA
-
-#### Set colour scheme ################################################################
-
-landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
 ### Denmark ###########################
 
 ### Correlation plot ##################
 
 # prepare plotting
-par(mfrow = c(2, 2))
+#par(mfrow = c(2, 2))
 
-names(allInsects)
+#names(allInsects)
 
 # select variables for PCA - we will only use land cover at 1000 m and cStops
-biomass.pca <- prcomp(allInsects[,c(12,141,44:49)], center = TRUE,scale. = TRUE) #choose biomass, stops and land covers
-summary(biomass.pca)
-str(biomass.pca)
+#biomass.pca <- prcomp(allInsects[,c(12,142,44:49)], center = TRUE,scale. = TRUE) #choose biomass, stops and land covers
+#summary(biomass.pca)
+#str(biomass.pca)
 
-ggbiplot(biomass.pca)
+#ggbiplot(biomass.pca)
 
 # correlation plot for 1000 m buffer
-someInsects <- allInsects[,c(12,141,44:49)]
+someInsects <- allInsects[,c(12,142,44:45,47:49)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -38,22 +34,14 @@ p <- cor(someInsects)
 res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
-## add p-values on no significant coefficient
-corrplot(p, p.mat = res1$p, method = "color", type = "upper",
-         sig.level = c(.001, .01, .05), pch.cex = .9,
-         insig = "label_sig", pch.col = "white", order = "AOE", tl.cex = 0.6, tl.col = "black", col = landuseCols)
+#png(file = "plots/DK_correlation_buffers.png")
+tiff("plots/DK_correlation_buffers.tiff", units="in", width=7, height=7, res=300)
 
-# with correlation coefficient as well
-corrplot.mixed(p, p.mat = res1$p, lower.col = "black", upper = "color",
-         sig.level = c(.001, .01, .05), pch.cex = .9,
-         insig = "label_sig", pch.col = "white", order = "AOE", tl.cex = 0.7, tl.col = "black", upper.col = landuseCols, number.cex = 0.7)
-
-corrplot(p, p.mat = res1$p, method = "color", type = "upper",
-         insig = "label_sig", pch.col = "white",
-         pch = "p<.05", pch.cex = .8, order = "AOE", tl.cex = 0.6, tl.col = "black", col = landuseCols) # "AOE" is for the angular order of the eigenvectors
+# prepare plotting
+par(mfrow = c(2, 2))
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "AOE", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
@@ -63,10 +51,9 @@ corrplot(p, method = "color", col = landuseCols,
          diag = FALSE, title = "Correlation at 1000 m", mar=c(0,0,1,0))
 
 # correlation plot for 500 m buffer
-
-someInsects <- allInsects[,c(12,141,38:43)]
+someInsects <- allInsects[,c(12,142,38:39,42:44)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -75,7 +62,7 @@ res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "AOE", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
@@ -85,9 +72,9 @@ corrplot(p, method = "color", col = landuseCols,
          diag = FALSE, title = "Correlation at 500 m", mar=c(0,0,1,0))
 
 # correlation plot for 250 m buffer
-someInsects <- allInsects[,c(12,141,32:37)]
+someInsects <- allInsects[,c(12,142,32:33,35:37)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -96,7 +83,7 @@ res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "AOE", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
@@ -106,9 +93,9 @@ corrplot(p, method = "color", col = landuseCols,
          diag = FALSE, title = "Correlation at 250 m", mar=c(0,0,1,0))
 
 # correlation plot for 50 m buffer
-someInsects <- allInsects[,c(12,141,26:31)]
+someInsects <- allInsects[,c(12,142,26:27,29:31)]
 colnames(someInsects)
-colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Heathland", "Grassland", "Urban", "Wetland")
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Forest", "Grassland", "Urban", "Wetland")
 
 p <- cor(someInsects)
 
@@ -117,7 +104,7 @@ res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "AOE", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
@@ -126,6 +113,7 @@ corrplot(p, method = "color", col = landuseCols,
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, title = "Correlation at 50 m", mar=c(0,0,1,0))
 
+dev.off()
 
 ### PCA #########
 

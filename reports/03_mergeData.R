@@ -2,6 +2,7 @@
 insectsDK <- read.delim("cleaned-data/DK_rough_landuse_biomass.txt",sep="\t")
 insectsDK$Country <- "Denmark"
 
+# skip to the section 'merge all Danish files for the Danis analysis'
 
 #read in German data
 insectsDE <- read.delim("cleaned-data/DE_rough_landuse_biomass.txt")
@@ -109,7 +110,7 @@ allInsects$Land_use <- factor(allInsects$Land_use,levels=c("Urban","Farmland",
 tripids <- read.delim("cleaned-data/DK_pilotTripIdToRouteID.txt")
 
 # load centroid coordinates for each route
-coords <- read.delim("covariate-data/DK_ruter2018_pkt_koordinater.txt")
+coords <- read.delim("covariate-data/DK_ruter2018_pkt_koordinater.txt", dec = ",")
 
 # load traffic light counts per route
 tfstops <- read.delim("covariate-data/DK_TrafficLightsCount.txt")
@@ -117,7 +118,7 @@ tfstops <- read.delim("covariate-data/DK_TrafficLightsCount.txt")
 # merging data by new routeIDs (RouteID_JB) so other data can be merged as well
 mergedData <-
   merge(allInsects, tripids, by.x = "SampleID", by.y = "PilotTripID")
-setdiff(allInsects$SampleID, tripids$PilotTripID) # all metadatasamples are included - yay!
+setdiff(allInsects$SampleID, tripids$PilotTripID) # all metadata samples are included - yay!
 
 # adding stopping effect (proxy = count of traffic lights on route)
 with_tfstops <-
@@ -235,6 +236,9 @@ allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime
 
 #set missing values to mean of time band
 allInsects$cnumberTime[is.na(allInsects$cnumberTime)]<- 0
+
+# write output
+write.table(allInsects, file = "cleaned-data/DK_allInsects.txt", col.names = T, row.names = F, sep = "\t",dec = ".")
 
 #centering other land use variables
 # centreVars<-function(df){

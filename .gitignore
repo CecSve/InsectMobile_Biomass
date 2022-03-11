@@ -52,3 +52,6 @@ covariate-data/
 
 #ignore plots
 plots/*
+
+#ignore old and unused scripts
+unused-scripts/*

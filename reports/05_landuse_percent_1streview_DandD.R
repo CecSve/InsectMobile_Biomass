@@ -1171,70 +1171,53 @@ qU <- ggplot(allInsects,aes(x=Urban_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[1])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70") + 
-  scale_x_continuous(
+  geom_smooth(method="lm",color="grey70") + scale_x_continuous(
     labels = function(x)
       paste0(x, "%")) +
-  xlab("") +
-  ylab("Biomass (mg)") + 
-  labs(subtitle = "Urban cover") + 
-  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+  xlab("") +ylab("") + labs(subtitle = "Urban cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"), axis.text = element_text(size = 16), axis.title.y = element_text(size = 16))
 
 qF <- ggplot(allInsects,aes(x=Agriculture_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[2])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70") + 
-  scale_x_continuous(
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x, "%")) +
-  xlab("") +
-  ylab("Biomass (mg)") + 
-  labs(subtitle = "Farmland cover") + 
-  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+  xlab("") +ylab("") + labs(subtitle = "Farmland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"), axis.text = element_text(size = 16), axis.title.y = element_text(size = 16))
 
 qD <- ggplot(allInsects,aes(x=Open.uncultivated_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[3])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70") + 
-  scale_x_continuous(
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
+    #limits = c(0, 0.16),
     labels = function(x)
       paste0(x, "%")) +
-  xlab("") +
-  ylab("Biomass (mg)") + 
-  labs(subtitle = "Grassland cover") + 
-  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+  xlab("") +ylab("Biomass (mg)") + labs(subtitle = "Grassland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5),"cm"), axis.text = element_text(size = 16), axis.title.y = element_text(size = 24))
 
 qW <- ggplot(allInsects,aes(x=Wetland_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[4])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70") + 
-  scale_x_continuous(
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x, "%")) +
-  xlab("") +
-  ylab("Biomass (mg)") + 
-  labs(subtitle = "Wetland cover") + 
-  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+  xlab("") +ylab("") + labs(subtitle = "Wetland cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5),"cm"), axis.text = element_text(size = 16), axis.title.y = element_text(size = 16))
 
 qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   geom_point(col=landuseCols[5])+
   scale_y_log10() +
   theme_bw() +
-  geom_smooth(method="lm",color="grey70") + 
-  scale_x_continuous(
+  geom_smooth(method="lm",color="grey70")+scale_x_continuous(
     labels = function(x)
       paste0(x, "%")) +
-  xlab("") +
-  ylab("Biomass (mg)") + 
-  labs(subtitle = "Forest cover") + 
-  theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+  xlab("") +ylab("") + labs(subtitle = "Forest cover") + theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"), axis.text = element_text(size = 16), axis.title.y = element_text(size = 16))
 
-cowplot::plot_grid(qU,qF,qD,qW,qFo,ncol=1)
+fig3 <- cowplot::plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
 ggsave("plots/Landcover_percent.png",width=4,height=12)
+cowplot::save_plot("plots/DE_Landcover_percent.tiff", fig3, base_width = 4, base_height = 12, dpi = 1200)
+
 
 ##### Figure 3: DE pie chart #####################################
 
@@ -1288,9 +1271,10 @@ allInsects_melt <- allInsects_melt %>% mutate(
 
 levels(allInsects_melt$BiomassCats)
 
-biomass.labs <- c("[0,46]"=" < 46 mg", "(46,115]"="486-115 mg", "(115,209]"="115-209 mg", 
-                  "(209,502]"="209-502 mg", "(502,1.38e+03]"="> 502 mg")
+biomass.labs <- c("[0,46]"=" 0-46 mg", "(46,115]"="486-115 mg", "(115,209]"="115-209 mg", 
+                  "(209,502]"="209-502 mg", "(502,1.38e+03]"="502-1380 mg")
 
+forplot <- allInsects_melt %>% filter(BiomassCats %in% c("[0,46]", "(502,1.38e+03]"))
 
 fig3_2 <- ggplot(forplot,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
   geom_bar(stat="identity")+
@@ -1308,7 +1292,7 @@ cowplot::save_plot("plots/DE_landcover_biomass_proportions.tiff", fig3_2, base_w
 ##### Table 1: Linear Mixed Effects Model - Land covers #################
 
 #full model and final
-lme1000 <- lmer(log(Biomass+1) ~ 
+lme1000 <- full_model <- lmer(log(Biomass+1) ~ 
                   Agriculture_1000 + 
                   Urban_1000 +
                   Open.uncultivated_1000+
@@ -1380,7 +1364,9 @@ r.squaredGLMM(lme1000)
 ##### Table 1: multicomp land covers - simple model ##########################################
 
 # pairwise comparison to farmland
-pair.ht <- glht(lme1000, linfct = c(" Agriculture_1000 - Forest_250 = 0", "Agriculture_1000 - Wetland_1000 = 0", "Agriculture_1000 - Open.uncultivated_1000 = 0"))
+pair.ht <- glht(lme1000, linfct = c(" Agriculture_1000 - Forest_250 = 0", 
+                                    "Agriculture_1000 - Wetland_1000 = 0", 
+                                    "Agriculture_1000 - Open.uncultivated_1000 = 0"))
 summary(pair.ht) 
 
 confint(pair.ht)
@@ -1405,6 +1391,15 @@ summary(pair.ht)
 
 confint(pair.ht)
 
+
+#compared to grassland
+pair.ht <- glht(lme1000, linfct = c(
+  "Wetland_1000 - Forest_250  = 0"))
+
+summary(pair.ht) 
+
+confint(pair.ht)
+
 #squareroot
 pair.ht <- glht(lme1000, linfct = c("sqrt_Forest_250 - sqrt_Agriculture_1000 = 0", "sqrt_Wetland_1000 - sqrt_Agriculture_1000 = 0", "sqrt_Open.uncultivated_1000 - sqrt_Agriculture_1000 = 0"))
 confint(pair.ht)
@@ -1412,6 +1407,53 @@ pair.ht <- glht(lme1000, linfct = c("sqrt_Forest_250 - sqrt_Urban_1000 = 0","sqr
 confint(pair.ht)
 pair.ht <- glht(lme1000, linfct = c("sqrt_Wetland_1000 - sqrt_Open.uncultivated_1000 = 0","sqrt_Forest_250 - sqrt_Open.uncultivated_1000  = 0"))
 confint(pair.ht)
+
+##### Table 1: coefficient plot ######################################################
+#point estimate
+
+myConfint <- confint(full_model)
+
+coefDF <- data.frame(Landcover = names(fixef(full_model)),
+                     estimate = as.numeric(fixef(full_model)),
+                     lowerCI = as.numeric(myConfint[-c(1:3),1]),
+                     upperCI = as.numeric(myConfint[-c(1:3),2]))
+
+#subset to land covers
+coefDF <- subset(coefDF, Landcover %in% c("Agriculture_1000","Urban_1000","Open.uncultivated_1000","Wetland_1000","Forest_250"))
+
+p <-coefDF %>% 
+  mutate(Landcover = fct_relevel(
+      Landcover,
+      "Urban_1000",
+      "Agriculture_1000",
+      "Open.uncultivated_1000",
+      "Wetland_1000",
+      "Forest_250"
+    )) %>% 
+  ggplot(aes(Landcover, estimate))
+
+c<-p+scale_size_area(max_size = 1.5)
+
+#this puts in a dotted line at the point of group difference
+d<-c+geom_hline(yintercept = 0, lty=2,size=1)
+
+coefPlot <-
+  d + geom_pointrange(aes(ymin = lowerCI, ymax = upperCI, colour = Landcover),
+                      size = 1.5) + theme_minimal_grid() + theme(
+                        legend.title = element_blank(),
+                        legend.key = element_rect(size = 0.1),
+                        legend.key.size = unit(1, 'cm')
+                      ) + labs(x = "", y = "Effect on flying insect biomass & 95% CIs") + scale_x_discrete(
+                        labels = c(
+                          "Urban_1000" = "Urban",
+                          "Agriculture_1000" = "Farmland",
+                          "Open.uncultivated_1000" = "Grassland",
+                          "Wetland_1000" = "Wetland",
+                          "Forest_250" = "Forest"
+                        )
+                      ) + scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) + theme(axis.text.x = element_text(size = 10, angle = 90, vjust=0.3,hjust=1), legend.position = "none", axis.title.y = element_text(size = 10)) + scale_colour_manual(values = landuseCols) + coord_fixed(50)
+
+cowplot::save_plot("plots/DE_coefficient_plot.tiff", coefPlot, base_width = 4, base_height = 5, dpi = 300)
 
 ##### ilr trans of land covers ################################
 

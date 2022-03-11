@@ -1232,7 +1232,7 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
   labs(subtitle = "Forest cover") + 
   theme(plot.subtitle = element_text(size = 12, face = "bold"), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
-plot_grid(qU,qF,qD,qW,qFo,ncol=1)
+cowplot::plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
 ggsave("plots/Landcover_percent.png",width=4,height=12)
 
@@ -1292,18 +1292,18 @@ biomass.labs <- c("[0,46]"=" < 46 mg", "(46,115]"="486-115 mg", "(115,209]"="115
                   "(209,502]"="209-502 mg", "(502,1.38e+03]"="> 502 mg")
 
 
-ggplot(allInsects_melt,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
+fig3_2 <- ggplot(forplot,aes(x="",y=value,fill=Land_cover, order = Land_cover))+
   geom_bar(stat="identity")+
-  facet_grid(~BiomassCats, labeller = labeller(BiomassCats=biomass.labs))+
+  facet_wrap(~BiomassCats, labeller = labeller(BiomassCats=biomass.labs[c(1,5)]), ncol = 1)+
   coord_polar("y")+
   theme_classic() + 
   theme(axis.line = element_blank(),
         axis.title = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank()) +
-  theme(legend.position="top") + scale_fill_manual(values = landuseCols, name = "Land cover", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Other")) +guides(fill=guide_legend(nrow=1,byrow=TRUE))
+  theme(legend.position="left", strip.text = element_text(size = 16), legend.text = element_text(size = 16), legend.key.size = unit(1.5, 'cm')) + scale_fill_manual(values = landuseCols, name = "", labels = c("Urban", "Farmland", "Grassland", "Wetland", "Forest", "Other")) 
 
-ggsave("plots/piecharts_DE.png",width=12,height=6)
+cowplot::save_plot("plots/DE_landcover_biomass_proportions.tiff", fig3_2, base_width = 12, base_height = 6, dpi = 800)
 
 ##### Table 1: Linear Mixed Effects Model - Land covers #################
 

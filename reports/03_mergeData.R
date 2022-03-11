@@ -64,9 +64,8 @@ weatherData <- merge(tempData,windData,by=c("RouteID","Date","Time_band"))
 allInsects <- allInsects[,-which(names(allInsects) %in% c("Wind","Temperature"))]
 allInsects2 <- merge(allInsects,weatherData,by=c("RouteID","Date","Time_band"),all.x=T)
 subset(allInsects2,is.na(Temp))
-#Gruen_09 2018-07-04 is missing - but I did this!!! Grr
 
-#insert mean values for now
+#insert mean values for missing temp data (1 value)
 mean(allInsects2$Temp[allInsects$Time_band=="midday"],na.rm=T)#24.42077
 mean(allInsects2$Wind[allInsects$Time_band=="midday"],na.rm=T)#4.163846
 mean(allInsects2$Temp[allInsects$Time_band=="evening"],na.rm=T)#23.01231
@@ -237,8 +236,13 @@ allInsects$cnumberTime[allInsects$Time_band=="evening"] <- allInsects$numberTime
 #set missing values to mean of time band
 allInsects$cnumberTime[is.na(allInsects$cnumberTime)]<- 0
 
-# write output
+### save ####################################################################################
+
+# write output for Denmark
 write.table(allInsects, file = "cleaned-data/DK_allInsects.txt", col.names = T, row.names = F, sep = "\t",dec = ".")
+
+# write output for Germany
+write.table(allInsects, file = "cleaned-data/DE_allInsects.txt", col.names = T, row.names = F, sep = "\t",dec = ".")
 
 #centering other land use variables
 # centreVars<-function(df){

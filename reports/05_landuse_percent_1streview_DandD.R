@@ -127,12 +127,13 @@ qFo <- ggplot(allInsects,aes(x=Forest_1000,y=(Biomass+1)))+
 
 fig3 <- cowplot::plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 
-cowplot::save_plot("plots/DK_Landcover_percent.tiff", fig3, base_width = 4, base_height = 12, dpi = 1200)
-#ggsave("plots/Landcover_percent.png",width=12,height=4)
+cowplot::save_plot("plots/DK_Landcover_percent.tiff", fig3, base_width = 4, base_height = 12, dpi = 800)
 
-# change land covers to be 0-100 instead of 0-1
+cowplot::save_plot("plots/DK_Landcover_percent.png", fig3, base_width = 4, base_height = 12, dpi = 800)
+
+# change the five land covers to be 0-100 instead of 0-1
 allInsects_trans_landcovers <- allInsects
-allInsects_trans_landcovers[, c(26:49, 70:137,139)] <- allInsects_trans_landcovers[, c(26:49, 70:137,139)]*100
+allInsects_trans_landcovers[,26:49] <- allInsects_trans_landcovers[,26:49]*100
 
 ##### Figure 3: DK pie chart#####################################
 

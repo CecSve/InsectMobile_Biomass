@@ -16,6 +16,7 @@ library(multcomp) # generalized linear hypothesis, to compare between effects of
 library(sjPlot) # to plot nice tables
 library(dplyr) # for data wrangling
 library(tidyr) # for data wrangling
+library(tidyverse) # for data wrangling
 
 #### Set colour scheme ################################################################
 
@@ -629,17 +630,19 @@ effectplot <- test %>% mutate(
   scale_color_manual(
     values = landuseCols,
     labels = c(
-      "Urban cover (1000 m)",
-      "Farmland cover (1000 m)",
-      "Grassland cover (1000 m)",
-      "Wetland cover (50 m)",
-      "Forest cover (250 m)"
+      "Urban cover",
+      "Farmland cover",
+      "Grassland cover",
+      "Wetland cover",
+      "Forest cover"
     )
-  ) + theme_minimal_grid() + theme(
+  ) +guides(colour=guide_legend(ncol=1, byrow = T)) + theme_minimal_grid() + theme(
     plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
-    legend.text = element_text(size =12),
-    legend.position = "bottom"
+    legend.text = element_text(size =14),
+    legend.position = "right",
+    legend.spacing.x = unit(1.0, 'cm'),
+    legend.key.height = unit(1, 'cm')
   ) + scale_x_continuous(
     limits = c(0, 100),
     labels = function(x)
@@ -653,15 +656,15 @@ effectplot <- test %>% mutate(
         alpha = 0.2,
         show.legend = F
       ) + labs(
-        x = "Land cover",
+        x = "Land cover extent",
         y = "log Predicted biomass (mg)",
         subtitle = "A: Denmark",
         colour = "Land cover type"
       ) + scale_fill_manual(values = landuseCols)
 
-cowplot::save_plot("plots/DK_effect_landcover.tiff", effectplot, base_width = 12, base_height = 8, dpi = 800)
+cowplot::save_plot("plots/Fig4_DK_effect_landcover.tiff", effectplot, base_width = 12, base_height = 8, dpi = 800)
 
-cowplot::save_plot("plots/DK_effect_landcover.png", effectplot, base_width = 12, base_height = 8, dpi = 800)
+cowplot::save_plot("plots/Fig4_DK_effect_landcover.png", effectplot, base_width = 12, base_height = 8, dpi = 800)
 
 ##### Figure 5: time band ###############################
 maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")
@@ -729,9 +732,9 @@ sampling_time <- cowplot::plot_grid(
   rel_heights = c(0.1, 1)
 )
 
-cowplot::save_plot("plots/DK_sampling_time_maxcover.tiff", sampling_time, base_width = 10, base_height = 6, dpi = 800)
+cowplot::save_plot("plots/Fig5_DK_sampling_time_maxcover.tiff", sampling_time, base_width = 10, base_height = 6, dpi = 800)
 
-cowplot::save_plot("plots/DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6, dpi = 800)
+cowplot::save_plot("plots/Fig5_DK_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6, dpi = 800)
 
 # biomass difference between midday and evening
 allInsects.long <- allInsects_trans_landcovers %>% 

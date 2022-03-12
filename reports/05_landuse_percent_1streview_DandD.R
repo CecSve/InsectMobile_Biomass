@@ -682,11 +682,11 @@ midday_plot <- allInsects_trans_landcovers[allInsects_trans_landcovers$Time_band
     "Agriculture_1000",
     "Forest_1000"
   )
-) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point(size = 3) + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
   "Urban",
   "Farmland",
   "Forest"
-)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text = element_text(size = 12), strip.text.x = element_text(size = 16, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 12), legend.position = "bottom", axis.title.y = element_text(size = 12))
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text = element_text(size = 12), strip.text.x = element_text(size = 16, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 14), legend.position = "bottom", axis.title.y = element_text(size = 12)) + guides(colour = guide_legend(override.aes = list(size=8)))
 
 midday_plot <- midday_plot + scale_x_continuous(breaks = c(-77.5, 10, 87.5), labels = c("12.00", "13.30", "15.00")) + ylim(0,8)
 
@@ -701,11 +701,11 @@ evening_plot <- allInsects_trans_landcovers[allInsects$Time_band=="evening",] %>
     "Agriculture_1000",
     "Forest_1000"
   )
-) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point(size = 3) + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
   "Urban",
   "Farmland",
   "Forest"
-)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text = element_text(size = 12), strip.text.x = element_text(size = 16, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 12), legend.position = "bottom", axis.title.y = element_text(size = 12))
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "", colour = "Sampling time") + theme_minimal() + theme(axis.text = element_text(size = 12), strip.text.x = element_text(size = 16, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 14), legend.position = "bottom", axis.title.y = element_text(size = 12)) + guides(colour = guide_legend(override.aes = list(size=8)))
 
 evening_plot <- evening_plot + scale_x_continuous(breaks = c(-74, 21, 95), labels = c("17.00", "18.30", "20.00"))+ ylim(0,8)
 

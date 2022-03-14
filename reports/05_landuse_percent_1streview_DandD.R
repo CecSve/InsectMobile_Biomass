@@ -1594,57 +1594,52 @@ forest <- getEffects(predEffects,var="Forest_250")
 test <- rbind(urb, farm, grass, wet, forest)
 
 # Visualization
-test_relevel <- test %>% mutate(
-  landcover = fct_relevel(
-    landcover,
+effectplot <- test %>% mutate(
+  landcover = fct_relevel(landcover,
     "Urban_1000",
     "Agriculture_1000",
     "Open.uncultivated_1000",
     "Wetland_1000",
-    "Forest_250"
-  )) 
-
-effectplot <- test_relevel %>% 
+    "Forest_250")) %>% 
   ggplot(aes(x = propcover, y = fit, fill = landcover)) +
   geom_line(aes(color = landcover), size = 2) +
   scale_color_manual(
     values = landuseCols,
     labels = c(
-      "Urban cover (1000 m)",
-      "Farmland cover (1000 m)",
-      "Grassland cover (1000 m)",
-      "Wetland cover (1000 m)",
-      "Forest cover (250 m)")) + 
-    theme_minimal_grid() + 
-  theme(
-    plot.subtitle = element_text(size = 20, face = "bold"),
+      "Urban cover",
+      "Farmland cover",
+      "Grassland cover",
+      "Wetland cover",
+      "Forest cover")) +
+  guides(colour=guide_legend(ncol=1, byrow = T)) + 
+  theme_minimal_grid() + 
+  theme(plot.subtitle = element_text(size = 20, face = "bold"),
     legend.title = element_blank(),
-    legend.text = element_text(size = 8),
-    legend.position = "bottom") + 
-  scale_x_continuous(
-    limits = c(0, 100),
+    legend.text = element_text(size =14),
+    legend.position = "right",
+    legend.spacing.x = unit(1.0, 'cm'),
+    legend.key.height = unit(1, 'cm')) + 
+  scale_x_continuous(limits = c(0, 100),
     labels = function(x)
-      paste0(x, "%"))  + 
-  #      scale_y_continuous(
-  #      limits = c(2.5, 7),
-  #      labels = function(x)
-  #        paste0(x * 1, "%")) + 
-  geom_ribbon(
+      paste0(x, "%")) + scale_y_continuous(limits = c(1.5, 7)) + geom_ribbon(
         aes(
           ymin = fit-se,
           ymax = fit+se,
-          group = landcover),
+          group = landcover
+        ),
         linetype = 2,
         alpha = 0.2,
         show.legend = F) + 
   labs(
-        x = "Land cover",
+        x = "Land cover extent",
         y = "log Predicted biomass (mg)",
         subtitle = "B: Germany",
         colour = "Land cover type") + 
   scale_fill_manual(values = landuseCols)
 
-save_plot("plots/DE_effect_landcover.png", effectplot, base_width = 10, base_height = 6)
+#cowplot::save_plot("plots/Fig4_DE_effect_landcover.tiff", effectplot, base_width = 12, base_height = 8, dpi = 800)
+
+ggsave("plots/Fig4_DE_effect_landcover.png", width = 8, height = 5)
 
 ##### Test of land cover diffs##############################
 
@@ -1776,6 +1771,9 @@ test <- allInsects[allInsects$Time_band=="midday",]
 min(test$cnumberTime)
 max(test$cnumberTime)
 
+temp <- unique(cbind(test[,c("StartTime","cnumberTime")]))
+temp[order(temp$cnumberTime),]
+
 midday_plot <- allInsects[allInsects$Time_band=="midday",] %>% filter(maxLand_use %in% maxs) %>% mutate(
   maxLand_use = fct_relevel(
     maxLand_use,
@@ -1783,17 +1781,22 @@ midday_plot <- allInsects[allInsects$Time_band=="midday",] %>% filter(maxLand_us
     "Agriculture_1000",
     "Forest_1000"
   )
-) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point(size = 3) + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
   "Urban",
   "Farmland",
   "Forest"
-)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text.x = element_text(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text = element_text(size = 12), strip.text.x = element_text(size = 16, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 14), legend.position = "bottom", axis.title.y = element_text(size = 12)) + guides(colour = guide_legend(override.aes = list(size=8)))
 
-midday_plot <- midday_plot + scale_x_continuous(breaks = c(-77.5, 10, 87.5), labels = c("12.00", "13.30", "15.00")) + ylim(0,8)
+midday_plot <- midday_plot + 
+  scale_x_continuous(breaks = c(-90, 0, 90), 
+                     labels = c("12.00", "13.30", "15.00")) + ylim(0,8)
 
 test <- allInsects[allInsects$Time_band=="evening",]
 min(test$cnumberTime)
 max(test$cnumberTime)
+
+temp <- unique(cbind(test[,c("StartTime","cnumberTime")]))
+temp[order(temp$cnumberTime),]
 
 evening_plot <- allInsects[allInsects$Time_band=="evening",] %>% filter(maxLand_use %in% maxs) %>% mutate(
   maxLand_use = fct_relevel(
@@ -1802,15 +1805,19 @@ evening_plot <- allInsects[allInsects$Time_band=="evening",] %>% filter(maxLand_
     "Agriculture_1000",
     "Forest_1000"
   )
-) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point() + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
+) %>% ggplot(aes((cnumberTime), log(Biomass+1), colour = maxLand_use)) + geom_point(size = 3) + geom_smooth(method=lm, alpha = 0.3, size =1.5, show.legend = F)+ scale_colour_manual(values = landuseCols[c(1,2,5)], labels = c(
   "Urban",
   "Farmland",
   "Forest"
-)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "log(biomass +1) (mg)", colour = "Sampling time") + theme_minimal() + theme(axis.text.x = element_text(), plot.subtitle = element_text(size = 20, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 8), legend.position = "bottom")
+)) + facet_grid(.~Time_band, labeller = labeller(Time_band = facet_labs)) + scale_fill_manual(values = c("darkgrey", "darkgrey")) + labs(x = "", y= "", colour = "Sampling time") + theme_minimal() + theme(axis.text = element_text(size = 12), strip.text.x = element_text(size = 16, face = "bold"),legend.title = element_blank(), legend.text = element_text(size = 14), legend.position = "bottom", axis.title.y = element_text(size = 12)) + guides(colour = guide_legend(override.aes = list(size=8)))
 
-evening_plot <- evening_plot + scale_x_continuous(breaks = c(-74, 21, 95), labels = c("17.00", "18.30", "20.00"))+ ylim(0,8)
+evening_plot <- evening_plot + 
+  scale_x_continuous(breaks = c(-75, 15, 105), 
+                     labels = c("17.00", "18.30", "20.00"))+ 
+  ylim(0,8)
 
-plot_row <- plot_grid(midday_plot, evening_plot)
+plot_row <- cowplot::plot_grid(midday_plot, 
+                      evening_plot,ncol=2,nrow=1)
 
 # now add the title
 title <- ggdraw() + 
@@ -1826,15 +1833,14 @@ title <- ggdraw() +
     plot.margin = margin(0, 0, 0, 7)
   )
 
-sampling_time <- plot_grid(
+sampling_time <- cowplot::plot_grid(
   title, plot_row,
   ncol = 1,
   # rel_heights values control vertical title margins
   rel_heights = c(0.1, 1)
 )
 
-save_plot("plots/DE_sampling_time_maxcover.png", sampling_time, base_width = 10, base_height = 6)
-
+ggsave("plots/DE_sampling_time_maxcover.png", width = 10, height = 6)
 
 ##### Table S4.2: exclude urban cover ######################################################
 

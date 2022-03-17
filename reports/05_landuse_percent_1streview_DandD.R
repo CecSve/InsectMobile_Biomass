@@ -662,9 +662,9 @@ effectplot <- test %>% mutate(
         colour = "Land cover type"
       ) + scale_fill_manual(values = landuseCols)
 
-cowplot::save_plot("plots/Fig4_DK_effect_landcover.tiff", effectplot, base_width = 12, base_height = 8, dpi = 800)
+cowplot::save_plot("plots/Fig4_DK_effect_landcover.tiff", effectplot, base_width = 8, base_height = 5, dpi = 800)
 
-cowplot::save_plot("plots/Fig4_DK_effect_landcover.png", effectplot, base_width = 12, base_height = 8, dpi = 800)
+cowplot::save_plot("plots/Fig4_DK_effect_landcover.png", effectplot, base_width = 8, base_height = 5, dpi = 800)
 
 ##### Figure 5: time band ###############################
 maxs <- c("Urban_1000", "Agriculture_1000", "Forest_1000")

@@ -38,6 +38,15 @@ getEffect <- function(model){
 #   
 # }
 
+### Load data ###################################################
+# NB! choose which country to run the analysis on and load the corresponding data
+
+# load Danish data
+allInsects <- read.delim("cleaned-data/DK_allInsects.txt")
+
+# load German data
+allInsects <- read.delim("cleaned-data/DE_allInsects.txt")
+
 ### Denmark ####################
 
 ###DK simple regression plot land cover##############################################
@@ -98,12 +107,16 @@ qFo <- ggplot(allInsects,aes(x=sqrt(Forest_1000),y=(Biomass+1)))+
 y.grob <- textGrob("Biomass (mg)", 
                    gp=gpar(fontface="bold", col="black", fontsize=10), rot=90)
 
-plot <- plot_grid(qU,qF,qD,qW,qFo,ncol=1)
+plot <- cowplot::plot_grid(qU,qF,qD,qW,qFo,ncol=1)
 plot <- grid.arrange(arrangeGrob(plot, left = y.grob))
 #ggsave("plots/DK_Landcover_percent.png",width=3,height=8)
 save_plot("plots/DK_Landcover_percent.png", plot, base_width = 3, base_height = 8)
 
 ### DK plot buffers#################################################
+
+# change the five land covers to be 0-100 instead of 0-1
+allInsects_trans_landcovers <- allInsects
+allInsects[,26:49] <- allInsects[,26:49]*100
 
 #urban
 u50 <- ggplot(allInsects)+
@@ -174,8 +187,8 @@ u1000pubr <- ggscatter(allInsects, x = "Urban_1000", y = "Biomass",
                                                            if_else(readr::parse_number(..p.label..) < 0.001, 
                                                                    "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 3, size =3) + xlab("Urban cover at 1000m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans()) + xscale(.scale = "percent")
 
-plot_grid(u50,u250,u500,u1000,ncol=1)
-plot_grid(u50pubr,u250pubr,u500pubr,u1000pubr,ncol=1)
+cowplot::plot_grid(u50,u250,u500,u1000,ncol=1)
+cowplot::plot_grid(u50pubr,u250pubr,u500pubr,u1000pubr,ncol=1)
 
 #agriculture
 a50 <- ggplot(allInsects)+
@@ -246,8 +259,8 @@ a1000pubr <- ggscatter(allInsects, x = "Agriculture_1000", y = "Biomass",
                                                            if_else(readr::parse_number(..p.label..) < 0.001, 
                                                                    "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 0.8, size =3) + xlab("Farmland cover at 1000m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans()) + xscale(.scale = "percent")
 
-plot_grid(a50,a250,a500,a1000,ncol=1)
-plot_grid(a50pubr,a250pubr,a500pubr,a1000pubr,ncol=1)
+cowplot::plot_grid(a50,a250,a500,a1000,ncol=1)
+cowplot::plot_grid(a50pubr,a250pubr,a500pubr,a1000pubr,ncol=1)
 
 # Grassland
 g50 <- ggplot(allInsects)+
@@ -318,8 +331,8 @@ g1000pubr <- ggscatter(allInsects, x = "Open.uncultivated.land_1000", y = "Bioma
                                                            if_else(readr::parse_number(..p.label..) < 0.001, 
                                                                    "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.3, label.y = 0.8, size =3) + xlab("Grassland cover at 1000m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans()) + xscale(.scale = "percent")
 
-plot_grid(g50,g250,g500,g1000,ncol=1)
-plot_grid(g50pubr,g250pubr,g500pubr,g1000pubr,ncol=1)
+cowplot::plot_grid(g50,g250,g500,g1000,ncol=1)
+cowplot::plot_grid(g50pubr,g250pubr,g500pubr,g1000pubr,ncol=1)
 
 # wetland
 w50 <- ggplot(allInsects)+
@@ -390,8 +403,8 @@ w1000pubr <- ggscatter(allInsects, x = "Wetland_1000", y = "Biomass",
                                                           if_else(readr::parse_number(..p.label..) < 0.001, 
                                                                   "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.25, label.y = 0.8, size =3) + xlab("Wetland cover at 1000m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans()) + xscale(.scale = "percent")
 
-plot_grid(w50,w250,w500,w1000,ncol=1)
-plot_grid(w50pubr,w250pubr,w500pubr,w1000pubr,ncol=1)
+cowplot::plot_grid(w50,w250,w500,w1000,ncol=1)
+cowplot::plot_grid(w50pubr,w250pubr,w500pubr,w1000pubr,ncol=1)
 
 #forest
 f50 <- ggplot(allInsects)+
@@ -462,12 +475,13 @@ f1000pubr <- ggscatter(allInsects, x = "Forest_1000", y = "Biomass",
                                                            if_else(readr::parse_number(..p.label..) < 0.001, 
                                                                    "p<0.001", ..p.label..), sep = "~`,   `~")), label.x = 0.5, label.y = 0.8, size =3) + xlab("Forest cover at 1000m") + ylab("Biomass (mg)") + scale_y_continuous(trans = log10_trans()) + xscale(.scale = "percent")
 
-plot_grid(f50,f250,f500,f1000,ncol=1)
-plot_grid(f50pubr,f250pubr,f500pubr,f1000pubr,ncol=1)
+cowplot::plot_grid(f50,f250,f500,f1000,ncol=1)
+cowplot::plot_grid(f50pubr,f250pubr,f500pubr,f1000pubr,ncol=1)
 
-plot_grid(u1000,a1000,g1000,w1000,f1000,ncol=1, labels = c("A", "B", "C", "D", "E"))
+cowplot::plot_grid(u1000,a1000,g1000,w1000,f1000,ncol=1, labels = c("A", "B", "C", "D", "E"))
 ggsave("plots/Landcover_percent_with_regline.png",width=5,height=15)
-plot_grid(u1000pubr,a1000pubr,g1000pubr,w1000pubr,f1000pubr,ncol=1, labels = c("A", "B", "C", "D", "E"))
+
+cowplot::plot_grid(u1000pubr,a1000pubr,g1000pubr,w1000pubr,f1000pubr,ncol=1, labels = c("A", "B", "C", "D", "E"))
 ggsave("plots/Landcover_percent_with_stats.png",width=6,height=20)
 
 ### intensive vs organic farming predited biomass ###############################
@@ -546,8 +560,14 @@ predConfData <- rownames_to_column(predConfData, var = "Farmland_type")
 
 # plot
 
-p <- predConfData %>% ggplot(aes(Farmland_type, predBiomass, colour = Farmland_type))
-finalplot <- p + geom_pointrange(aes(ymin = lowCI, ymax = highCI), size =1.5) + scale_colour_manual(values = c("#F09018", "#E3B622" )) + theme_minimal_grid() + theme(legend.title = element_blank(), legend.key = element_rect(size = 0.1), legend.key.size = unit(1, 'cm')) + labs(x = "\nFarming system", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "A") + theme(plot.subtitle = element_text(size = 20, face = "bold")) + scale_y_log10()
+p <-
+  predConfData %>% ggplot(aes(Farmland_type, predBiomass, colour = Farmland_type))
+finalplot <-
+  p + geom_pointrange(aes(ymin = lowCI, ymax = highCI), size = 1.5) + scale_colour_manual(values = c("#F09018", "#E3B622")) + theme_minimal_grid() + theme(
+    legend.title = element_blank(),
+    legend.key = element_rect(size = 0.1),
+    legend.key.size = unit(1, 'cm')
+  ) + labs(x = "\nFarming system", y = "Predicted biomass (mg) and 95% CIs\n", subtitle = "A") + theme(plot.subtitle = element_text(size = 20, face = "bold")) + scale_y_log10()
 
 save_plot("plots/DK_predicted_biomass_farmtype.png", finalplot, base_width = 8, base_height = 5)
 
@@ -731,16 +751,16 @@ outUrban$Land_use <- "Urban"
 hist(allInsects$Open.uncultivated.land_250)#log??
 lme50 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_50) + Time_band + 
                 Time_band:cnumberTime + cStops + cyDay + 
-                (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
+                (1|RouteID_JB) + (1|PilotID), data=allInsects)
 lme250 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_250) + Time_band + 
                  Time_band:cnumberTime + cStops + cyDay +  
-                 (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
+                 (1|RouteID_JB) + (1|PilotID), data=data=allInsects)
 lme500 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_500) + Time_band + 
                  Time_band:cnumberTime + cStops + cyDay +  
-                 (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
+                 (1|RouteID_JB) + (1|PilotID), data=data=allInsects)
 lme1000 <- lmer(log(Biomass+1) ~ (Open.uncultivated.land_1000) + Time_band + 
                   Time_band:cnumberTime + cStops + cyDay +  
-                  (1|RouteID_JB) + (1|PilotID), data=subset(allInsects, Open.uncultivated.land_50 < 0.16))
+                  (1|RouteID_JB) + (1|PilotID), data=data=allInsects)
 outOpen.uncultivated <- rbind(getEffect(lme50),getEffect(lme250),getEffect(lme500),getEffect(lme1000))
 outOpen.uncultivated <- as.data.frame(outOpen.uncultivated)
 outOpen.uncultivated$Buffer <- c(50,250,500,1000)
@@ -861,8 +881,8 @@ qFo <- ggplot(allInsects,aes(x=sqrt(Forest_1000),y=(Biomass+1)))+
   geom_smooth(method="lm",color="grey70")+
   xlab("Forest cover") +ylab("Biomass")
 
-plot_grid(qU,qF,qD,qW,qFo,ncol=1)
-ggsave("plots/Landcover_percent.png",width=3,height=8)
+cowplot::plot_grid(qU,qF,qD,qW,qFo,ncol=1)
+#ggsave("plots/Landcover_percent.png",width=3,height=8)
 
 #save_plot("plots/DE_Landcover_percent.png", plot, base_width = 3, base_height = 8)
 
@@ -890,7 +910,7 @@ b1000 <- ggplot(allInsects)+
   theme_bw() +
   xlab("Farmland cover at 1000m") +ylab("Biomass")
 
-plot_grid(b50,b250,b1000,ncol=1)
+cowplot::plot_grid(b50,b250,b1000,ncol=1)
 
 #urban
 b50 <- ggplot(allInsects)+
@@ -914,7 +934,7 @@ b1000 <- ggplot(allInsects)+
   theme_bw() +
   xlab("Urban cover at 1000m") +ylab("Biomass")
 
-plot_grid(b50,b250,b1000,ncol=1)
+cowplot::plot_grid(b50,b250,b1000,ncol=1)
 
 ### buffer effect plots ######################
 
@@ -1030,5 +1050,7 @@ ggplot(outAll)+
   scale_fill_manual(values=landuseCols[1:5])+
   geom_hline(yintercept=0,colour="black",linetype="dashed")+
   xlab("Buffer size (m)") + ylab("Effect of land cover on biomass") + labs(subtitle = "B")+ theme(plot.subtitle=element_text(size=18, face="bold", color="black"))
+
+
 
 ggsave("plots/Landcover_buffer.png",width=3,height=8)

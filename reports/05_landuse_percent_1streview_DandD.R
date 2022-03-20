@@ -316,7 +316,7 @@ coefPlot <-
                         legend.title = element_blank(),
                         legend.key = element_rect(size = 0.1),
                         legend.key.size = unit(1, 'cm')
-                      ) + labs(x = "", y = "Estimated flying insect biomass & 95% CIs") + scale_x_discrete(
+                      ) + labs(x = "", y = "Effect on flying insect biomass & 95% CIs") + scale_x_discrete(
                         labels = c(
                           "Urban_1000" = "Urban",
                           "Agriculture_1000" = "Farmland",

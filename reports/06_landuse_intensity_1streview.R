@@ -20,6 +20,7 @@ library(sjPlot)
 landuseCols <- c("#CC79A7", "#E69F00", "#D55E00", "#56B4E9", "#009E73", "darkgrey") # colour friendly, ordered by land cover 
 
 ### DK urban##############################################
+allInsects <- read.delim("cleaned-data/DK_allInsects.txt")
 
 # change land covers to be 0-100 instead of 0-1
 allInsects[, c(26:49, 70:137,139)] <- allInsects[, c(26:49, 70:137,139)]*100
@@ -40,10 +41,20 @@ p <- cor(someInsects, use="pairwise.complete.obs")
 res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
-png(height=600, width=600, file="plots/corr_urban_landuse.jpeg", type = "cairo-png", res = 100)
+png(height=7, width=7, units="in", file="plots/corr_urban_landuse.jpeg", type = "cairo-png", res = 300)
+
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, mar=c(0,0,1,0))
+
+corrplot(p, method = "color",
+         type = "upper", order = "AOE", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
          # Combine with significance
@@ -55,7 +66,7 @@ dev.off()
 
 ### PCA urban ##################
 names(someInsects)
-mydata <- someInsects[,c(3:9)]
+mydata <- someInsects[,c(3,5:9)]
 
 fit <- princomp(mydata, cor=TRUE)
 biplot(fit)
@@ -71,7 +82,6 @@ autoplot(fit, data = mydata,
   theme_bw() + labs(colour = "Land cover")
 
 # the main axis explains most of the variation - the general urban cover effect.
-
 #cowplot::save_plot("plots/pca_landuse_urban.png", dk_autoplot, base_height = 8, base_width = 12)
 
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
@@ -86,9 +96,9 @@ data <- subset(allInsects, allInsects$Urban_1000 > 6.67550)
 #make data proportional
 #data$propHedge <- (data$byHegnMeterPerHa_1000/data$Urban_1000)
 data$propurbGreen <- (data$urbGreenPropArea_1000/data$Urban_1000)*100
-#data$propLargecity <- (data$Bykerne_1000/data$Urban_1000)*100
-#data$propCommercial <- (data$Erhverv_1000/data$Urban_1000)*100
-#data$propMultistory <- (data$Høj.bebyggelse_1000/data$Urban_1000)*100
+data$propLargecity <- (data$Bykerne_1000/data$Urban_1000)*100
+data$propCommercial <- (data$Erhverv_1000/data$Urban_1000)*100
+data$propMultistory <- (data$Høj.bebyggelse_1000/data$Urban_1000)*100
 tail(data)
 
 # merge greenness
@@ -118,9 +128,9 @@ res2 <- cor.mtest(someInsects, conf.level = .99)
 
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
 
-png(height=600, width=600, file="plots/corr_propurban_landuse.jpeg", type = "cairo-png", res = 100)
+png(units="in", width=7, height=7, file="plots/corr_propurban_landuse.jpeg", type = "cairo-png", res = 300)
 
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "original", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 60, # Text label color and rotation
@@ -235,20 +245,20 @@ data$Greening_gradient <- pca_rotated$scores[,2]
 
 #general gradient
 data$General_gradient_factor <- cut(data$Urbanization_gradient,3)
-ggplot(data,aes(x=Urban,y=log(Biomass+1),
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
                 group=General_gradient_factor))+
   geom_smooth(method=lm,aes(colour=General_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 #greening gradient
 data$Greening_gradient_factor <- cut(data$Greening_gradient,3)
-ggplot(data,aes(x=Urban,y=log(Biomass+1),
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1),
                 group=Greening_gradient_factor))+
   geom_smooth(method=lm,aes(colour=Greening_gradient_factor),se=F)+
   scale_colour_viridis_d()
 
 #both gradients
-ggplot(data,aes(x=Urban,y=log(Biomass+1)))+
+ggplot(data,aes(x=Urban_1000,y=log(Biomass+1)))+
   geom_smooth(method=lm,se=F)+
   facet_grid(Greening_gradient_factor~General_gradient_factor)
 
@@ -328,7 +338,7 @@ g6 <- ggplot(subset(allInsects, maxLand_use = "Agriculture_1000"),
   geom_smooth(method="lm",color="grey70")+
   xlab("Unspecified crop cover") +ylab("")
 
-plot_grid(g1,g2,g3,g4,g5,g6)
+cowplot::plot_grid(g1,g2,g3,g4,g5,g6)
 
 ### PCA farmland ####
 mydata <- allInsects[,c("cStops",names(allInsects)[grepl("_1000",names(allInsects))])]
@@ -364,6 +374,44 @@ cowplot::save_plot("plots/pca_landuse_farmland.png", dk_autoplot, base_height = 
 pca_rotated <- psych::principal(mydata, rotate="varimax", nfactors=2, scores=TRUE)
 biplot(pca_rotated, main = "")
 print(pca_rotated)
+
+#### correlation plot farmland use (not proportional) ############
+names(data)
+someInsects <- data[,c(12,142, 44, 90:93, 96:97)]
+colnames(someInsects)
+colnames(someInsects) <- c("Biomass", "Stops", "Farmland", "Extensive", "OrganicExtensive", "Intensive", "OrganicIntensive", "semiIntensive", "semiOrganicIntensive")
+
+p <- cor(someInsects, use="pairwise.complete.obs")
+
+# add significance
+res1 <- cor.mtest(someInsects, conf.level = .95)
+res2 <- cor.mtest(someInsects, conf.level = .99)
+
+png(height=7, width=7, units = "in", file="plots/DK_farmland_use.jpeg", type = "cairo-png", res = 300)
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color",
+         type = "upper", order = "original", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, mar=c(0,0,1,0))
+
+dev.off()
+
+# with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
+corrplot(p, method = "color",
+         type = "upper", order = "AOE", number.cex = .7,
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col = "black", tl.srt = 90, # Text label color and rotation
+         # Combine with significance
+         p.mat = res1$p, sig.level = 0.05, insig = "blank", 
+         # hide correlation coefficient on the principal diagonal 
+         diag = FALSE, mar=c(0,0,1,0))
+
+dev.off()
 
 ### DK farmland proportional cover ######################################
 # calculate the proportional cover of the land use intensity variables within the most land cover routes
@@ -406,9 +454,10 @@ p <- cor(someInsects, use="pairwise.complete.obs")
 res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
-png(height=600, width=600, file="plots/prop_farmland_use.jpeg", type = "cairo-png", res = 100)
+png(height=7, width=7, units = "in", file="plots/prop_farmland_use.jpeg", type = "cairo-png", res = 300)
+
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "original", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
@@ -416,6 +465,7 @@ corrplot(p, method = "color", col = landuseCols,
          p.mat = res1$p, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal 
          diag = FALSE, mar=c(0,0,1,0))
+
 dev.off()
 
 # the combined farming practices
@@ -430,9 +480,10 @@ p <- cor(someInsects, use="pairwise.complete.obs")
 res1 <- cor.mtest(someInsects, conf.level = .95)
 res2 <- cor.mtest(someInsects, conf.level = .99)
 
-png(height=600, width=600, file="plots/prop_farmland_practice.jpeg", type = "cairo-png", res = 100)
+png(height=7, width=7, units = "in", file="plots/prop_farmland_practice.jpeg", type = "cairo-png", res = 300)
+
 # with correlation coefficient instead of p-values, coloured boxes = significant at a 0.05 level
-corrplot(p, method = "color", col = landuseCols,
+corrplot(p, method = "color",
          type = "upper", order = "original", number.cex = .7,
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation

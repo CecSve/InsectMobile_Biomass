@@ -1,7 +1,5 @@
 # Supplementary material analysis for InsectMobile biomass paper
 
-# run script 03 before the analysis
-
 #### Load required libraries ################################################################
 library(cowplot)
 library(ggplot2)

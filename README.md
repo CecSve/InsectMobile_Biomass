@@ -1,6 +1,6 @@
 # Flying insect biomass is negatively associated with urban cover in surrounding landscapes
 ## Landscape-level drivers of flying insect biomass
-This repository (R project) contains all scripts necessary to run the ecological/statistical analyses from the study "Flying insect biomass is negatively associated with urban cover in surrounding landscapes" (Svenningsen et al. 2022, DOI: [add link]).
+This repository (R project) contains all scripts necessary to run the ecological/statistical analyses from the study "Flying insect biomass is negatively associated with urban cover in surrounding landscapes" (Svenningsen et al. 2022, DOI: https://onlinelibrary.wiley.com/doi/pdf/10.1111/ddi.13532).
 
 The data were collected in June 2018 as part of the citizen science project InsectMobile ("Insektmobilen") at the Natural History Museum of Denmark and at iDiv in Germany during June-July 2018.
 

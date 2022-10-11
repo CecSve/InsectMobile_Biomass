@@ -4,7 +4,7 @@ This repository (R project) contains all scripts necessary to run the ecological
 
 The data were collected in June 2018 as part of the citizen science project InsectMobile ("Insektmobilen") at the Natural History Museum of Denmark and at iDiv in Germany during June-July 2018.
 
-* **Data**: data (e.g. the proportional land cover and land use data, flying insect biomass etc. for each buffer zone) used in the analyses is deposited in Dryad: [add link]
+* **Data**: data (e.g. the proportional land cover and land use data, flying insect biomass etc. for each buffer zone) used in the analyses is deposited in Dryad: https://doi.org/10.5061/dryad.547d7wm9f 
 
 ## Description of the sub directories for data processing ##
 
